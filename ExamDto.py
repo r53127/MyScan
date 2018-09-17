@@ -1,0 +1,2 @@
+class ExamDto():
+    pass

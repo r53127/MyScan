@@ -6,7 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 class Ui_TabWidget(object):
     def setupUi(self, TabWidget):
@@ -47,12 +47,4 @@ class Ui_TabWidget(object):
         TabWidget.setTabText(TabWidget.indexOf(self.tab1), _translate("TabWidget", "设置"))
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    TabWidget = QtWidgets.QTabWidget()
-    ui = Ui_TabWidget()
-    ui.setupUi(TabWidget)
-    TabWidget.show()
-    sys.exit(app.exec_())
 

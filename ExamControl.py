@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication
 
 from DB import StudentDB, AnswerDB
 from ExamDto import ExamDto
-from ExamService import ExamService
+from MarkingService import MarkingService
 from ScanWindow import ScanWindow
 
 
@@ -16,16 +16,19 @@ class ExamControl():
         self.stu_data = StudentDB()
         # 讀取答案
         self.ans_data = AnswerDB()
-        # 加載數據
-        self.reloadData()
+        # 加載答案和分值數據
+        self.loadData()
         # 创建阅卷面板(连接游戏数据源、 安装控制器）
         self.scanWin = ScanWindow(self.dto, self)
         # 创建阅卷逻辑块（连接阅卷数据源）
-        self.examServ = ExamService(self.dto)
+        self.examServ = MarkingService(self.dto)
 
 
-    def reloadData(self):
+    def loadData(self):
         pass
+
+    def startMarking(self):
+        self.examServ.marking()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

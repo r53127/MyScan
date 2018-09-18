@@ -34,10 +34,15 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
-        files,filetype=QFileDialog.getOpenFileNames(self,'打开文件',r'.',r'图片文件 (*.jpg;*.png;*.bmp)')
-        if not files:
-            return
-        self.files=files
+        try:
+            files,filetype=QFileDialog.getOpenFileNames(self,'打开文件',r'.',r'图片文件 (*.jpg;*.png;*.bmp)')
+            if not files:
+                return
+            for file in files:
+                self.dto.setCurrentPaper(file)
+                self.examControl.startMarking()
+        except BaseException as e:
+            print(e)
             
             
     @pyqtSlot()

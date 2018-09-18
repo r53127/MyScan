@@ -1,2 +1,10 @@
+from ExamPaper import ExamPaper
+
+
 class ExamDto():
-    pass
+    def __init__(self):
+        self.currentPaper=ExamPaper()
+
+
+    def setCurrentPaper(self,file):
+        self.currentPaper.init(file)

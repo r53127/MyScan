@@ -69,8 +69,8 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         try:
             if not self.dto.currentPaper:
                 return
-            if self.dto.currentPaper.img is not None:
-                self.showImg(self.dto.currentPaper.img)
+            if self.dto.currentPaper.showingImg is not None:
+                self.showImg(self.dto.currentPaper.showingImg)
         except BaseException as e:
             print(e)
 

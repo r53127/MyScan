@@ -7,4 +7,4 @@ class ExamDto():
 
 
     def setCurrentPaper(self,file):
-        self.currentPaper.init(file)
+        self.currentPaper.initProcess(file)

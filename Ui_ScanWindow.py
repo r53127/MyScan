@@ -6,19 +6,19 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_TabWidget(object):
     def setupUi(self, TabWidget):
         TabWidget.setObjectName("TabWidget")
-        TabWidget.resize(378, 209)
+        TabWidget.resize(648, 578)
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.label = QtWidgets.QLabel(self.tab)
-        self.label.setGeometry(QtCore.QRect(50, 40, 331, 31))
+        self.label.setGeometry(QtCore.QRect(170, 420, 331, 31))
         self.label.setObjectName("label")
         self.splitter = QtWidgets.QSplitter(self.tab)
-        self.splitter.setGeometry(QtCore.QRect(50, 100, 279, 28))
+        self.splitter.setGeometry(QtCore.QRect(170, 480, 279, 28))
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
         self.pushButton = QtWidgets.QPushButton(self.splitter)
@@ -27,6 +27,9 @@ class Ui_TabWidget(object):
         self.pushButton_4.setObjectName("pushButton_4")
         self.pushButton_3 = QtWidgets.QPushButton(self.splitter)
         self.pushButton_3.setObjectName("pushButton_3")
+        self.label_2 = QtWidgets.QLabel(self.tab)
+        self.label_2.setGeometry(QtCore.QRect(40, 30, 72, 15))
+        self.label_2.setObjectName("label_2")
         TabWidget.addTab(self.tab, "")
         self.tab1 = QtWidgets.QWidget()
         self.tab1.setObjectName("tab1")
@@ -43,8 +46,17 @@ class Ui_TabWidget(object):
         self.pushButton.setText(_translate("TabWidget", "选择文件"))
         self.pushButton_4.setText(_translate("TabWidget", "选择目录"))
         self.pushButton_3.setText(_translate("TabWidget", "取消"))
+        self.label_2.setText(_translate("TabWidget", "显示区："))
         TabWidget.setTabText(TabWidget.indexOf(self.tab), _translate("TabWidget", "阅卷"))
         TabWidget.setTabText(TabWidget.indexOf(self.tab1), _translate("TabWidget", "设置"))
 
 
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    TabWidget = QtWidgets.QTabWidget()
+    ui = Ui_TabWidget()
+    ui.setupUi(TabWidget)
+    TabWidget.show()
+    sys.exit(app.exec_())
 

@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication
 
 from DB import StudentDB, AnswerDB
 from ExamDto import ExamDto
-from MarkingService import MarkingService
+from ExamService import ExamService
 from ScanWindow import ScanWindow
 
 
@@ -21,7 +21,7 @@ class ExamControl():
         # 创建阅卷面板(连接游戏数据源、 安装控制器）
         self.scanWin = ScanWindow(self.dto, self)
         # 创建阅卷逻辑块（连接阅卷数据源）
-        self.examServ = MarkingService(self.dto)
+        self.examServ = ExamService(self.dto)
 
 
     def loadData(self):

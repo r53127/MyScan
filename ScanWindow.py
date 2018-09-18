@@ -3,8 +3,10 @@
 """
 Module implementing ScanWindow.
 """
+import cv2
 
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QTabWidget, QFileDialog
 
 from Ui_ScanWindow import Ui_TabWidget
@@ -61,6 +63,30 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         Slot documentation goes here.
         """
         self.close()
+
+    def paintEvent(self, QPaintEvent):
+        super().paintEvent(QPaintEvent)
+        try:
+            if not self.dto.currentPaper:
+                return
+            if self.dto.currentPaper.img is not None:
+                self.showImg(self.dto.currentPaper.img)
+        except BaseException as e:
+            print(e)
+
+    def showImg(self,img):
+        height, width, bytesPerComponent = img.shape
+        bytesPerLine = bytesPerComponent * width
+        # 变换彩色空间顺序
+        cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
+        # 转为QImage对象
+        showimage = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        self.label_2.setGeometry(100, 30, 400, 380)
+        # self.label_2.setScaledContents(True)
+        self.label_2.setPixmap(QPixmap.fromImage(showimage).scaled(self.label_2.width(), self.label_2.height()))
+
+
+
     
 
 

@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Tasks SYSTEM "Tasks-6.0.dtd">
 <!-- eric6 tasks file for project MyScan -->
-<!-- Saved: 2018-09-17, 21:43:07 -->
+<!-- Saved: 2018-09-18, 15:42:01 -->
 <Tasks version="6.0">
   <ProjectScanFilter></ProjectScanFilter>
-  <Task priority="1" completed="False" type="1" uid="{2f4e4f48-66f5-4b1e-8383-c9d7f43650bc}">
-    <Summary>TODO: not implemented yet</Summary>
-    <Description></Description>
-    <Created>2018-09-17, 21:43:06</Created>
-    <Resource>
-      <Filename>ScanWindow.py</Filename>
-      <Linenumber>34</Linenumber>
-    </Resource>
-  </Task>
 </Tasks>

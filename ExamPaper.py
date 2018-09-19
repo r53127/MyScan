@@ -5,8 +5,7 @@ from imutils import contours
 from imutils.perspective import four_point_transform
 
 
-ANSWER_KEY_SCORE = {0: 1, 1: 4, 2: 0, 3: 3, 4: 1}
-ANSWER_KEY = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E"}
+
 
 class ExamPaper():
     def __init__(self):
@@ -34,7 +33,7 @@ class ExamPaper():
         # 获取多边形的所有定点，如果是四个定点，就代表是矩形
         approx = cv.approxPolyDP(cnt, peri, True)
         # 打印定点个数
-        print("顶点个数：", len(approx)
+        print("顶点个数：", len(approx))
         if len(approx) == 4:  # 矩形
             # 透视变换提取原图内容部分
             self.ox_sheet = four_point_transform(self.img, approx.reshape(4, 2))
@@ -45,7 +44,7 @@ class ExamPaper():
             # 继续寻找轮廓
             r_image, r_cnt, r_hierarchy = cv.findContours(self.thresh2.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
             print("找到轮廓个数：",len(r_cnt))
-            choiceCnt = []
+            choiceCnts = []
             for cxx in r_cnt:
                 # 通过矩形，标记每一个指定的轮廓
                 x, y, w, h = cv.boundingRect(cxx)
@@ -55,19 +54,19 @@ class ExamPaper():
                     # 使用红色标记，满足指定条件的图形
                     # cv.rectangle(ox_sheet, (x, y), (x + w, y + h), (0, 0, 255), 2)
                     # 把每个选项，保存下来
-                    choiceCnt.append(cxx)
-        return choiceCnt
+                    choiceCnts.append(cxx)
+        return choiceCnts
 
-    def getChoices(self, choiceCnt):
+    def getChoices(self, choiceCnts):
         print('获取所有選項气泡')
         # 按坐标从上到下排序
-        choiceCnt = contours.sort_contours(choiceCnt, method="top-to-bottom")[0]
+        choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
         # 使用np函数，按5个元素，生成一个集合
         choices=[]
         #q为行号，j为行内序号
-        for (q, i) in enumerate(np.arange(0, len(choiceCnt), 5)):
+        for (q, i) in enumerate(np.arange(0, len(choiceCnts), 5)):
             # 获取按从左到右的排序后的5个元素
-            cnts = contours.sort_contours(choiceCnt[i:i + 5])[0]
+            cnts = contours.sort_contours(choiceCnts[i:i + 5])[0]
             # 遍历每一个选项
             bubble_row = []#暂存每行序号和像素值
             for (j, c) in enumerate(cnts):
@@ -88,13 +87,6 @@ class ExamPaper():
             choices.append((q,choice_num))
         return choices
 
-    def checkAnswer(self, choices):
-        print('进行答案比对')
-
-        return
-
-    def getScore(self, right_answers):
-        print('判分')
 
 
 

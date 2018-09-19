@@ -24,17 +24,17 @@ class ExamPaper():
         image, cnts, hierarchy = cv.findContours(self.edged.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         # 给轮廓加标记，便于我们在原图里面观察，注意必须是原图才能画出红色，灰度图是没有颜色的
         cv.drawContours(self.img, cnts, -1, (0, 0, 255), 3)
-        cnt = max(cnts, key=lambda c: cv.contourArea(c))
-        return cnt
+        maxcnt = max(cnts, key=lambda c: cv.contourArea(c))
+        return maxcnt
 
 
-    def getAnswerContour(self,cnt):
+    def getChoiceContour(self, cnt):
         print('获取答题区域')
         peri = 0.01 * cv.arcLength(cnt, True)
         # 获取多边形的所有定点，如果是四个定点，就代表是矩形
         approx = cv.approxPolyDP(cnt, peri, True)
         # 打印定点个数
-        print("顶点个数：", len(approx), approx)
+        print("顶点个数：", len(approx)
         if len(approx) == 4:  # 矩形
             # 透视变换提取原图内容部分
             self.ox_sheet = four_point_transform(self.img, approx.reshape(4, 2))
@@ -45,7 +45,7 @@ class ExamPaper():
             # 继续寻找轮廓
             r_image, r_cnt, r_hierarchy = cv.findContours(self.thresh2.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
             print("找到轮廓个数：",len(r_cnt))
-            questionCnts = []
+            choiceCnt = []
             for cxx in r_cnt:
                 # 通过矩形，标记每一个指定的轮廓
                 x, y, w, h = cv.boundingRect(cxx)
@@ -55,21 +55,21 @@ class ExamPaper():
                     # 使用红色标记，满足指定条件的图形
                     # cv.rectangle(ox_sheet, (x, y), (x + w, y + h), (0, 0, 255), 2)
                     # 把每个选项，保存下来
-                    questionCnts.append(cxx)
-        return questionCnts
+                    choiceCnt.append(cxx)
+        return choiceCnt
 
-    def getAnswers(self,qus_cnt):
-        print('获取所有答题气泡')
+    def getChoices(self, choiceCnt):
+        print('获取所有選項气泡')
         # 按坐标从上到下排序
-        questionCnts = contours.sort_contours(qus_cnt, method="top-to-bottom")[0]
+        choiceCnt = contours.sort_contours(choiceCnt, method="top-to-bottom")[0]
         # 使用np函数，按5个元素，生成一个集合
-        choice_bubble=[]
+        choices=[]
         #q为行号，j为行内序号
-        for (q, i) in enumerate(np.arange(0, len(questionCnts), 5)):
+        for (q, i) in enumerate(np.arange(0, len(choiceCnt), 5)):
             # 获取按从左到右的排序后的5个元素
-            cnts = contours.sort_contours(questionCnts[i:i + 5])[0]
+            cnts = contours.sort_contours(choiceCnt[i:i + 5])[0]
             # 遍历每一个选项
-            bubble_rows = []#暂存每行序号和像素值
+            bubble_row = []#暂存每行序号和像素值
             for (j, c) in enumerate(cnts):
                 # 生成一个大小与透视图一样的全黑背景图布
                 mask = np.zeros(self.tx_sheet.shape, dtype="uint8")
@@ -80,15 +80,15 @@ class ExamPaper():
                 # 获取每个答案的像素值
                 total = cv.countNonZero(mask)
                 # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
-                bubble_rows.append((total, j))
+                bubble_row.append((total, j))
             #行内按像素值排序
-            bubble_rows=sorted(bubble_rows,key=lambda x: x[0],reverse=True)
+            bubble_row=sorted(bubble_row,key=lambda x: x[0],reverse=True)
             # 將题号和选择的序号(j值）存入choice_bubble
-            choice_num=bubble_rows[0][1]
-            choice_bubble.append((q,choice_num))
-        return choice_bubble
+            choice_num=bubble_row[0][1]
+            choices.append((q,choice_num))
+        return choices
 
-    def checkAnswer(self, answers):
+    def checkAnswer(self, choices):
         print('进行答案比对')
 
         return

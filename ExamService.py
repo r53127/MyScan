@@ -7,14 +7,14 @@ class ExamService():
         maxcnt=self.dto.currentPaper.getMaxContour()
 
         #获取答题区域
-        qus_cnt=self.dto.currentPaper.getAnswerContour(maxcnt)
+        choiceCnt=self.dto.currentPaper.getChoiceContour(maxcnt)
 
 
         #获取所有答题气泡
-        answers=self.dto.currentPaper.getAnswers(qus_cnt)
+        choices=self.dto.currentPaper.getChoices(choiceCnt)
 
         #进行答案比对
-        right_answers=self.dto.currentPaper.checkAnswer(answers)
+        right_answers=self.dto.currentPaper.checkAnswer(choices)
 
         #判分
         self.dto.currentPaper.getScore(right_answers)

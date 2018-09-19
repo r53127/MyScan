@@ -5,7 +5,7 @@ Module implementing ScanWindow.
 """
 import cv2
 
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QTabWidget, QFileDialog
 
@@ -82,6 +82,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         # 转为QImage对象
         showimage = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
         self.label_2.setGeometry(100, 30, 400, 380)
+        self.label_2.setAlignment(Qt.AlignCenter)
         # self.label_2.setScaledContents(True)
         self.label_2.setPixmap(QPixmap.fromImage(showimage).scaled(self.label_2.width(), self.label_2.height()))
 

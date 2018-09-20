@@ -21,8 +21,6 @@ class ExamPaper():
     def getMaxContour(self):
         print('获取最大轮廓')
         image, cnts, hierarchy = cv.findContours(self.edged.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        # 给轮廓加标记，便于我们在原图里面观察，注意必须是原图才能画出红色，灰度图是没有颜色的
-        cv.drawContours(self.img, cnts, -1, (0, 0, 255), 3)
         maxcnt = max(cnts, key=lambda c: cv.contourArea(c))
         return maxcnt
 
@@ -32,11 +30,7 @@ class ExamPaper():
         peri = 0.01 * cv.arcLength(cnt, True)
         # 获取多边形的所有定点，如果是四个定点，就代表是矩形
         approx = cv.approxPolyDP(cnt, peri, True)
-        # 打印定点个数
-        print("顶点个数：", len(approx))
         if len(approx) == 4:  # 矩形
-            # 透视变换提取原图内容部分
-            self.ox_sheet = four_point_transform(self.img, approx.reshape(4, 2))
             # 透视变换提取灰度图内容部分
             self.tx_sheet = four_point_transform(self.gray, approx.reshape(4, 2))
             # 使用ostu二值化算法对灰度图做一个二值化处理

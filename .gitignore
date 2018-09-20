@@ -2,8 +2,7 @@
 .idea/
 ~$*.*
 
-#eric
-_eric6project
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

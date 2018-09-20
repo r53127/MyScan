@@ -1,28 +1,31 @@
-ANSWER_KEY = {0: 1, 1: 4, 2: 0, 3: 3, 4: 1}
-ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E"}
-
+from PyQt5.QtWidgets import QMessageBox
 
 class ExamService():
     def __init__(self, dto):
         self.dto = dto
 
     def marking(self):
+        if self.dto.nowAnswer is None:
+            QMessageBox.information(None,'提示','请先导入答案')
+            return False
         # 获取最大轮廓
-        maxcnt = self.dto.currentPaper.getMaxContour()
+        maxcnt = self.dto.nowPaper.getMaxContour()
 
         # 获取答题区域
-        choiceCnts = self.dto.currentPaper.getChoiceContour(maxcnt)
+        choiceCnts = self.dto.nowPaper.getChoiceContour(maxcnt)
 
         # 获取所有答题气泡
-        choices = self.dto.currentPaper.getChoices(choiceCnts)
+        choices = self.dto.nowPaper.getChoices(choiceCnts)
 
         # 进行答案比对、判分
-        print(self.getScore(choices))
+        print(self.getScore(choices,self.dto.nowAnswer))
 
-    def getScore(self, choices):
+    def getScore(self, choices,answer):
         print('判分')
         correct_count = 0
+        score=0
         for choice in choices:
-            if ANSWER_KEY.get(choice[0]) == choice[1]:
+            if (answer.get(choice[0]))[0] == choice[1]:
                 correct_count += 1
-        return correct_count / len(ANSWER_KEY) * 100
+                score+=(answer.get(choice[0]))[1]
+        return score

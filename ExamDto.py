@@ -3,8 +3,10 @@ from ExamPaper import ExamPaper
 
 class ExamDto():
     def __init__(self):
-        self.currentPaper=ExamPaper()
+        self.nowPaper=ExamPaper()
+        self.nowAnswer=None
+        self.nowAnswerFile=None
 
 
     def setCurrentPaper(self,file):
-        self.currentPaper.initProcess(file)
+        self.nowPaper.initProcess(file)

@@ -5,11 +5,10 @@ Module implementing ScanWindow.
 """
 import win32api
 
-import cv2
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QTabWidget, QFileDialog
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox
 
+from DB import AnswerDB
 from Ui_ScanWindow import Ui_TabWidget
 
 
@@ -21,7 +20,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
     def __init__(self, dto, examControl):
         """
         Constructor
-        
+
         @param parent reference to the parent widget
         @type QWidget
         """
@@ -32,9 +31,29 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         self.setupUi(self)
         self.show()
 
+    @pyqtSlot()
+    def on_pushButton_1_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        win32api.ShellExecute(0, 'open', 'data\答案.xlsx', '', '', 1)
 
     @pyqtSlot()
-    def on_pushButton_clicked(self):
+    def on_pushButton_2_clicked(self):
+        try:
+            file, filetype = QFileDialog.getOpenFileName(self, '导入答案文件', r'.\data', r'EXCEL文件 (*.xlsx)')
+            if not file:
+                return
+            else:
+                self.dto.nowAnswerFile = file
+                # 读取答案
+                self.dto.nowAnswer = AnswerDB.importAnswer(file)
+                QMessageBox.information(None, '请核对导入的答案：', str(self.dto.nowAnswer))
+        except BaseException as e:
+            print(e)
+
+    @pyqtSlot()
+    def on_pushButton_3_clicked(self):
         """
         Slot documentation goes here.
         """
@@ -58,20 +77,13 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             return
         self.direc = direc
 
-    @pyqtSlot()
-    def on_pushButton_3_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-        win32api.ShellExecute(0, 'open', 'data\答案.xlsx', '', '', 1)
-
     # def paintEvent(self, QPaintEvent):
     #     super().paintEvent(QPaintEvent)
     #     try:
-    #         if not self.dto.currentPaper:
+    #         if not self.dto.nowPaper:
     #             return
-    #         if self.dto.currentPaper.showingImg is not None:
-    #             self.showImg(self.dto.currentPaper.showingImg)
+    #         if self.dto.nowPaper.showingImg is not None:
+    #             self.showImg(self.dto.nowPaper.showingImg)
     #     except BaseException as e:
     #         print(e)
 

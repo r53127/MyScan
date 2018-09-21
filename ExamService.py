@@ -5,9 +5,6 @@ class ExamService():
         self.dto = dto
 
     def marking(self):
-        if self.dto.nowAnswer is None:
-            QMessageBox.information(None,'提示','请先导入答案')
-            return False
         # 获取最大轮廓
         maxcnt = self.dto.nowPaper.getMaxContour()
 
@@ -18,7 +15,9 @@ class ExamService():
         choices = self.dto.nowPaper.getChoices(choiceCnts)
 
         # 进行答案比对、判分
-        print(self.getScore(choices,self.dto.nowAnswer))
+        score=self.getScore(choices,self.dto.nowAnswer)
+
+        #答案、得分入库
 
     def getScore(self, choices,answer):
         print('判分')

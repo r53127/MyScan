@@ -42,30 +42,51 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
     def on_pushButton_2_clicked(self):
         try:
             file, filetype = QFileDialog.getOpenFileName(self, '导入答案文件', r'.\data', r'EXCEL文件 (*.xlsx)')
+            #如果未选择，返回
             if not file:
                 return
-            else:
-                self.dto.nowAnswerFile = file
-                # 读取答案
-                self.dto.nowAnswer = AnswerDB.importAnswer(file)
-                QMessageBox.information(None, '请核对导入的答案：', str(self.dto.nowAnswer))
+            # 读取答案
+            self.dto.nowAnswer = AnswerDB.importAnswer(file)
+            #如果答案为空，返回
+            if self.dto.nowAnswer is None:
+                return
+            self.dto.nowAnswerFile = file
+            #答案校对
+            ansinfo=''
+            for answer in self.dto.nowAnswer.items():
+                ansinfo+='题号:'+str(answer[0])+' 答案为：'+str(answer[1][0])+" 分值为："+str(answer[1][1])+"\n"
+            QMessageBox.information(None, '请核对答案分值:', ansinfo)
         except BaseException as e:
-            print(e)
+            QMessageBox.information(None, '错误:', "错误是："+str(e)+"，请导入有效的答案文件！")
 
     @pyqtSlot()
     def on_pushButton_3_clicked(self):
         """
         Slot documentation goes here.
         """
-        try:
-            files, filetype = QFileDialog.getOpenFileNames(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp)')
-            if not files:
-                return
-            for file in files:
+        files, filetype = QFileDialog.getOpenFileNames(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp)')
+        # 如果未选择，返回
+        if files is None:
+            return
+        #未导入答案，返回
+        if self.dto.nowAnswer is None:
+            QMessageBox.information(None,'提示','请先导入答案')
+            return
+        #开始阅卷
+        for file in files:
+            try:
                 self.dto.setCurrentPaper(file)
                 self.examControl.startMarking()
-        except BaseException as e:
-            print(e)
+            except Exception as e:
+                reply = QMessageBox.question(None, "提示",
+                                             "该卡无法识别，错误是"+str(e)+"，文件名是："+file+"，是否继续？",
+                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if reply == 16384:
+                    continue
+                else:
+                    break
+
+
 
     @pyqtSlot()
     def on_pushButton_4_clicked(self):

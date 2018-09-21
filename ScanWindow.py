@@ -27,7 +27,6 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         super(ScanWindow, self).__init__()
         self.dto = dto
         self.examControl = examControl
-        self.files = []
         self.setupUi(self)
         self.show()
 

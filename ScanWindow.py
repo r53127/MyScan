@@ -3,6 +3,8 @@
 """
 Module implementing ScanWindow.
 """
+import os
+import shutil
 import win32api
 
 from PyQt5.QtCore import pyqtSlot
@@ -63,13 +65,13 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
+        #未导入答案，返回
+        if not self.dto.nowAnswer:
+            QMessageBox.information(None,'提示','请先导入答案!')
+            return
         files, filetype = QFileDialog.getOpenFileNames(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp)')
         # 如果未选择，返回
-        if files is None:
-            return
-        #未导入答案，返回
-        if self.dto.nowAnswer is None:
-            QMessageBox.information(None,'提示','请先导入答案')
+        if not files:
             return
         #开始阅卷
         for file in files:
@@ -81,10 +83,10 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
                                              "该卡无法识别，错误是"+str(e)+"，文件名是："+file+"，是否继续？",
                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == 16384:
+                    self.dto.failedFiles.append(file)
                     continue
                 else:
                     break
-
 
 
     @pyqtSlot()
@@ -92,6 +94,10 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
+        #未导入答案，返回
+        if not self.dto.nowAnswer:
+            QMessageBox.information(None,'提示','请先导入答案!')
+            return
         direc = QFileDialog.getExistingDirectory(self, '打开阅卷目录', r'.')
         if not dir:
             return
@@ -118,3 +124,40 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
     #     self.label_2.setAlignment(Qt.AlignCenter)
     #     # self.label_2.setScaledContents(True)
     #     self.label_2.setPixmap(QPixmap.fromImage(showimage).scaled(self.label_2.width(), self.label_2.height()))
+    
+    @pyqtSlot()
+    def on_pushButton_5_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        pass
+    
+    @pyqtSlot()
+    def on_pushButton_6_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        self.close()
+    
+    @pyqtSlot()
+    def on_pushButton_7_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        if not self.dto.failedFiles:
+            QMessageBox.information(None, '提示', '尚未有阅卷失败的文件！')
+            return
+        direc = QFileDialog.getExistingDirectory(self, '另存为目录', r'.')
+        if not dir:
+            return
+        for file in self.dto.failedFiles:
+            self.saveFailedFiles(file,direc)
+
+    def saveFailedFiles(self,file,dstPath):
+        try:
+            newfilepath=os.path.join(dstPath,os.path.basename(file))
+            shutil.copyfile(file, newfilepath)
+        except Exception as e:
+            QMessageBox.information(None, '提示', '另存失败！错误是：'+str(e))
+
+

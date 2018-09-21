@@ -6,6 +6,7 @@ class ExamDto():
         self.nowPaper=ExamPaper()
         self.nowAnswer=None
         self.nowAnswerFile=None
+        self.failedFiles=[]
 
 
     def setCurrentPaper(self,file):

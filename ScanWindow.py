@@ -74,19 +74,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         if not files:
             return
         #开始阅卷
-        for file in files:
-            try:
-                self.dto.setCurrentPaper(file)
-                self.examControl.startMarking()
-            except Exception as e:
-                reply = QMessageBox.question(None, "提示",
-                                             "该卡无法识别，错误是"+str(e)+"，文件名是："+file+"，是否继续？",
-                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-                if reply == 16384:
-                    self.dto.failedFiles.append(file)
-                    continue
-                else:
-                    break
+        self.startScan(files)
 
 
     @pyqtSlot()
@@ -107,13 +95,16 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         for filename in filesname:
             files.append(os.path.join(direc+'/',filename))
         #开始阅卷
+        self.startScan(files)
+
+    def startScan(self, files):
         for file in files:
             try:
                 self.dto.setCurrentPaper(file)
                 self.examControl.startMarking()
             except Exception as e:
                 reply = QMessageBox.question(None, "提示",
-                                             "该卡无法识别，错误是"+str(e)+"，文件名是："+file+"，是否继续？",
+                                             "该卡无法识别，错误是" + str(e) + "，文件名是：" + file + "，是否继续？",
                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == 16384:
                     self.dto.failedFiles.append(file)

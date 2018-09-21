@@ -1,5 +1,3 @@
-from PyQt5.QtWidgets import QMessageBox
-
 class ExamService():
     def __init__(self, dto):
         self.dto = dto
@@ -15,16 +13,16 @@ class ExamService():
         choices = self.dto.nowPaper.getChoices(choiceCnts)
 
         # 进行答案比对、判分
-        score=self.getScore(choices,self.dto.nowAnswer)
+        score = self.getScore(choices, self.dto.nowAnswer)
 
-        #答案、得分入库
+        # 答案、得分入库
 
-    def getScore(self, choices,answer):
+    def getScore(self, choices, answer):
         print('判分')
         correct_count = 0
-        score=0
+        score = 0
         for choice in choices:
             if (answer.get(choice[0]))[0] == choice[1]:
                 correct_count += 1
-                score+=(answer.get(choice[0]))[1]
+                score += (answer.get(choice[0]))[1]
         return score

@@ -5,6 +5,7 @@ from imutils.perspective import four_point_transform
 
 ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E"}
 
+
 class ExamPaper():
     def __init__(self):
         self.showingImg = None
@@ -74,6 +75,6 @@ class ExamPaper():
             # 行内按像素值排序
             bubble_row = sorted(bubble_row, key=lambda x: x[0], reverse=True)
             # 將题号和选择的序号(inlineID值）存入choice_bubble
-            choice_num = bubble_row[0][1]  #[0][0]為total，[0][1]為選項號
-            choices.append((questionID+1, ANSWER_CHAR[choice_num]))  # %为字符串占位操作符
+            choice_num = bubble_row[0][1]  # [0][0]為total，[0][1]為選項號
+            choices.append((questionID + 1, ANSWER_CHAR[choice_num]))  # %为字符串占位操作符
         return choices

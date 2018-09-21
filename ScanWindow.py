@@ -32,6 +32,21 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         self.setupUi(self)
         self.show()
 
+    def startScan(self, files):
+        for file in files:
+            try:
+                self.dto.setCurrentPaper(file)
+                self.examControl.startMarking()
+            except Exception as e:
+                reply = QMessageBox.question(None, "提示",
+                                             "该卡无法识别，错误是" + str(e) + "，文件名是：" + file + "，是否继续？",
+                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                self.dto.failedFiles.append(file)
+                if reply == 16384:
+                    continue
+                else:
+                    break
+
     @pyqtSlot()
     def on_pushButton_1_clicked(self):
         """
@@ -83,11 +98,11 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         Slot documentation goes here.
         """
         #未导入答案，返回
-        # if not self.dto.nowAnswer:
-        #     QMessageBox.information(None,'提示','请先导入答案!')
-        #     return
+        if not self.dto.nowAnswer:
+            QMessageBox.information(None,'提示','请先导入答案!')
+            return
         direc = QFileDialog.getExistingDirectory(self, '打开阅卷目录', r'.')
-        if not dir:
+        if not direc:
             return
         #生成文件列表
         files=[]
@@ -97,20 +112,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         #开始阅卷
         self.startScan(files)
 
-    def startScan(self, files):
-        for file in files:
-            try:
-                self.dto.setCurrentPaper(file)
-                self.examControl.startMarking()
-            except Exception as e:
-                reply = QMessageBox.question(None, "提示",
-                                             "该卡无法识别，错误是" + str(e) + "，文件名是：" + file + "，是否继续？",
-                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-                if reply == 16384:
-                    self.dto.failedFiles.append(file)
-                    continue
-                else:
-                    break
+
 
     # def paintEvent(self, QPaintEvent):
     #     super().paintEvent(QPaintEvent)

@@ -8,7 +8,7 @@ import shutil
 import win32api
 
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox, QAction
 
 from DB import AnswerDB
 from Ui_ScanWindow import Ui_TabWidget
@@ -62,7 +62,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             if not file:
                 return
             # 读取答案
-            self.dto.nowAnswer = AnswerDB.importAnswer(file)
+            self.dto.nowAnswer = AnswerDB.importAnswerFromXLS(file)
             #如果答案为空，返回
             if self.dto.nowAnswer is None:
                 return
@@ -113,29 +113,6 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         self.startScan(files)
 
 
-
-    # def paintEvent(self, QPaintEvent):
-    #     super().paintEvent(QPaintEvent)
-    #     try:
-    #         if not self.dto.nowPaper:
-    #             return
-    #         if self.dto.nowPaper.showingImg is not None:
-    #             self.showImg(self.dto.nowPaper.showingImg)
-    #     except BaseException as e:
-    #         print(e)
-
-    # def showImg(self, img):
-    #     height, width, bytesPerComponent = img.shape
-    #     bytesPerLine = bytesPerComponent * width
-    #     # 变换彩色空间顺序
-    #     cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
-    #     # 转为QImage对象
-    #     showimage = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
-    #     self.label_2.setGeometry(100, 30, 400, 380)
-    #     self.label_2.setAlignment(Qt.AlignCenter)
-    #     # self.label_2.setScaledContents(True)
-    #     self.label_2.setPixmap(QPixmap.fromImage(showimage).scaled(self.label_2.width(), self.label_2.height()))
-    
     @pyqtSlot()
     def on_pushButton_5_clicked(self):
         """
@@ -170,5 +147,18 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             shutil.copyfile(file, newfilepath)
         except Exception as e:
             QMessageBox.information(None, '提示', '另存失败！错误是：'+str(e))
+    
+    @pyqtSlot()
+    def on_pushButton_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        file, filetype = QFileDialog.getOpenFileName(self, '导入学生库', r'.\data', r'EXCEL文件 (*.xlsx)')
+        # 如果未选择，返回
+        if not file:
+            return
+        if self.examControl.stu_data.importStuFromXLS(file):
+            QMessageBox.information(None, '消息', '导入结束！')
+
 
 

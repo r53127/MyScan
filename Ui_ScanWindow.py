@@ -68,13 +68,22 @@ class Ui_TabWidget(object):
         TabWidget.addTab(self.tab, "")
         self.tab1 = QtWidgets.QWidget()
         self.tab1.setObjectName("tab1")
-        self.pushButton = QtWidgets.QPushButton(self.tab1)
-        self.pushButton.setGeometry(QtCore.QRect(120, 20, 93, 28))
+        self.widget = QtWidgets.QWidget(self.tab1)
+        self.widget.setGeometry(QtCore.QRect(120, 40, 116, 65))
+        self.widget.setObjectName("widget")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.widget)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.pushButton_8 = QtWidgets.QPushButton(self.widget)
+        self.pushButton_8.setObjectName("pushButton_8")
+        self.verticalLayout_2.addWidget(self.pushButton_8)
+        self.pushButton = QtWidgets.QPushButton(self.widget)
         self.pushButton.setObjectName("pushButton")
+        self.verticalLayout_2.addWidget(self.pushButton)
         TabWidget.addTab(self.tab1, "")
 
         self.retranslateUi(TabWidget)
-        TabWidget.setCurrentIndex(0)
+        TabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(TabWidget)
 
     def retranslateUi(self, TabWidget):
@@ -91,6 +100,7 @@ class Ui_TabWidget(object):
         self.pushButton_5.setText(_translate("TabWidget", "生成报表"))
         self.pushButton_6.setText(_translate("TabWidget", "退出"))
         TabWidget.setTabText(TabWidget.indexOf(self.tab), _translate("TabWidget", "阅卷"))
+        self.pushButton_8.setText(_translate("TabWidget", "打开学生库模板"))
         self.pushButton.setText(_translate("TabWidget", "导入学生库"))
         TabWidget.setTabText(TabWidget.indexOf(self.tab1), _translate("TabWidget", "设置"))
 

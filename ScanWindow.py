@@ -52,7 +52,14 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
-        win32api.ShellExecute(0, 'open', 'data\答案.xlsx', '', '', 1)
+        answerfile='data\答案.xlsx'
+        if not os.path.exists(answerfile):
+            QMessageBox.information(None, '错误:', "答案文件不存在！")
+            return
+        try:
+            win32api.ShellExecute(0, 'open', answerfile, '', '', 1)
+        except Exception as e:
+            QMessageBox.information(None, '错误:', "错误是：" + str(e) + "！")
 
     @pyqtSlot()
     def on_pushButton_2_clicked(self):
@@ -157,4 +164,18 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         if not file:
             return
         if self.examControl.stu_data.importStuFromXLS(file):
-            QMessageBox.information(None, '消息', '导入结束！')
+            QMessageBox.information(None, '消息', '结束！')
+    
+    @pyqtSlot()
+    def on_pushButton_8_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        stufile=r'data\学生库.xlsx'
+        if not os.path.exists(stufile):
+            QMessageBox.information(None, '错误', "学生库不存在！")
+            return
+        try:
+            win32api.ShellExecute(0, 'open', stufile, '', '', 1)
+        except Exception as e:
+            QMessageBox.information(None, '错误:', "错误是：" + str(e) + "！")

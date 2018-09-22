@@ -26,7 +26,7 @@
    <string>MyScan</string>
   </property>
   <property name="currentIndex">
-   <number>0</number>
+   <number>1</number>
   </property>
   <widget class="QWidget" name="tab">
    <attribute name="title">
@@ -131,18 +131,31 @@
    <attribute name="title">
     <string>设置</string>
    </attribute>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>20</y>
-      <width>93</width>
-      <height>28</height>
+      <y>40</y>
+      <width>116</width>
+      <height>65</height>
      </rect>
     </property>
-    <property name="text">
-     <string>导入学生库</string>
-    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QPushButton" name="pushButton_8">
+       <property name="text">
+        <string>打开学生库模板</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>导入学生库</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
  </widget>

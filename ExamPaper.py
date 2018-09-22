@@ -1,6 +1,6 @@
 import cv2 as cv
 import numpy as np
-from imutils import contours
+from imutils import contours, auto_canny
 from imutils.perspective import four_point_transform
 
 ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E"}
@@ -16,6 +16,13 @@ class ExamPaper():
         self.gray = cv.cvtColor(self.img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         self.gaussian_bulr = cv.GaussianBlur(self.gray, (5, 5), 0)  # 高斯模糊
         self.edged = cv.Canny(self.gaussian_bulr, 75, 200)  # 边缘检测,灰度值小于2参这个值的会被丢弃，大于3参这个值会被当成边缘，在中间的部分，自动检测
+
+    def test(self,imgFile):
+        img = cv.imread(imgFile)
+        img=self.get_init_process_img(img)
+        cv.imshow('img',img)
+        cv.waitKey(0)
+
 
     def getMaxContour(self):
         print('获取最大轮廓')
@@ -78,3 +85,34 @@ class ExamPaper():
             choice_num = bubble_row[0][1]  # [0][0]為total，[0][1]為選項號
             choices.append((questionID + 1, ANSWER_CHAR[choice_num]))  # %为字符串占位操作符
         return choices
+
+    def get_init_process_img(self,roi_img):
+        """
+        对图片进行初始化处理，包括，梯度化，高斯模糊，二值化，腐蚀，膨胀和边缘检测
+        :param roi_img: ndarray
+        :return: ndarray
+        """
+        h = cv.Sobel(roi_img, cv.CV_32F, 0, 1, -1)
+        v = cv.Sobel(roi_img, cv.CV_32F, 1, 0, -1)
+        img = cv.add(h, v)
+        img = cv.convertScaleAbs(img)
+        img = cv.GaussianBlur(img, (3, 3), 0)
+        ret, img = cv.threshold(img, 120, 255, cv.THRESH_BINARY)
+        kernel = np.ones((1, 1), np.uint8)
+        img = cv.erode(img, kernel, iterations=1)
+        img = cv.dilate(img, kernel, iterations=2)
+        img = cv.erode(img, kernel, iterations=1)
+        img = cv.dilate(img, kernel, iterations=2)
+        img = auto_canny(img)
+        return img
+
+    def get_max_area_cnt(self,img):
+        """
+        获得图片里面最大面积的轮廓
+        :param img: ndarray
+        :return: ndarray
+        """
+        image, cnts, hierarchy = cv.findContours(img, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        cnt = max(cnts, key=lambda c: cv.contourArea(c))
+        return cnt
+

@@ -22,6 +22,9 @@ class ExamControl():
     def startMarking(self):
         self.examServ.marking()
 
+    def test(self,file):
+        self.examServ.test(file)
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     ExamControl()

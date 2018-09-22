@@ -179,3 +179,15 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             win32api.ShellExecute(0, 'open', stufile, '', '', 1)
         except Exception as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "！")
+    
+    @pyqtSlot()
+    def on_pushButton_9_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        file, filetype = QFileDialog.getOpenFileName(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp)')
+        # 如果未选择，返回
+        if not file:
+            return
+        # 开始阅卷
+        self.examControl.test(file)

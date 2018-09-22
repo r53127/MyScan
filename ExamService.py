@@ -26,3 +26,9 @@ class ExamService():
                 correct_count += 1
                 score += (answer.get(choice[0]))[1]
         return score
+
+    def test(self,file):
+        try:
+            self.dto.nowPaper.test(file)
+        except Exception as e:
+            print(e)

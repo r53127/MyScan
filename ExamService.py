@@ -1,3 +1,6 @@
+import sys
+import traceback
+
 class ExamService():
     def __init__(self, dto):
         self.dto = dto
@@ -30,5 +33,5 @@ class ExamService():
     def test(self,file):
         try:
             self.dto.nowPaper.test(file)
-        except Exception as e:
-            print(e)
+        except:
+            traceback.print_exc()

@@ -28,12 +28,16 @@ class ExamPaper():
         cv.waitKey(0)
 
         image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        cv.drawContours(self.img, cnts, -1, (255, 0, 0), 1)
+        #     cv.imshow('temp', self.img)
+        #     cv.waitKey(0)
         # print("1找到轮廓个数：", len(cnts))
         # print(cnts)
         # a=self.img.copy()
-        # cv.drawContours(a, cnts, -1, (255, 0, 0), 2)
-        # cv.imshow('temp', a)
-        # cv.waitKey(0)
+        # for i,c in enumerate(cnts):
+        #     cv.drawContours(self.img, cnts, i, (255, 0, 0), 2)
+        #     cv.imshow('temp', self.img)
+        #     cv.waitKey(0)
         # print(len(cnts),len(hierarchy),hierarchy[0][0],len(hierarchy[0][0]))
 
         return cnts
@@ -56,7 +60,7 @@ class ExamPaper():
         roi_img = []
         # 按面积大小对所有的轮廓排序
         listcnt = sorted(cnts, key=cv.contourArea, reverse=True)
-        dstImgCount = 4  # 获取最大的4个矩形
+        dstImgCount = 3  # 获取最大的4个矩形
         for cnt in listcnt:
             if dstImgCount == 0:
                 break
@@ -83,8 +87,7 @@ class ExamPaper():
             cv.waitKey(0)
         # 读取答题区域的选项
         self.ans_choices_cnts = self.getChoiceContour(self.answer_img[1])
-        self.cls_choice_cnts  = self.getChoiceContour(self.answer_img[2])
-        self.stuid_choice_cnts= self.getChoiceContour(self.answer_img[3])
+        self.stuid_choice_cnts= self.getChoiceContour(self.answer_img[2])
 
         self.ans_choices=self.getChoices(self.ans_choices_cnts,self.answer_img[1])
         print(self.ans_choices)

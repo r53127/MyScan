@@ -25,9 +25,9 @@ class ExamPaper():
     def get_max_img(self, src_img):
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         # 高斯滤波，清除一些杂点
-        blur = cv.GaussianBlur(gray, (3, 3), 0)
+        blur = cv.GaussianBlur(gray, (5, 5), 0)
         # 自适应二值化算法
-        thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 131, 1)
+        thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 9, 9)
         image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
         sortcnts=sorted(cnts,key=lambda c: cv.contourArea(c),reverse=True)
         for i in range(len(sortcnts)):

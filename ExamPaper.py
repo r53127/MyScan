@@ -23,7 +23,6 @@ class ExamPaper():
 
 
     def get_max_img(self, src_img):
-        maxImg=None
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         # 高斯滤波，清除一些杂点
         blur = cv.GaussianBlur(gray, (3, 3), 0)
@@ -38,8 +37,7 @@ class ExamPaper():
             if len(approx) == 4:  # 矩形
                 # 透视变换提取原图内容部分
                 maxImg = four_point_transform(src_img, approx.reshape(4, 2))
-                ratio=maxImg.shape[1] / maxImg.shape[0]
-                print(ratio)
+                ratio=maxImg.shape[1] / maxImg.shape[0]#寬高比
                 if ratio>1.3 and ratio<2.0 and maxImg.shape[0] >src_img.shape[0]/4 and maxImg.shape[1] >src_img.shape[1]/4:
                     return maxImg
         else:

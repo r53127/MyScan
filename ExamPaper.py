@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from PyQt5.QtWidgets import QMessageBox
 from imutils import contours
 from imutils.perspective import four_point_transform
 
@@ -16,46 +17,42 @@ class ExamPaper():
 
     def initProcess(self, imgFile):
         self.img = self.cv_imread(imgFile)
+        # self.showingImg=self.img
         cv.imshow('1.origin', self.img)
         cv.waitKey(0)
 
-        self.gray = cv.cvtColor(self.img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
-        cv.imshow('2.1 gray', self.gray)
-        cv.waitKey(0)
 
-        ret, thresh2 = cv.threshold(self.gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
-        cv.imshow('thresh2', thresh2)
-        cv.waitKey(0)
-
+    def get_max_img(self, src_img):
+        maxImg=None
+        gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
+        # 高斯滤波，清除一些杂点
+        blur = cv.GaussianBlur(gray, (3, 3), 0)
+        # 自适应二值化算法
+        thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 131, 1)
         image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-        cv.drawContours(self.img, cnts, -1, (255, 0, 0), 1)
-        #     cv.imshow('temp', self.img)
-        #     cv.waitKey(0)
-        # print("1找到轮廓个数：", len(cnts))
-        # print(cnts)
-        # a=self.img.copy()
-        # for i,c in enumerate(cnts):
-        #     cv.drawContours(self.img, cnts, i, (255, 0, 0), 2)
-        #     cv.imshow('temp', self.img)
-        #     cv.waitKey(0)
-        # print(len(cnts),len(hierarchy),hierarchy[0][0],len(hierarchy[0][0]))
+        sortcnts=sorted(cnts,key=lambda c: cv.contourArea(c),reverse=True)
+        for i in range(len(sortcnts)):
+            peri = 0.1 * cv.arcLength(sortcnts[i], True)
+            # 获取多边形的所有定点，如果是四个定点，就代表是矩形
+            approx = cv.approxPolyDP(sortcnts[i], peri, True)
+            if len(approx) == 4:  # 矩形
+                # 透视变换提取原图内容部分
+                maxImg = four_point_transform(src_img, approx.reshape(4, 2))
+                ratio=maxImg.shape[1] / maxImg.shape[0]
+                print(ratio)
+                if ratio>1.3 and ratio<2.0 and maxImg.shape[0] >src_img.shape[0]/4 and maxImg.shape[1] >src_img.shape[1]/4:
+                    return maxImg
+        else:
+            QMessageBox.information(None,'提示','找不到有效的答題区域！')
+            return None
 
-        return cnts
-
-    def get_max_img(self, cnts, src_img):
-        # 按面积大小对所有的轮廓排序
-        maxcnt = max(cnts, key=lambda c: cv.contourArea(c))
-        peri = 0.1 * cv.arcLength(maxcnt, True)
-        # 获取多边形的所有定点，如果是四个定点，就代表是矩形
-        approx = cv.approxPolyDP(maxcnt, peri, True)
-        if len(approx) == 4:  # 矩形
-            # 透视变换提取原图内容部分
-            maxImg = four_point_transform(src_img, approx.reshape(4, 2))
-        return maxImg
 
     def get_roi_img(self, src_img):
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
-        ret, thresh2 = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU)
+        blur = cv.GaussianBlur(gray, (3, 3), 0)
+        # 自适应二值化算法
+        thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 131, 1)
+
         r_image, cnts, r_hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
         roi_img = []
         # 按面积大小对所有的轮廓排序
@@ -75,9 +72,9 @@ class ExamPaper():
 
     def test(self, imgFile):
         # 预处理获取所有轮廓
-        cts = self.initProcess(imgFile)
+        self.initProcess(imgFile)
         # 获取最大的答题卡区域
-        self.paper_img = self.get_max_img(cts, self.img)
+        self.paper_img = self.get_max_img(self.img)
         cv.imshow('paper_img', self.paper_img)
         cv.waitKey(0)
         # 找到答题卡上的答题、班级和学号区域
@@ -86,10 +83,10 @@ class ExamPaper():
             cv.imshow('answer_img' + str(i), c)
             cv.waitKey(0)
         # 读取答题区域的选项
-        self.ans_choices_cnts = self.getChoiceContour(self.answer_img[1])
-        self.stuid_choice_cnts= self.getChoiceContour(self.answer_img[2])
+        self.ans_choices_cnts = self.getChoiceContour(self.answer_img[0])
+        self.stuid_choice_cnts= self.getChoiceContour(self.answer_img[1])
 
-        self.ans_choices=self.getChoices(self.ans_choices_cnts,self.answer_img[1])
+        self.ans_choices=self.getChoices(self.ans_choices_cnts,self.answer_img[0])
         print(self.ans_choices)
 
 
@@ -114,6 +111,8 @@ class ExamPaper():
         return choiceCnts
 
     def getChoices(self, choiceCnts,src_img):
+        cv.drawContours(self.img,choiceCnts,-1,(0,255,0),1)
+        cv.imshow('choices',self.img)
         print('获取所有選項气泡')
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         ret, thresh2 = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU)
@@ -121,16 +120,16 @@ class ExamPaper():
         print(len(choiceCnts))
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
         choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
-        print(choiceCnts)
         # 使用np函数，按5个元素，生成一个集合
         choices = []
         # questionID为題号，j为行内序号
         for (questionID, i) in enumerate(np.arange(0, len(choiceCnts), 4)):
             # 获取按从左到右的排序后的5个元素
-            cnts = contours.sort_contours(choiceCnts[i:i + 4])[0]
+            cnts = choiceCnts[i:i + 4]
             # 遍历每一个选项
             bubble_row = []  # 暂存每行序号和像素值
             for (inlineID, c) in enumerate(cnts):
+                print(c)
                 # 生成一个大小与透视图一样的全黑背景图布
                 mask = np.zeros(gray.shape, dtype="uint8")
                 cv.imshow('mask',mask)

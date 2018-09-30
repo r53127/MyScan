@@ -28,7 +28,7 @@ class ExamPaper():
         # 获取答题卡上的答题和学号区域
         answer_img,stu_Img = self.get_roi_img(self.img)
         cv.imshow('answer_img', answer_img)
-        # cv.imshow('stu_img', stu_Img)
+        cv.imshow('stu_img', stu_Img)
         cv.waitKey(0)
         # 读取答题区域的选项
         ans_choices_cnts = self.makeAnswerCnts(answer_img)
@@ -59,49 +59,6 @@ class ExamPaper():
                 answerCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
         return answerCnts
 
-    def getChoiceContour(self, src_img):
-        print('获取答题区域')
-        kernel = np.ones((2, 2), np.uint8)
-        # median_bulr = cv.medianBlur(src_img, 7)
-        # cv.imshow('median_bulr',median_bulr)
-        # cv.waitKey(0)
-        gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
-        gaussian_bulr = cv.GaussianBlur(gray, (3,3), 0)  # 高斯模糊
-
-        # ans_img=cv.Canny(gaussian_bulr,100,200)
-        # # ans_img = cv.erode(gaussian_bulr, kernel, iterations=10)
-        # # ans_img = cv.dilate(ans_img, kernel, iterations=3)
-
-        # cv.imshow('auto_img',ans_img)
-        # cv.waitKey(0)
-        # 对矫正图做自适应二值化
-        thresh2 = cv.adaptiveThreshold(gaussian_bulr, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 131, 4)
-        # cv.imshow('choice',thresh2)
-        # cv.waitKey(0)
-        # kernel = np.ones((2, 2), np.uint8)
-        # ans_img = cv.dilate(thresh2, kernel, iterations=1)
-        # ans_img = cv.erode(ans_img, kernel, iterations=1)
-        r_image, cnts, r_hierarchy = cv.findContours(thresh2.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-
-
-        choiceCnts = []
-        for cxx in cnts:
-            # 通过矩形，标记每一个指定的轮廓
-            x, y, w, h = cv.boundingRect(cxx)
-            ar = w / float(h)
-
-            # cv.drawContours(src_img, [cxx], 0, (255, 0, 0), 1)
-            # cv.imshow('choice', src_img)
-            # cv.waitKey(0)
-            if w < 65 and h < 40 and ar >= 1.5 and ar <= 3.5 and w > 30 and h > 5:
-                # 使用红色标记，满足指定条件的图形
-                cv.rectangle(src_img, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                cv.imshow('choices', src_img)
-                # cv.waitKey(0)
-                # # 把每个选项，保存下来
-                choiceCnts.append(cxx)
-        print('找到的选项个数为：', len(choiceCnts))
-        return choiceCnts
 
     def getChoices(self, choiceCnts, src_img):
         cv.drawContours(src_img, choiceCnts, -1, (0, 255, 0), 1)
@@ -203,8 +160,8 @@ class ExamPaper():
                 # 透视变换提取原图内容部分
                 stuImg_tmp = four_point_transform(src_img, approx.reshape(4, 2))
                 ratio = stuImg_tmp.shape[1] / stuImg_tmp.shape[0]  # 寬高比
-                if ratio > 0.4 and ratio < 1 and stuImg_tmp.shape[0] < maxImg.shape[0] and stuImg_tmp.shape[1] < \
-                        maxImg.shape[1] and stuImg_tmp.shape[0] > maxImg.shape[0] / 4 and stuImg_tmp.shape[1] > \
+                if ratio > 0.4 and ratio < 1 and stuImg_tmp.shape[0] < ansImg.shape[0] and stuImg_tmp.shape[1] < \
+                        ansImg.shape[1] and stuImg_tmp.shape[0] > maxImg.shape[0] / 4 and stuImg_tmp.shape[1] > \
                         maxImg.shape[1] / 7:
                     stuImg = stuImg_tmp
                     cv.imwrite('stuImg.png', stuImg)

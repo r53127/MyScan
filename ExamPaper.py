@@ -18,15 +18,17 @@ class ExamPaper():
     def initProcess(self, imgFile):
         self.img = self.cv_imread(imgFile)
         # self.showingImg=self.img
-        cv.imshow('1.origin', self.img)
-        cv.waitKey(0)
+        # cv.imshow('1.origin', self.img)
+        # cv.waitKey(0)
 
-    def get_max_img(self, src_img):
+    def get_roi_img(self, src_img):
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         # 高斯滤波，清除一些杂点
         blur = cv.GaussianBlur(gray, (5, 5), 0)
         # 自适应二值化算法
         thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 9, 9)
+        # cv.imshow('thr',thresh2)
+        # cv.waitKey(0)
         image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
         sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)
 
@@ -41,7 +43,7 @@ class ExamPaper():
                 ratio = maxImg_tmp.shape[1] / maxImg_tmp.shape[0]  # 寬高比
                 if ratio > 1.3 and ratio < 2.0 and maxImg_tmp.shape[0] > src_img.shape[0] / 4 and maxImg_tmp.shape[1] > \
                         src_img.shape[1] / 4:
-                    # cv.imwrite('paper.png', maxImg)
+                    # cv.imwrite('paper.png', maxImg_tmp)
                     maxImg = maxImg_tmp
                     break
         else:
@@ -61,7 +63,7 @@ class ExamPaper():
                         maxImg.shape[1] and ansImg_tmp.shape[0] > maxImg.shape[0] / 2 and ansImg_tmp.shape[1] > \
                         maxImg.shape[1] / 2:
                     ansImg = ansImg_tmp
-                    cv.imwrite('ansImg.png', ansImg)
+                    # cv.imwrite('ansImg.png', ansImg)
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的答題区域！')
@@ -76,31 +78,28 @@ class ExamPaper():
                 # 透视变换提取原图内容部分
                 stuImg_tmp = four_point_transform(src_img, approx.reshape(4, 2))
                 ratio = stuImg_tmp.shape[1] / stuImg_tmp.shape[0]  # 寬高比
+                if i == 3:
+                    print(i)
                 if ratio > 0.4 and ratio < 1 and stuImg_tmp.shape[0] < maxImg.shape[0] and stuImg_tmp.shape[1] < \
                         maxImg.shape[1] and stuImg_tmp.shape[0] > maxImg.shape[0] / 4 and stuImg_tmp.shape[1] > \
-                        maxImg.shape[1] / 6:
+                        maxImg.shape[1] / 7:
                     stuImg = stuImg_tmp
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的学号区域！')
             return None
 
-        return maxImg,ansImg,stuImg
+        return ansImg,stuImg
 
 
     def test(self, imgFile):
         # 预处理获取所有轮廓
         self.initProcess(imgFile)
-        # 获取最大的答题卡区域
-        paper_img,answer_img,stu_Img = self.get_max_img(self.img)
-        cv.imshow('paper_img', paper_img)
+        # 获取答题卡上的答题和学号区域
+        answer_img,stu_Img = self.get_roi_img(self.img)
         cv.imshow('answer_img', answer_img)
         cv.imshow('stu_img', stu_Img)
         cv.waitKey(0)
-        # 找到答题卡上的答题、班级和学号区域
-        # answer_img = self.get_answer_img(paper_img)
-        # cv.imshow('answer_img', answer_img)
-        # cv.waitKey(0)
         # 读取答题区域的选项
         ans_choices_cnts = self.getChoiceContour(answer_img)
         # self.stuid_choice_cnts= self.getChoiceContour(self.answer_img[1])
@@ -112,6 +111,8 @@ class ExamPaper():
         print('获取答题区域')
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         ret, thresh2 = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU)
+        cv.imshow('choice',thresh2)
+        cv.waitKey(0)
         r_image, cnts, r_hierarchy = cv.findContours(thresh2.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         choiceCnts = []
         for cxx in cnts:

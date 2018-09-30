@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_TabWidget(object):
     def setupUi(self, TabWidget):
         TabWidget.setObjectName("TabWidget")
-        TabWidget.resize(880, 448)
+        TabWidget.resize(880, 468)
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.layoutWidget = QtWidgets.QWidget(self.tab)
@@ -78,8 +78,12 @@ class Ui_TabWidget(object):
         self.pushButton.setObjectName("pushButton")
         self.verticalLayout_2.addWidget(self.pushButton)
         self.pushButton_9 = QtWidgets.QPushButton(self.tab1)
-        self.pushButton_9.setGeometry(QtCore.QRect(140, 350, 93, 28))
+        self.pushButton_9.setGeometry(QtCore.QRect(120, 280, 93, 28))
         self.pushButton_9.setObjectName("pushButton_9")
+        self.label_4 = QtWidgets.QLabel(self.tab1)
+        self.label_4.setGeometry(QtCore.QRect(130, 340, 72, 15))
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
         TabWidget.addTab(self.tab1, "")
 
         self.retranslateUi(TabWidget)

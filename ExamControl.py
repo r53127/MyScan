@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 from PyQt5.QtWidgets import QApplication
 
@@ -6,6 +7,7 @@ from DB import StudentDB
 from ExamDto import ExamDto
 from ExamService import ExamService
 from ScanWindow import ScanWindow
+from error import PaperRegionCountError
 
 
 class ExamControl():
@@ -23,7 +25,16 @@ class ExamControl():
         self.examServ.marking()
 
     def test(self,file):
-        self.examServ.test(file)
+        try:
+            self.examServ.test(file)
+        except PaperRegionCountError as e:
+            self.dto.errorMsg = '错误！找到的选项个数为：' + str(e.errorValue) + e.errorMsg
+            self.scanWin.update()
+            return
+        except:
+            traceback.print_exc()
+            return
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

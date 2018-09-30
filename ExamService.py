@@ -1,6 +1,3 @@
-import sys
-import traceback
-
 class ExamService():
     def __init__(self, dto):
         self.dto = dto
@@ -31,7 +28,4 @@ class ExamService():
         return score
 
     def test(self,file):
-        try:
-            self.dto.nowPaper.test(file)
-        except:
-            traceback.print_exc()
+        self.dto.nowPaper.test(file)

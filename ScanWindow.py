@@ -8,8 +8,9 @@ import shutil
 import traceback
 import win32api
 
-from PyQt5.QtCore import pyqtSlot, QRect
-from PyQt5.QtGui import QImage, QPainter, QPixmap
+
+from PyQt5.QtCore import pyqtSlot, QRect, Qt
+from PyQt5.QtGui import QImage, QPainter, QPixmap, QPalette, QFont
 from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox, QGraphicsScene, QGraphicsItem
 
 from DB import AnswerDB
@@ -30,11 +31,23 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         @type QWidget
         """
         super(ScanWindow, self).__init__()
+        #初始化
         self.dto = dto
         self.examControl = examControl
         self.setupUi(self)
         self.scene=QGraphicsScene()
         self.graphicsView.setScene(self.scene)
+
+        #设置错误消息label_4的字体
+        errorFont = QFont()
+        errorFont.setBold(True)
+        errorFont.setPointSize(14)
+        errorPal = QPalette()
+        errorPal.setColor(QPalette.WindowText, Qt.red)
+        self.label_4.setFont(errorFont)
+        self.label_4.setPalette(errorPal)
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint|Qt.WindowCloseButtonHint)
+        #显示窗体
         self.show()
 
     def startScan(self, files):
@@ -129,6 +142,8 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
     def paintEvent(self, QPaintEvent):
         super().paintEvent(QPaintEvent)
         try:
+            self.label_4.setText(self.dto.errorMsg)
+            self.label_4.adjustSize()
             if not self.dto.nowPaper:
                 return
             if self.dto.nowPaper.showingImg is not None:

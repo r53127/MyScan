@@ -7,6 +7,7 @@ class ExamDto():
         self.nowAnswer=None
         self.nowAnswerFile=None
         self.failedFiles=[]
+        self.errorMsg=''
 
 
     def setCurrentPaper(self,file):

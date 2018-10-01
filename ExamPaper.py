@@ -9,6 +9,7 @@ ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
 ANSWER_ROWS = 20
 #列数
 ANSWER_COLS = 3
+#顔色像素阈值
 ANSWER_THRESHOLD=270
 #每题选项
 PER_CHOICE_COUNT=4

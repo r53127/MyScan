@@ -9,16 +9,18 @@ ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
 ANSWER_ROWS = 20
 #列数
 ANSWER_COLS = 3
-#顔色像素阈值
-Stuid_AREA_COLS=7
 #学号区excel列数
-Stuid_AREA_ROWS=28
+Stuid_AREA_COLS=7
 #学号区excel行数
-ID_BITS=2
+Stuid_AREA_ROWS=28
+#学号第一个数字起始X偏移单元格数
+ID_X_OFFSET=2
+#学号第一个数字起始Y偏移单元格数
+ID_Y_OFFSET=3
 #学号位数
-NUM_BITS=10
+ID_BITS=2
 #十个学号数字
-
+NUM_BITS=10
 #每题选项
 PER_CHOICE_COUNT=4
 
@@ -140,18 +142,18 @@ class ExamPaper():
         width_scale_size=width/Stuid_AREA_COLS
         print(width,height,width_scale_size,height_scale_size)
         stuidCnts=[]
-        for x in range(ID_BITS):#x为列相对坐标
-            for y in range(NUM_BITS):#y为行相对坐标
+        for x in range(ID_BITS):#x为列相对坐标:表示2位数
+            for y in range(NUM_BITS):#y为行相对坐标:表示每位10个数字
                 if expandingFlag:#扩大
-                    top_left=[(2*x+2)*width_scale_size-offset,(2*y+3)*height_scale_size-offset]
-                    top_right=[(2*x+3)*width_scale_size+offset,(2*y+3)*height_scale_size-offset]
-                    bottom_left=[(2*x+2)*width_scale_size-offset,(2*y+4)*height_scale_size+offset]
-                    bottom_right=[(2*x+3)*width_scale_size+offset,(2*y+4)*height_scale_size+offset]
+                    top_left=[(2*x+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET)*height_scale_size-offset]
+                    top_right=[(2*x+1+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET)*height_scale_size-offset]
+                    bottom_left=[(2*x+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET+1)*height_scale_size+offset]
+                    bottom_right=[(2*x+1+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET+1)*height_scale_size+offset]
                 else:#缩小
-                    top_left=[(2*x+2)*width_scale_size+offset,(2*y+3)*height_scale_size+offset]
-                    top_right=[(2*x+3)*width_scale_size-offset,(2*y+3)*height_scale_size+offset]
-                    bottom_left=[(2*x+2)*width_scale_size+offset,(2*y+4)*height_scale_size-offset]
-                    bottom_right=[(2*x+3)*width_scale_size-offset,(2*y+4)*height_scale_size-offset]
+                    top_left=[(2*x+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET)*height_scale_size+offset]
+                    top_right=[(2*x+1+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET)*height_scale_size+offset]
+                    bottom_left=[(2*x+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET+1)*height_scale_size-offset]
+                    bottom_right=[(2*x+1+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET+1)*height_scale_size-offset]
                 stuidCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
         return stuidCnts
 

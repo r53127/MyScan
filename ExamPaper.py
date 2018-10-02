@@ -11,7 +11,13 @@ ANSWER_ROWS = 20
 ANSWER_COLS = 3
 #顔色像素阈值
 Stuid_AREA_COLS=7
+#学号区excel列数
 Stuid_AREA_ROWS=28
+#学号区excel行数
+ID_BITS=2
+#学号位数
+NUM_BITS=10
+#十个学号数字
 
 #每题选项
 PER_CHOICE_COUNT=4
@@ -54,24 +60,23 @@ class ExamPaper():
         height_scale_size=height/rows
         width_scale_size=width/cols
         answerCnts=[]
-        for i in range(ANSWER_COLS*PER_CHOICE_COUNT):
-            for j in range(ANSWER_ROWS):
+        for x in range(1,2*ANSWER_COLS*PER_CHOICE_COUNT,2):
+            for y in range(1,2*ANSWER_ROWS,2):
                 if expandingFlag:#扩大
-                    top_left=[(2*i+1)*width_scale_size-offset,int((2*j+1)*height_scale_size-offset)]
-                    top_right=[int(2*(i+1)*width_scale_size+offset),int((2*j+1)*height_scale_size-offset)]
-                    bottom_left=[int((2*i+1)*width_scale_size-offset),int(2*(j+1)*height_scale_size+offset)]
-                    bottom_right=[int(2*(i+1)*width_scale_size+offset),int(2*(j+1)*height_scale_size+offset)]
+                    top_left=[x*width_scale_size-offset,y*height_scale_size-offset]
+                    top_right=[(x+1)*width_scale_size+offset,y*height_scale_size-offset]
+                    bottom_left=[x*width_scale_size-offset,(y+1)*height_scale_size+offset]
+                    bottom_right=[(x+1)*width_scale_size+offset,(y+1)*height_scale_size+offset]
                 else:#缩小
-                    top_left=[int((2*i+1)*width_scale_size+offset),int((2*j+1)*height_scale_size+offset)]
-                    top_right=[int(2*(i+1)*width_scale_size-offset),int((2*j+1)*height_scale_size+offset)]
-                    bottom_left=[int((2*i+1)*width_scale_size+offset),int(2*(j+1)*height_scale_size-offset)]
-                    bottom_right=[int(2*(i+1)*width_scale_size-offset),int(2*(j+1)*height_scale_size-offset)]
+                    top_left=[x*width_scale_size+offset,y*height_scale_size+offset]
+                    top_right=[(x+1)*width_scale_size-offset,y*height_scale_size+offset]
+                    bottom_left=[x*width_scale_size+offset,(y+1)*height_scale_size-offset]
+                    bottom_right=[(x+1)*width_scale_size-offset,(y+1)*height_scale_size-offset]
                 answerCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
         return answerCnts
 
     #获取选项
     def getChoices(self,src_img):
-        print('获取所有選項气泡')
         processed_img = cv.medianBlur(src_img, 3)
         gray = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
@@ -127,30 +132,31 @@ class ExamPaper():
                 answerChars+=ANSWER_CHAR[b[1]]
         return ''.join(sorted(list(answerChars)))#按字母顺序排序
 
-
+    #生成学号绝对坐标
     def makeStuidCnts(self,src_img,expandingFlag=True,offset=0):
         width=src_img.shape[1]
         height=src_img.shape[0]
         height_scale_size=height/Stuid_AREA_ROWS
         width_scale_size=width/Stuid_AREA_COLS
+        print(width,height,width_scale_size,height_scale_size)
         stuidCnts=[]
-        for col in range(2):#列
-            for row in range(10):#行
+        for x in range(ID_BITS):#x为列相对坐标
+            for y in range(NUM_BITS):#y为行相对坐标
                 if expandingFlag:#扩大
-                    top_left=[(2*row+2)*width_scale_size-offset,(2*col+3)*height_scale_size-offset]
-                    top_right=[(2*(row+1)+2)*width_scale_size+offset,(2*col+3)*height_scale_size-offset]
-                    bottom_left=[(2*row+2)*width_scale_size-offset,(2*(col+1)+3)*height_scale_size+offset]
-                    bottom_right=[(2*(row+1)+2)*width_scale_size+offset,(2*(col+1)+3)*height_scale_size+offset]
+                    top_left=[(2*x+2)*width_scale_size-offset,(2*y+3)*height_scale_size-offset]
+                    top_right=[(2*x+3)*width_scale_size+offset,(2*y+3)*height_scale_size-offset]
+                    bottom_left=[(2*x+2)*width_scale_size-offset,(2*y+4)*height_scale_size+offset]
+                    bottom_right=[(2*x+3)*width_scale_size+offset,(2*y+4)*height_scale_size+offset]
                 else:#缩小
-                    top_left=[(2*row+2)*width_scale_size+offset,(2*col+3)*height_scale_size+offset]
-                    top_right=[(2*(row+1)+2)*width_scale_size-offset,(2*col+3)*height_scale_size+offset]
-                    bottom_left=[(2*row+2)*width_scale_size+offset,(2*(col+1)+3)*height_scale_size-offset]
-                    bottom_right=[(2*(row+1)+2)*width_scale_size-offset,(2*(col+1)+3)*height_scale_size-offset]
+                    top_left=[(2*x+2)*width_scale_size+offset,(2*y+3)*height_scale_size+offset]
+                    top_right=[(2*x+3)*width_scale_size-offset,(2*y+3)*height_scale_size+offset]
+                    bottom_left=[(2*x+2)*width_scale_size+offset,(2*y+4)*height_scale_size-offset]
+                    bottom_right=[(2*x+3)*width_scale_size-offset,(2*y+4)*height_scale_size-offset]
                 stuidCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
         return stuidCnts
-    #获取选项
+
+    #获取学号
     def getStuID(self,src_img):
-        print('获取所有選項气泡')
         processed_img = cv.medianBlur(src_img, 3)
         gray = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
@@ -159,11 +165,9 @@ class ExamPaper():
         # 按坐标从上到下排序
         cv.imshow('thresh2',thresh2)
         cv.waitKey(0)
-        stuidCnts=self.makeAnswerCnts(src_img)
-        for s in stuidCnts:
-            cv.drawContours(src_img, [s], -1, (255, 0, 0), 1)
-            cv.imshow('i', src_img)
-            cv.waitKey(0)
+        stuidCnts=self.makeStuidCnts(src_img)
+        cv.drawContours(src_img, stuidCnts, -1, (255, 0, 0), 1)
+        cv.imshow('i', src_img)
         # 使用np函数，按5个元素，生成一个集合
         first_num = []
         second_num = []
@@ -179,26 +183,18 @@ class ExamPaper():
             # 获取每个答案的像素值
             total = cv.countNonZero(mask)
             # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
-            if i % 2 == 0:
+            if i < 10:
                 first_num.append((m, total))
-                print('firnum is :', first_num)
+                # print('firnum is :', first_num)
                 m += 1
             else:
                 second_num.append((n, total))
-                print('secnum is :', second_num)
+                # print('secnum is :', second_num)
                 n += 1
         # 按像素值排序
         first_num = sorted(first_num, key=lambda x: x[1], reverse=True)
         second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
         return str(first_num[0][0]) + str(second_num[0][0])
-
-    def rect2ndarray(self, rect):
-        x, y, w, h = rect
-        top_left = [x, y]
-        top_right = [x + w, y]
-        bottom_right = [x + w, y + h]
-        bottom_left = [x, y + h]
-        return np.array([[top_left], [top_right], [bottom_right], [bottom_left]], dtype=np.int32)
 
     #提取答题和学号区域
     def get_roi_img(self, src_img):
@@ -267,4 +263,12 @@ class ExamPaper():
 
         return ansImg,stuImg
 
+    #功能：把矩形框（x,y,w,h)转变为ndarray
+    def rect2ndarray(self, rect):
+        x, y, w, h = rect
+        top_left = [x, y]
+        top_right = [x + w, y]
+        bottom_right = [x + w, y + h]
+        bottom_left = [x, y + h]
+        return np.array([[top_left], [top_right], [bottom_right], [bottom_left]], dtype=np.int32)
 

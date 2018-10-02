@@ -2,65 +2,88 @@ import cv2 as cv
 import numpy as np
 
 
-# def nothing(x):
-#     pass
+def nothing(x):
+    pass
 
 
 # 创建一副􅢀色图像
 
-img = cv.imread('ansImg.png')
-# cv.namedWindow('image')
+img = cv.imread('stuImg.png')
+cv.namedWindow('image',0)
 
-# cv.createTrackbar('blur kernel', 'image', 0, 10, nothing)
-# cv.createTrackbar('bs', 'image', 0, 1, nothing)
-#
-# cv.createTrackbar('medianBlur ', 'image', 0, 10, nothing)
-# cv.createTrackbar('ms', 'image', 0, 1, nothing)
-#
-# cv.createTrackbar('bilateralFilter ', 'image', 0, 10, nothing)
-# cv.createTrackbar('bils', 'image', 0, 1, nothing)
-#
-# cv.createTrackbar('threshold kernel', 'image', 0, 300, nothing)
-# cv.createTrackbar('threshold C', 'image', 1, 100, nothing)
-# cv.createTrackbar('ths', 'image', 0, 1, nothing)
-# # while (1):
-#     k = cv.waitKey(1) & 0xFF
-#     if k == 27:
-#         break
-b = cv.getTrackbarPos('blur kernel', 'image')
-bs = cv.getTrackbarPos('bs', 'image')
 
-m = cv.getTrackbarPos('medianBlur', 'image')
-ms = cv.getTrackbarPos('ms', 'image')
+cv.createTrackbar('medianBlur', 'image', 1, 100, nothing)
 
-bil = cv.getTrackbarPos('bilateralFilter', 'image')
-bils = cv.getTrackbarPos('bils', 'image')
+cv.createTrackbar('GaussianBlur', 'image', 0, 100, nothing)
 
-th = cv.getTrackbarPos('threshold kernel', 'image')
-thc = cv.getTrackbarPos('threshold C', 'image')
-ths = cv.getTrackbarPos('ths', 'image')
+cv.createTrackbar('aTh Block', 'image', 200, 255, nothing)
+cv.createTrackbar('aTh C', 'image', 40, 255, nothing)
 
-processed = cv.cvtColor(img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
-# 
-# #
-# processed = cv.bilateralFilter(processed, 9, 75, 75)
-# 
-# kernel = (2 * b + 3, 2 * b + 3)
-# # 高斯滤波，清除一些杂点
-processed = cv.GaussianBlur(processed, (3,3), 0)
-# 
-# processed = cv.medianBlur(processed, 3)
-# 
-processed = cv.adaptiveThreshold(processed, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,131, 4)
-# processed = cv.dilate(processed,kernel,iterations = 1)
-# processed = cv.erode(processed, kernel, iterations=1)
-# cv.imshow('processed', processed)
-# 调整图片的亮度
-# processed = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-# processed = cv.GaussianBlur(processed, (3, 3), 0)
-cv.imshow('g', processed)
-cv.waitKey(0)
-#
+
+cv.createTrackbar('threshold low', 'image', 88, 255, nothing)
+cv.createTrackbar('threshold high', 'image', 255, 255, nothing)
+
+cv.createTrackbar('DILATE kernel', 'image', 0, 255, nothing)
+
+cv.createTrackbar('ERODE num', 'image', 0, 255, nothing)
+cv.createTrackbar('DILATE num', 'image', 0, 255, nothing)
+
+
+while (1):
+    k = cv.waitKey(1) & 0xFF
+    if k == 27:
+        break
+
+    m = cv.getTrackbarPos('medianBlur', 'image')
+
+    b = cv.getTrackbarPos('GaussianBlur', 'image')
+
+    thl = cv.getTrackbarPos('threshold low', 'image')
+    thh = cv.getTrackbarPos('threshold high', 'image')
+
+    B = cv.getTrackbarPos('aTh Block', 'image')
+    C = cv.getTrackbarPos('aTh C', 'image')
+
+
+    kernel=cv.getTrackbarPos('DILATE kernel', 'image')
+    d=cv.getTrackbarPos('DILATE num', 'image')
+    e=cv.getTrackbarPos('ERODE num', 'image')
+
+    # processed = cv.bilateralFilter(processed, 9, 75, 75)
+
+    # processed = cv.Sobel(processed, -1, 0,1, ksize=5)
+    # processed=cv.Scharr(processed,-1,0,1)
+    # processed = cv.Scharr(processed, -1, 1,0)
+
+    # processed_img = cv.medianBlur(img, 2*m+1)
+    processed_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+    processed_img = cv.GaussianBlur(processed_img, (2*b+3,2*b+3), 0)
+
+    ANS_IMG_KERNEL = np.ones((kernel,kernel), np.uint8)
+    # 识别所涂写区域时的膨胀参数
+    ANS_IMG_DILATE_ITERATIONS = 9
+    # 识别所涂写区域时的腐蚀参数
+    ANS_IMG_ERODE_ITERATIONS = 0
+    # 识别所涂写区域时的二值化参数
+    ANS_IMG_THRESHOLD = (88, 255)
+
+
+    # 通过二值化和膨胀腐蚀获得填涂区域
+    # ret, ans_img = cv2.threshold(processed_img, ANS_IMG_THRESHOLD[0], ANS_IMG_THRESHOLD[1], cv2.THRESH_BINARY_INV)
+    # ans_img = cv.adaptiveThreshold(processed_img, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 41, 35)
+    # ans_img = cv.erode(processed_img, ANS_IMG_KERNEL, iterations= e)
+    # ans_img= cv.dilate(ans_img,ANS_IMG_KERNEL,iterations = d)
+    ans_img = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 2*B+3, C)
+    # ans_img = cv.erode(ans_img, ANS_IMG_KERNEL, iterations= e)
+    # ans_img= cv.dilate(ans_img,ANS_IMG_KERNEL,iterations = d)
+
+    # ret, ans_img = cv.threshold(ans_img, thl, thh, cv.THRESH_BINARY)
+    # ret, ans_img1 = cv.threshold(ans_img.copy(), 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+
+
+
+    cv.imshow('i', ans_img)
 # CHOICE_IMG_KERNEL = np.ones((2, 2), np.uint8)
 # ANS_IMG_KERNEL = np.ones((2, 2), np.uint8)
 # # 识别所涂写区域时的膨胀参数
@@ -95,6 +118,6 @@ cv.waitKey(0)
 # cv.waitKey(0)
 # # 自适应二值化算法
 
-# resized = cv.resize(processed, None, fx=0.5, fy=0.5, interpolation=cv.INTER_AREA)
+
 
 cv.destroyAllWindows()

@@ -80,3 +80,9 @@ class AnswerDB():
             if row[0].value is not None:
                 answer[row[0].value] = (row[1].value, row[2].value)
         return answer
+
+class ScanDB():
+    pass
+
+class ScoreDB():
+    pass

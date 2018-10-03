@@ -8,15 +8,14 @@ import shutil
 import traceback
 import win32api
 
-
-from PyQt5.QtCore import pyqtSlot, QRect, Qt
+import cv2 as cv
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QPalette, QFont
-from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox, QGraphicsScene, QGraphicsItem
+from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox, QGraphicsScene
 
 from DB import AnswerDB
 from Ui_ScanWindow import Ui_TabWidget
 
-import cv2 as cv
 
 class ScanWindow(QTabWidget, Ui_TabWidget):
     """
@@ -60,6 +59,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
                                              "该卡无法识别，错误是" + str(e) + "，文件名是：" + file + "，是否继续？",
                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 self.dto.failedFiles.append(file)
+                traceback.print_exc()
                 if reply == 16384:
                     continue
                 else:

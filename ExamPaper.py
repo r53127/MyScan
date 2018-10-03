@@ -118,7 +118,7 @@ class ExamPaper():
                 # 行内按像素值排序
                 ANSWER_THRESHOLD=pixelCount/PER_CHOICE_COUNT/2#取一半作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
-                print('答案和阈值：',row_answers,ANSWER_THRESHOLD)
+                # print('答案和阈值：',row_answers,ANSWER_THRESHOLD)
                 # row_answers[0][0]為total，row_answers[0][1]為選項號
                 questionID=col*ANSWER_ROWS+row+1#计算题号
                 choices.append((questionID,self.getAnswerChars(row_answers,ANSWER_THRESHOLD)))
@@ -140,7 +140,6 @@ class ExamPaper():
         height=src_img.shape[0]
         height_scale_size=height/Stuid_AREA_ROWS
         width_scale_size=width/Stuid_AREA_COLS
-        print(width,height,width_scale_size,height_scale_size)
         stuidCnts=[]
         for x in range(ID_BITS):#x为列相对坐标:表示2位数
             for y in range(NUM_BITS):#y为行相对坐标:表示每位10个数字
@@ -218,7 +217,7 @@ class ExamPaper():
                 ratio = maxImg_tmp.shape[1] / maxImg_tmp.shape[0]  # 寬高比
                 if ratio > 1.3 and ratio < 2.0 and maxImg_tmp.shape[0] > src_img.shape[0] / 4 and maxImg_tmp.shape[1] > \
                         src_img.shape[1] / 4:
-                    cv.imwrite('paper.png', maxImg_tmp)
+                    cv.imwrite('tmp/paper.png', maxImg_tmp)
                     maxImg = maxImg_tmp
                     break
         else:
@@ -238,7 +237,7 @@ class ExamPaper():
                         maxImg.shape[1] and ansImg_tmp.shape[0] > maxImg.shape[0] / 2 and ansImg_tmp.shape[1] > \
                         maxImg.shape[1] / 2:
                     ansImg = ansImg_tmp
-                    cv.imwrite('ansImg.png', ansImg)
+                    cv.imwrite('tmp/ansImg.png', ansImg)
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的答題区域！')
@@ -257,7 +256,7 @@ class ExamPaper():
                         ansImg.shape[1] and stuImg_tmp.shape[0] > maxImg.shape[0] / 4 and stuImg_tmp.shape[1] > \
                         maxImg.shape[1] / 7:
                     stuImg = stuImg_tmp
-                    cv.imwrite('stuImg.png', stuImg)
+                    cv.imwrite('tmp/stuImg.png', stuImg)
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的学号区域！')

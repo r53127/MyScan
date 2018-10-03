@@ -5,24 +5,24 @@ from imutils import contours
 from imutils.perspective import four_point_transform
 
 ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
-#行數
+# 行數
 ANSWER_ROWS = 20
-#列数
+# 列数
 ANSWER_COLS = 3
-#学号区excel列数
-Stuid_AREA_COLS=7
-#学号区excel行数
-Stuid_AREA_ROWS=28
-#学号第一个数字起始X偏移单元格数
-ID_X_OFFSET=2
-#学号第一个数字起始Y偏移单元格数
-ID_Y_OFFSET=3
-#学号位数
-ID_BITS=2
-#十个学号数字
-NUM_BITS=10
-#每题选项
-PER_CHOICE_COUNT=4
+# 学号区excel列数
+Stuid_AREA_COLS = 7
+# 学号区excel行数
+Stuid_AREA_ROWS = 28
+# 学号第一个数字起始X偏移单元格数
+ID_X_OFFSET = 2
+# 学号第一个数字起始Y偏移单元格数
+ID_Y_OFFSET = 3
+# 学号位数
+ID_BITS = 2
+# 十个学号数字
+NUM_BITS = 10
+# 每题选项
+PER_CHOICE_COUNT = 4
 
 
 class ExamPaper():
@@ -43,42 +43,41 @@ class ExamPaper():
         # 预处理获取所有轮廓
         self.initProcess(imgFile)
         # 获取答题卡上的答题和学号区域
-        answer_img,stu_Img = self.get_roi_img(self.img)
+        answer_img, stu_Img = self.get_roi_img(self.img)
         # cv.imshow('answer_img', answer_img)
         # cv.imshow('stu_img', stu_Img)
         # cv.waitKey(0)
-        ans_choices=self.getChoices(answer_img)
-        stuID=self.getStuID(stu_Img)
+        ans_choices = self.getChoices(answer_img)
+        stuID = self.getStuID(stu_Img)
         print(ans_choices)
         print(stuID)
 
-
-    #根据答题区域大小生成每个选框的绝对坐标
-    def makeAnswerCnts(self,src_img,expandingFlag=True,offset=0):
-        width=src_img.shape[1]
-        height=src_img.shape[0]
-        rows= ANSWER_ROWS * 2 + 1
-        cols=ANSWER_COLS*PER_CHOICE_COUNT*2+1
-        height_scale_size=height/rows
-        width_scale_size=width/cols
-        answerCnts=[]
-        for x in range(1,2*ANSWER_COLS*PER_CHOICE_COUNT,2):
-            for y in range(1,2*ANSWER_ROWS,2):
-                if expandingFlag:#扩大
-                    top_left=[x*width_scale_size-offset,y*height_scale_size-offset]
-                    top_right=[(x+1)*width_scale_size+offset,y*height_scale_size-offset]
-                    bottom_left=[x*width_scale_size-offset,(y+1)*height_scale_size+offset]
-                    bottom_right=[(x+1)*width_scale_size+offset,(y+1)*height_scale_size+offset]
-                else:#缩小
-                    top_left=[x*width_scale_size+offset,y*height_scale_size+offset]
-                    top_right=[(x+1)*width_scale_size-offset,y*height_scale_size+offset]
-                    bottom_left=[x*width_scale_size+offset,(y+1)*height_scale_size-offset]
-                    bottom_right=[(x+1)*width_scale_size-offset,(y+1)*height_scale_size-offset]
-                answerCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
+    # 根据答题区域大小生成每个选框的绝对坐标
+    def makeAnswerCnts(self, src_img, expandingFlag=True, offset=0):
+        width = src_img.shape[1]
+        height = src_img.shape[0]
+        rows = ANSWER_ROWS * 2 + 1
+        cols = ANSWER_COLS * PER_CHOICE_COUNT * 2 + 1
+        height_scale_size = height / rows
+        width_scale_size = width / cols
+        answerCnts = []
+        for x in range(1, 2 * ANSWER_COLS * PER_CHOICE_COUNT, 2):
+            for y in range(1, 2 * ANSWER_ROWS, 2):
+                if expandingFlag:  # 扩大
+                    top_left = [x * width_scale_size - offset, y * height_scale_size - offset]
+                    top_right = [(x + 1) * width_scale_size + offset, y * height_scale_size - offset]
+                    bottom_left = [x * width_scale_size - offset, (y + 1) * height_scale_size + offset]
+                    bottom_right = [(x + 1) * width_scale_size + offset, (y + 1) * height_scale_size + offset]
+                else:  # 缩小
+                    top_left = [x * width_scale_size + offset, y * height_scale_size + offset]
+                    top_right = [(x + 1) * width_scale_size - offset, y * height_scale_size + offset]
+                    bottom_left = [x * width_scale_size + offset, (y + 1) * height_scale_size - offset]
+                    bottom_right = [(x + 1) * width_scale_size - offset, (y + 1) * height_scale_size - offset]
+                answerCnts.append(np.array([[top_left], [top_right], [bottom_right], [bottom_left]], dtype=np.int32))
         return answerCnts
 
-    #获取选项
-    def getChoices(self,src_img):
+    # 获取选项
+    def getChoices(self, src_img):
         processed_img = cv.medianBlur(src_img, 3)
         gray = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
@@ -87,7 +86,7 @@ class ExamPaper():
         # 按坐标从上到下排序
         # cv.imshow('thresh2',thresh2)
         # cv.waitKey(0)
-        choiceCnts=self.makeAnswerCnts(src_img)
+        choiceCnts = self.makeAnswerCnts(src_img)
         cv.drawContours(src_img, choiceCnts, -1, (255, 0, 0), 1)
         # cv.imshow('choices', src_img)
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
@@ -95,20 +94,21 @@ class ExamPaper():
         # 使用np函数，按5个元素，生成一个集合
         choices = []
         # questionID为題号，j为行内序号
-        for col in range(ANSWER_COLS):#列循环3列
-            for row in range(ANSWER_ROWS):#行循环20行
+        for col in range(ANSWER_COLS):  # 列循环3列
+            for row in range(ANSWER_ROWS):  # 行循环20行
                 # 获取按从左到右的排序后的4个元素
-                cnts = choiceCnts[ANSWER_COLS*PER_CHOICE_COUNT*row+PER_CHOICE_COUNT*col:ANSWER_COLS*PER_CHOICE_COUNT*row + PER_CHOICE_COUNT+PER_CHOICE_COUNT*col]
+                cnts = choiceCnts[
+                       ANSWER_COLS * PER_CHOICE_COUNT * row + PER_CHOICE_COUNT * col:ANSWER_COLS * PER_CHOICE_COUNT * row + PER_CHOICE_COUNT + PER_CHOICE_COUNT * col]
                 # 遍历每一个选项
                 row_answers = []  # 暂存每行序号和像素值
-                pixelCount=0
-                for (inlineID, c) in enumerate(cnts):#行内循环4个选项
+                pixelCount = 0
+                for (inlineID, c) in enumerate(cnts):  # 行内循环4个选项
                     # 生成一个大小与透视图一样的全黑背景图布
                     mask = np.zeros(gray.shape, dtype="uint8")
                     # 将指定的轮廓+白色的填充写到画板上,255代表亮度值，亮度=255的时候，颜色是白色，等于0的时候是黑色
                     cv.drawContours(mask, [c], -1, 255, -1)
-                    maxPixel=cv.countNonZero(mask)
-                    pixelCount+=maxPixel
+                    maxPixel = cv.countNonZero(mask)
+                    pixelCount += maxPixel
                     # 做两个图片做位运算，把每个选项独自显示到画布上，为了统计非0像素值使用，这部分像素最大的其实就是答案
                     mask = cv.bitwise_and(thresh2, thresh2, mask=mask)
                     # 获取每个答案的像素值
@@ -116,48 +116,56 @@ class ExamPaper():
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
                     row_answers.append((total, inlineID))
                 # 行内按像素值排序
-                ANSWER_THRESHOLD=pixelCount/PER_CHOICE_COUNT/2#取一半作为阈值
+                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT / 2  # 取一半作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
                 # print('答案和阈值：',row_answers,ANSWER_THRESHOLD)
                 # row_answers[0][0]為total，row_answers[0][1]為選項號
-                questionID=col*ANSWER_ROWS+row+1#计算题号
-                choices.append((questionID,self.getAnswerChars(row_answers,ANSWER_THRESHOLD)))
+                questionID = col * ANSWER_ROWS + row + 1  # 计算题号
+                choices.append((questionID, self.getAnswerChars(row_answers, ANSWER_THRESHOLD)))
         return choices
 
-    #根据选项 的涂色阈值换算选项字母
-    #param:ANSWER_THRESHOLD 像素阈值；每行4个选项
-    def getAnswerChars(self, row_answers,ANSWER_THRESHOLD):
-        answerChars=''
+    # 根据选项 的涂色阈值换算选项字母
+    # param:ANSWER_THRESHOLD 像素阈值；每行4个选项
+    def getAnswerChars(self, row_answers, ANSWER_THRESHOLD):
+        answerChars = ''
         # bubble_row[0]為total，bubble_row[1]為選項號
         for b in row_answers:
-            if b[0]>ANSWER_THRESHOLD:
-                answerChars+=ANSWER_CHAR[b[1]]
-        return ''.join(sorted(list(answerChars)))#按字母顺序排序
+            if b[0] > ANSWER_THRESHOLD:
+                answerChars += ANSWER_CHAR[b[1]]
+        return ''.join(sorted(list(answerChars)))  # 按字母顺序排序
 
-    #生成学号绝对坐标
-    def makeStuidCnts(self,src_img,expandingFlag=True,offset=0):
-        width=src_img.shape[1]
-        height=src_img.shape[0]
-        height_scale_size=height/Stuid_AREA_ROWS
-        width_scale_size=width/Stuid_AREA_COLS
-        stuidCnts=[]
-        for x in range(ID_BITS):#x为列相对坐标:表示2位数
-            for y in range(NUM_BITS):#y为行相对坐标:表示每位10个数字
-                if expandingFlag:#扩大
-                    top_left=[(2*x+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET)*height_scale_size-offset]
-                    top_right=[(2*x+1+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET)*height_scale_size-offset]
-                    bottom_left=[(2*x+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET+1)*height_scale_size+offset]
-                    bottom_right=[(2*x+1+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET+1)*height_scale_size+offset]
-                else:#缩小
-                    top_left=[(2*x+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET)*height_scale_size+offset]
-                    top_right=[(2*x+1+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET)*height_scale_size+offset]
-                    bottom_left=[(2*x+ID_X_OFFSET)*width_scale_size+offset,(2*y+ID_Y_OFFSET+1)*height_scale_size-offset]
-                    bottom_right=[(2*x+1+ID_X_OFFSET)*width_scale_size-offset,(2*y+ID_Y_OFFSET+1)*height_scale_size-offset]
-                stuidCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
+    # 生成学号绝对坐标
+    def makeStuidCnts(self, src_img, expandingFlag=True, offset=0):
+        width = src_img.shape[1]
+        height = src_img.shape[0]
+        height_scale_size = height / Stuid_AREA_ROWS
+        width_scale_size = width / Stuid_AREA_COLS
+        stuidCnts = []
+        for x in range(ID_BITS):  # x为列相对坐标:表示2位数
+            for y in range(NUM_BITS):  # y为行相对坐标:表示每位10个数字
+                if expandingFlag:  # 扩大
+                    top_left = [(2 * x + ID_X_OFFSET) * width_scale_size - offset,
+                                (2 * y + ID_Y_OFFSET) * height_scale_size - offset]
+                    top_right = [(2 * x + 1 + ID_X_OFFSET) * width_scale_size + offset,
+                                 (2 * y + ID_Y_OFFSET) * height_scale_size - offset]
+                    bottom_left = [(2 * x + ID_X_OFFSET) * width_scale_size - offset,
+                                   (2 * y + ID_Y_OFFSET + 1) * height_scale_size + offset]
+                    bottom_right = [(2 * x + 1 + ID_X_OFFSET) * width_scale_size + offset,
+                                    (2 * y + ID_Y_OFFSET + 1) * height_scale_size + offset]
+                else:  # 缩小
+                    top_left = [(2 * x + ID_X_OFFSET) * width_scale_size + offset,
+                                (2 * y + ID_Y_OFFSET) * height_scale_size + offset]
+                    top_right = [(2 * x + 1 + ID_X_OFFSET) * width_scale_size - offset,
+                                 (2 * y + ID_Y_OFFSET) * height_scale_size + offset]
+                    bottom_left = [(2 * x + ID_X_OFFSET) * width_scale_size + offset,
+                                   (2 * y + ID_Y_OFFSET + 1) * height_scale_size - offset]
+                    bottom_right = [(2 * x + 1 + ID_X_OFFSET) * width_scale_size - offset,
+                                    (2 * y + ID_Y_OFFSET + 1) * height_scale_size - offset]
+                stuidCnts.append(np.array([[top_left], [top_right], [bottom_right], [bottom_left]], dtype=np.int32))
         return stuidCnts
 
-    #获取学号
-    def getStuID(self,src_img):
+    # 获取学号
+    def getStuID(self, src_img):
         processed_img = cv.medianBlur(src_img, 3)
         gray = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
@@ -166,7 +174,7 @@ class ExamPaper():
         # 按坐标从上到下排序
         # cv.imshow('thresh2',thresh2)
         # cv.waitKey(0)
-        stuidCnts=self.makeStuidCnts(src_img)
+        stuidCnts = self.makeStuidCnts(src_img)
         cv.drawContours(src_img, stuidCnts, -1, (255, 0, 0), 1)
         # cv.imshow('i', src_img)
         # 使用np函数，按5个元素，生成一个集合
@@ -197,7 +205,7 @@ class ExamPaper():
         second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
         return str(first_num[0][0]) + str(second_num[0][0])
 
-    #提取答题和学号区域
+    # 提取答题和学号区域
     def get_roi_img(self, src_img):
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         # 高斯滤波，清除一些杂点
@@ -206,7 +214,7 @@ class ExamPaper():
         thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 9, 9)
         image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
         sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)
-        #找答题卡
+        # 找答题卡
         for i in range(len(sortcnts)):
             peri = 0.1 * cv.arcLength(sortcnts[i], True)
             # 获取多边形的所有定点，如果是四个定点，就代表是矩形
@@ -222,7 +230,7 @@ class ExamPaper():
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的答题卡！')
-            return None
+            return None,None
 
         # 找选项区
         for i in range(len(sortcnts)):
@@ -241,7 +249,7 @@ class ExamPaper():
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的答題区域！')
-            return None
+            return None,None
 
         # 找学号区
         for i in range(len(sortcnts)):
@@ -260,11 +268,11 @@ class ExamPaper():
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的学号区域！')
-            return None
+            return None,None
 
-        return ansImg,stuImg
+        return ansImg, stuImg
 
-    #功能：把矩形框（x,y,w,h)转变为ndarray
+    # 功能：把矩形框（x,y,w,h)转变为ndarray
     def rect2ndarray(self, rect):
         x, y, w, h = rect
         top_left = [x, y]
@@ -272,4 +280,3 @@ class ExamPaper():
         bottom_right = [x + w, y + h]
         bottom_left = [x, y + h]
         return np.array([[top_left], [top_right], [bottom_right], [bottom_left]], dtype=np.int32)
-

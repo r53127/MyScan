@@ -31,14 +31,14 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         @type QWidget
         """
         super(ScanWindow, self).__init__()
-        #初始化
+        # 初始化
         self.dto = dto
         self.examControl = examControl
         self.setupUi(self)
-        self.scene=QGraphicsScene()
+        self.scene = QGraphicsScene()
         self.graphicsView.setScene(self.scene)
 
-        #设置错误消息label_4的字体
+        # 设置错误消息label_4的字体
         errorFont = QFont()
         errorFont.setBold(True)
         errorFont.setPointSize(14)
@@ -46,39 +46,38 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         errorPal.setColor(QPalette.WindowText, Qt.red)
         self.label_4.setFont(errorFont)
         self.label_4.setPalette(errorPal)
-        self.setWindowFlags(Qt.WindowMinimizeButtonHint|Qt.WindowCloseButtonHint)
-        #显示窗体
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        # 显示窗体
         self.show()
 
     def startScan(self, files):
-        failedCount=0
+        failedCount = 0
         for file in files:
             try:
                 self.dto.setCurrentPaper(file)
-                markingFlag=self.examControl.startMarking()
+                markingFlag = self.examControl.startMarking()
                 if not markingFlag:
                     failedCount += 1
                     self.dto.failedFiles.append(file)
             except Exception as e:
-                failedCount+=1
+                failedCount += 1
                 self.dto.failedFiles.append(file)
-                logging.basicConfig(filename='log.log',filemode='w',level=logging.DEBUG)
+                logging.basicConfig(filename='log.log', filemode='w', level=logging.DEBUG)
                 logging.debug(traceback.format_exc())
                 # traceback.print_exc()
                 continue
         else:
-            if failedCount !=0:
-                QMessageBox.information(None, "提示","共有" + str(failedCount) + '张卡阅卷失败！')
+            if failedCount != 0:
+                QMessageBox.information(None, "提示", "共有" + str(failedCount) + '张卡阅卷失败！')
             else:
-                QMessageBox.information(None,'提示','已結束！')
-
+                QMessageBox.information(None, '提示', '已結束！')
 
     @pyqtSlot()
     def on_pushButton_1_clicked(self):
         """
         Slot documentation goes here.
         """
-        answerfile='data\答案.xlsx'
+        answerfile = 'data\答案.xlsx'
         if not os.path.exists(answerfile):
             QMessageBox.information(None, '错误:', "答案文件不存在！")
             return
@@ -100,7 +99,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             if answers is None:
                 return
             self.dto.nowAnswerFile = file
-            self.dto.nowAnswer=answers
+            self.dto.nowAnswer = answers
             # 答案校对
             ansinfo = ''
             for answer in self.dto.nowAnswer.items():
@@ -145,8 +144,6 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         # 开始阅卷
         self.startScan(files)
 
-
-
     def paintEvent(self, QPaintEvent):
         super().paintEvent(QPaintEvent)
         try:
@@ -155,9 +152,9 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             if not self.dto.nowPaper:
                 return
             if self.dto.nowPaper.showingImg is not None:
-                pic=ScanWindow.convertImg(self.dto.nowPaper.showingImg)
-                painter=QPainter()
-                painter.drawImage(50,50,pic)
+                pic = ScanWindow.convertImg(self.dto.nowPaper.showingImg)
+                painter = QPainter()
+                painter.drawImage(50, 50, pic)
 
                 # view_size=self.graphicsView.size()
                 # pic_size=pic.size()
@@ -179,7 +176,6 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         showimg = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
         showpix = QPixmap.fromImage(showimg)
         return showimg
-
 
     @pyqtSlot()
     def on_pushButton_5_clicked(self):
@@ -227,13 +223,13 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             return
         if self.examControl.stuDB.importStuFromXLS(file):
             QMessageBox.information(None, '消息', '结束！')
-    
+
     @pyqtSlot()
     def on_pushButton_8_clicked(self):
         """
         Slot documentation goes here.
         """
-        stufile=r'data\学生库.xlsx'
+        stufile = r'data\学生库.xlsx'
         if not os.path.exists(stufile):
             QMessageBox.information(None, '错误', "学生库不存在！")
             return
@@ -241,7 +237,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             win32api.ShellExecute(0, 'open', stufile, '', '', 1)
         except Exception as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "！")
-    
+
     @pyqtSlot()
     def on_pushButton_9_clicked(self):
         """

@@ -1,3 +1,4 @@
+import os
 import sqlite3
 
 from PyQt5.QtWidgets import QMessageBox
@@ -63,25 +64,6 @@ class StudentDB():
         # 关闭Cursor:
         self.cursor.close()
 
-
-class AnswerDB():
-    @classmethod
-    def importAnswerFromXLS(cls, file):
-        answer = {}
-        wb = load_workbook(file)
-        sheet = wb["Sheet1"]
-        # for i in range(2, sheet.max_row):
-        #     answer[sheet["A%d" % i].value] = (sheet["B%d" % i].value, sheet['C%d' % i].value) ## 第一种方法：%字符串占位操作符
-        if sheet['A1'].value != '题号':
-            QMessageBox.information(None, '提示', '这不是有效的答案文件！')
-            return None
-        for row in sheet.rows:  # 第二种方法使用rows属性
-            if row[0].value == '题号':
-                continue
-            if row[0].value is not None:
-                answer[row[0].value] = (row[1].value, row[2].value)
-        return answer
-
 class ScanDB():
     def __init__(self):
         self.initDB()
@@ -132,3 +114,41 @@ class ScoreDB():
     def closeDB(self):
         # 关闭Cursor:
         self.cursor.close()
+
+
+class AnswerDB():
+    @classmethod
+    def importAnswerFromXLS(cls, file):
+        answer = {}
+        wb = load_workbook(file)
+        sheet = wb["Sheet1"]
+        # for i in range(2, sheet.max_row):
+        #     answer[sheet["A%d" % i].value] = (sheet["B%d" % i].value, sheet['C%d' % i].value) ## 第一种方法：%字符串占位操作符
+        if sheet['A1'].value != '题号':
+            QMessageBox.information(None, '提示', '这不是有效的答案文件！')
+            return None
+        for row in sheet.rows:  # 第二种方法使用rows属性
+            if row[0].value == '题号':
+                continue
+            if row[0].value is not None:
+                answer[row[0].value] = (row[1].value, row[2].value)
+        return answer
+
+class RepoartForm():
+    def __init__(self):
+        self.reportTemplateFile='data/结果报表.xlsx'
+        if not os.path.exists(self.reportTemplateFile):
+            QMessageBox.information(None, '提示', '找不到报表模板文件！')
+            return None
+        self.wb = load_workbook(self.reportTemplateFile)
+        self.scoreSheet = self.wb["成绩表"]
+        self.reportSheet= self.wb["试卷分析"]
+        if self.sheet['A1'].value != '成绩表':
+            QMessageBox.information(None, '提示', '这不是有效的模板文件！')
+
+    def makeReport(self):
+        pass
+
+if __name__ == "__main__":
+    test=RepoartForm()
+

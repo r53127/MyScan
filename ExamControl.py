@@ -35,7 +35,7 @@ class ExamControl():
         result=self.stuDB.checkData(stuID,stuClass)
         if not result:
             QMessageBox.information(None,'TIP','未找到该学生！')
-            return
+            return False
         stuName=result[0][2]
         # 答案入库
         for choice in choices:
@@ -43,11 +43,12 @@ class ExamControl():
         #判分
         if len(choices)>len(self.dto.nowAnswer):
             QMessageBox.information(None,'提示','学生选项比答案多，题有'+str(len(choices))+'个，答案有'+str(len(self.dto.nowAnswer))+'个！')
-            return
+            return False
         score = self.getScore(choices, self.dto.nowAnswer)
         examid=date.today()
         #分数入库
         self.scoreDB.insertDB(stuClass,stuID,stuName,score,str(examid))
+        return True
 
 
     def getScore(self, choices, answer):

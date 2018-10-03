@@ -3,6 +3,7 @@
 """
 Module implementing ScanWindow.
 """
+import logging
 import os
 import shutil
 import traceback
@@ -50,20 +51,27 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         self.show()
 
     def startScan(self, files):
+        failedCount=0
         for file in files:
             try:
                 self.dto.setCurrentPaper(file)
-                self.examControl.startMarking()
+                markingFlag=self.examControl.startMarking()
+                if not markingFlag:
+                    failedCount += 1
+                    self.dto.failedFiles.append(file)
             except Exception as e:
-                reply = QMessageBox.question(None, "提示",
-                                             "该卡无法识别，错误是" + str(e) + "，文件名是：" + file + "，是否继续？",
-                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                failedCount+=1
                 self.dto.failedFiles.append(file)
-                traceback.print_exc()
-                if reply == 16384:
-                    continue
-                else:
-                    break
+                logging.basicConfig(filename='log.log',filemode='w',level=logging.DEBUG)
+                logging.debug(traceback.format_exc())
+                # traceback.print_exc()
+                continue
+        else:
+            if failedCount !=0:
+                QMessageBox.information(None, "提示","共有" + str(failedCount) + '张卡阅卷失败！')
+            else:
+                QMessageBox.information(None,'提示','已結束！')
+
 
     @pyqtSlot()
     def on_pushButton_1_clicked(self):
@@ -158,8 +166,6 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
                 # pic.scaled(view_size,1)
                 # self.graphicsItem=self.scene.addPixmap(pic)
                 # self.graphicsItem.setFlag(QGraphicsItem.ItemIsMovable)
-
-
         except:
             traceback.print_exc()
 
@@ -198,7 +204,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             QMessageBox.information(None, '提示', '尚未有阅卷失败的文件！')
             return
         direc = QFileDialog.getExistingDirectory(self, '另存为目录', r'.')
-        if not dir:
+        if not direc:
             return
         for file in self.dto.failedFiles:
             self.saveFailedFiles(file, direc)

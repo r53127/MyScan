@@ -85,11 +85,11 @@ class ExamPaper():
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
                                        85, 18)
         # 按坐标从上到下排序
-        cv.imshow('thresh2',thresh2)
-        cv.waitKey(0)
+        # cv.imshow('thresh2',thresh2)
+        # cv.waitKey(0)
         choiceCnts=self.makeAnswerCnts(src_img)
         cv.drawContours(src_img, choiceCnts, -1, (255, 0, 0), 1)
-        cv.imshow('choices', src_img)
+        # cv.imshow('choices', src_img)
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
         choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
         # 使用np函数，按5个元素，生成一个集合
@@ -164,11 +164,11 @@ class ExamPaper():
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
                                        85, 18)
         # 按坐标从上到下排序
-        cv.imshow('thresh2',thresh2)
-        cv.waitKey(0)
+        # cv.imshow('thresh2',thresh2)
+        # cv.waitKey(0)
         stuidCnts=self.makeStuidCnts(src_img)
         cv.drawContours(src_img, stuidCnts, -1, (255, 0, 0), 1)
-        cv.imshow('i', src_img)
+        # cv.imshow('i', src_img)
         # 使用np函数，按5个元素，生成一个集合
         first_num = []
         second_num = []

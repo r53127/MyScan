@@ -219,7 +219,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         # 如果未选择，返回
         if not file:
             return
-        if self.examControl.stu_data.importStuFromXLS(file):
+        if self.examControl.stuDB.importStuFromXLS(file):
             QMessageBox.information(None, '消息', '结束！')
     
     @pyqtSlot()

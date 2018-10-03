@@ -58,6 +58,7 @@ class StudentDB():
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
 
+
     def closeDB(self):
         # 关闭Cursor:
         self.cursor.close()
@@ -82,7 +83,52 @@ class AnswerDB():
         return answer
 
 class ScanDB():
-    pass
+    def __init__(self):
+        self.initDB()
+
+    def initDB(self):
+        db_path = 'data/scan.db'
+        # 连接到SQLite数据库
+        # 如果文件不存在，会自动在当前目录创建:
+        self.conn = sqlite3.connect(db_path)
+        # 创建一个Cursor:
+        self.cursor = self.conn.cursor()
+        # 执行一条SQL语句，创建user表:AUTOINCREMENT类型必须是主键
+        self.cursor.execute(
+            r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,classID varchar(20),stuID int,name varchar(20),quesID int,choice varchar(4))')
+
+    def insertDB(self, classid,stuid, name, quesid, choice):
+        # 继续执行一条SQL语句，插入一条记录:
+        insert_statement = r'insert into scan (classID,stuID,name,quesID,choice) values (?,?,?,?,?)'
+        self.conn.execute(insert_statement, (classid,stuid, name, quesid,choice))
+        self.conn.commit()  # 修改类操作必须commit
+
+    def closeDB(self):
+        # 关闭Cursor:
+        self.cursor.close()
+
 
 class ScoreDB():
-    pass
+    def __init__(self):
+        self.initDB()
+
+    def initDB(self):
+        db_path = 'data/score.db'
+        # 连接到SQLite数据库
+        # 如果文件不存在，会自动在当前目录创建:
+        self.conn = sqlite3.connect(db_path)
+        # 创建一个Cursor:
+        self.cursor = self.conn.cursor()
+        # 执行一条SQL语句，创建user表:AUTOINCREMENT类型必须是主键
+        self.cursor.execute(
+            r'CREATE TABLE IF NOT EXISTS score (scoreID INTEGER  primary key AUTOINCREMENT ,classID varchar(20),stuID int,name varchar(20),score int,examID varchar(8))')
+
+    def insertDB(self, classid,stuid, name, score, examid):
+        # 继续执行一条SQL语句，插入一条记录:
+        insert_statement = r'insert into score (classID,stuID,name,score,examID) values (?,?,?,?,?)'
+        self.conn.execute(insert_statement, (classid,stuid, name, score, examid))
+        self.conn.commit()  # 修改类操作必须commit
+
+    def closeDB(self):
+        # 关闭Cursor:
+        self.cursor.close()

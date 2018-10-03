@@ -1,5 +1,6 @@
 import sys
 import traceback
+from datetime import date
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
@@ -29,19 +30,28 @@ class ExamControl():
 
     def startMarking(self):
         choices, stuID=self.examServ.marking()
+        stuClass='高三一班'
+        #根据学号查姓名
+        result=self.stuDB.checkData(stuID,stuClass)
+        if not result:
+            QMessageBox.information(None,'TIP','未找到该学生！')
+            return
+        stuName=result[0][2]
         # 答案入库
-        print(choices,stuID)
-        print(self.dto.nowAnswer)
+        for choice in choices:
+            self.scanDB.insertDB(stuClass,stuID,stuName,choice[0],choice[1])
         #判分
         if len(choices)>len(self.dto.nowAnswer):
             QMessageBox.information(None,'提示','学生选项比答案多，题有'+str(len(choices))+'个，答案有'+str(len(self.dto.nowAnswer))+'个！')
             return
         score = self.getScore(choices, self.dto.nowAnswer)
+        examid=date.today()
         #分数入库
+        self.scoreDB.insertDB(stuClass,stuID,stuName,score,str(examid))
 
 
     def getScore(self, choices, answer):
-        print('判分')
+        # print('判分')
         correct_count = 0
         score = 0
         for choice in choices:

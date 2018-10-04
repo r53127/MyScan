@@ -134,21 +134,28 @@ class AnswerDB():
                 answer[row[0].value] = (row[1].value, row[2].value)
         return answer
 
-class RepoartForm():
+class ReportForm():
     def __init__(self):
-        self.reportTemplateFile='data/结果报表.xlsx'
-        if not os.path.exists(self.reportTemplateFile):
+        self.reportTemplate= 'data/结果报表.xlsx'
+        if not os.path.exists(self.reportTemplate):
             QMessageBox.information(None, '提示', '找不到报表模板文件！')
             return None
-        self.wb = load_workbook(self.reportTemplateFile)
-        self.scoreSheet = self.wb["成绩表"]
-        self.reportSheet= self.wb["试卷分析"]
+        self.wb = load_workbook(self.reportTemplate)
+        self.sheet = self.wb["Sheet1"]
         if self.sheet['A1'].value != '成绩表':
             QMessageBox.information(None, '提示', '这不是有效的模板文件！')
 
-    def makeReport(self):
-        pass
+    def makeReport(self,examResults):
+        ##examResults内数据：班级，学号，姓名，题号，填涂选项，答案，总分
+        examResults=sorted(examResults,key=lambda x: x[6], reverse=True)
+        for i,r in enumerate(examResults):
+            self.sheet["A%d" % (i + 2)].value = r[0]#班級
+            self.sheet["B%d" % (i + 2)].value = r[2]#姓名
+            self.sheet["C%d" % (i + 2)].value = r[1]#学号
+            self.sheet["D%d" % (i + 2)].value = r[6]#总分
+        self.wb.save('result.xlsx')
+
 
 if __name__ == "__main__":
-    test=RepoartForm()
+    test=ReportForm()
 

@@ -78,16 +78,17 @@ class ExamPaper():
 
     # 获取选项
     def getChoices(self, src_img):
-        processed_img = cv.medianBlur(src_img, 3)
+        processed_img = cv.medianBlur(src_img, 11)
         gray = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
-        processed_img = cv.GaussianBlur(gray, (3, 3), 0)
+        processed_img = cv.GaussianBlur(gray, (17, 17), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
-                                       85, 18)
+                                       69, 4)
         # 按坐标从上到下排序
+        cv.imwrite('tmp/ansImgThresh.png', thresh2)
         # cv.imshow('thresh2',thresh2)
         # cv.waitKey(0)
         choiceCnts = self.makeAnswerCnts(src_img)
-        cv.drawContours(src_img, choiceCnts, -1, (255, 0, 0), 1)
+        # cv.drawContours(src_img, choiceCnts, -1, (255, 0, 0), 1)
         # cv.imshow('choices', src_img)
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
         choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
@@ -116,11 +117,17 @@ class ExamPaper():
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
                     row_answers.append((total, inlineID))
                 # 行内按像素值排序
-                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT / 2  # 取一半作为阈值
+                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT / 4  # 取一半作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
-                # print('答案和阈值：',row_answers,ANSWER_THRESHOLD)
+                print('答案和阈值：',row_answers,ANSWER_THRESHOLD)
                 # row_answers[0][0]為total，row_answers[0][1]為選項號
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
+                #以下为取最大值，实现单选
+                # choices.append((questionID, ANSWER_CHAR.get(row_answers[0][1])))
+                # if row_answers[0][0]>ANSWER_THRESHOLD:
+                #     choices.append((questionID, ANSWER_CHAR.get(row_answers[0][1])))
+                # else:
+                #     choices.append((questionID, ''))
                 choices.append((questionID, self.getAnswerChars(row_answers, ANSWER_THRESHOLD)))
         return choices
 
@@ -241,8 +248,8 @@ class ExamPaper():
                 # 透视变换提取原图内容部分
                 ansImg_tmp = four_point_transform(src_img, approx.reshape(4, 2))
                 ratio = ansImg_tmp.shape[1] / ansImg_tmp.shape[0]  # 寬高比
-                if ratio > 0.9 and ratio < 1.3 and ansImg_tmp.shape[0] < maxImg.shape[0] and ansImg_tmp.shape[1] < \
-                        maxImg.shape[1] and ansImg_tmp.shape[0] > maxImg.shape[0] / 2 and ansImg_tmp.shape[1] > \
+                if ratio > 0.9 and ratio < 1.8 and ansImg_tmp.shape[0] < maxImg.shape[0] and ansImg_tmp.shape[1] < \
+                        maxImg.shape[1] and ansImg_tmp.shape[0] > maxImg.shape[0]*2/3 and ansImg_tmp.shape[1] > \
                         maxImg.shape[1] / 2:
                     ansImg = ansImg_tmp
                     cv.imwrite('tmp/ansImg.png', ansImg)

@@ -182,7 +182,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
-        pass
+        self.examControl.makeReport()
 
     @pyqtSlot()
     def on_pushButton_6_clicked(self):

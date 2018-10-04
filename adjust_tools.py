@@ -8,7 +8,7 @@ def nothing(x):
 
 # 创建一副􅢀色图像
 
-img = cv.imread('stuImg.png')
+img = cv.imread('tmp/ansImg.png')
 cv.namedWindow('image',0)
 
 
@@ -16,8 +16,8 @@ cv.createTrackbar('medianBlur', 'image', 1, 100, nothing)
 
 cv.createTrackbar('GaussianBlur', 'image', 0, 100, nothing)
 
-cv.createTrackbar('aTh Block', 'image', 200, 255, nothing)
-cv.createTrackbar('aTh C', 'image', 40, 255, nothing)
+cv.createTrackbar('aTh Block', 'image', 0, 255, nothing)
+cv.createTrackbar('aTh C', 'image', 0, 255, nothing)
 
 
 cv.createTrackbar('threshold low', 'image', 88, 255, nothing)
@@ -55,8 +55,8 @@ while (1):
     # processed=cv.Scharr(processed,-1,0,1)
     # processed = cv.Scharr(processed, -1, 1,0)
 
-    # processed_img = cv.medianBlur(img, 2*m+1)
-    processed_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    processed_img = cv.medianBlur(img, 2*m+1)
+    processed_img = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)
 
     processed_img = cv.GaussianBlur(processed_img, (2*b+3,2*b+3), 0)
 

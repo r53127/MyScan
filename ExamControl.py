@@ -4,7 +4,7 @@ from datetime import date
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from DB import StudentDB, AnswerDB, ScanDB, ScoreDB
+from DB import StudentDB, AnswerDB, ScanDB, ScoreDB, ReportForm
 from ExamDto import ExamDto
 from ExamService import ExamService
 from ScanWindow import ScanWindow
@@ -30,8 +30,15 @@ class ExamControl():
 
     def startMarking(self):
         choices, stuID = self.examServ.marking()
+        #阅卷结果为空
         if not choices:
             return False
+        #少答案
+        if len(choices) > len(self.dto.nowAnswer):
+            QMessageBox.information(None, '提示',
+                                    '学生选项比答案多，题有' + str(len(choices)) + '个，答案有' + str(len(self.dto.nowAnswer)) + '个！')
+            return False
+        #TODO:硬编码班级
         stuClass = '高三一班'
         # 根据学号查姓名
         result = self.stuDB.checkData(stuID, stuClass)
@@ -39,22 +46,34 @@ class ExamControl():
             QMessageBox.information(None, 'TIP', '未找到该学生！')
             return False
         stuName = result[0][2]
-        # 答案入库
+
+        # 判分
+        score = self.getScore(choices, self.dto.nowAnswer)
+
+        # 答案入库，choice[0]是题号，choice[1]是填涂选项
         for choice in choices:
             self.scanDB.insertDB(stuClass, stuID, stuName, choice[0], choice[1])
-        # 判分
-        if len(choices) > len(self.dto.nowAnswer):
-            QMessageBox.information(None, '提示',
-                                    '学生选项比答案多，题有' + str(len(choices)) + '个，答案有' + str(len(self.dto.nowAnswer)) + '个！')
-            return False
-        score = self.getScore(choices, self.dto.nowAnswer)
-        examid = date.today()
+            #班级，学号，姓名，题号，填涂选项，答案，总分
+            self.dto.currentExamResults.append([stuClass, stuID, stuName, choice[0], choice[1],(self.dto.nowAnswer.get(choice[0]))[1],score])
         # 分数入库
+        examid = date.today()
         self.scoreDB.insertDB(stuClass, stuID, stuName, score, str(examid))
+
         return True
 
+    def makeReport(self):
+        self.getReport()
+        print('maike')
+
+    def getReport(self):
+        # 初始化报表文件
+        self.reportFile = ReportForm()
+        self.reportFile.makeReport(self.dto.currentExamResults)
+        print('over')
+
+
     def getScore(self, choices, answer):
-        # print('判分')
+        # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值
         correct_count = 0
         score = 0
         for choice in choices:
@@ -73,6 +92,8 @@ class ExamControl():
         except:
             traceback.print_exc()
             return
+
+
 
 
 if __name__ == "__main__":

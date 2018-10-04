@@ -149,10 +149,10 @@ class ReportForm():
         ##examResults内数据：班级，学号，姓名，题号，填涂选项，答案，总分
         examResults=sorted(examResults,key=lambda x: x[6], reverse=True)
         for i,r in enumerate(examResults):
-            self.sheet["A%d" % (i + 2)].value = r[0]#班級
-            self.sheet["B%d" % (i + 2)].value = r[2]#姓名
-            self.sheet["C%d" % (i + 2)].value = r[1]#学号
-            self.sheet["D%d" % (i + 2)].value = r[6]#总分
+            self.sheet["A%d" % (i + 3)].value = r[0]#班級
+            self.sheet["B%d" % (i + 3)].value = r[2]#姓名
+            self.sheet["C%d" % (i + 3)].value = r[1]#学号
+            self.sheet["D%d" % (i + 3)].value = r[6]#总分
         self.wb.save('result.xlsx')
 
 

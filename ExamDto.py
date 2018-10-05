@@ -8,7 +8,10 @@ class ExamDto():
         self.nowAnswerFile=None
         self.failedFiles=[]
         self.errorMsg=''
-        self.currentExamResults=[]
+        self.examID=''
+        self.classID=''
+        #暂存所有的班级名称，用以初始化和刷新班级下拉列表
+        self.allClassID=set()
 
 
     def setCurrentPaper(self,file):

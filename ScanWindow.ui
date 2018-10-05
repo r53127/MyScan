@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
-    <height>466</height>
+    <width>782</width>
+    <height>465</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,7 +30,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>51</x>
@@ -150,7 +150,7 @@
         <number>3</number>
        </property>
        <property name="text">
-        <string>第三步：1、选择考试时间（作为阅卷保存和生成报表的依据）</string>
+        <string>第三步、阅卷或生成报表：</string>
        </property>
        <property name="textFormat">
         <enum>Qt::PlainText</enum>
@@ -181,13 +181,6 @@
       <widget class="QPushButton" name="pushButton_7">
        <property name="text">
         <string>另存失败文件</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>第四步：生成报表</string>
        </property>
       </widget>
      </item>

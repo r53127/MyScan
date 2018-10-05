@@ -59,6 +59,11 @@ class StudentDB():
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
 
+    def queryClassID(self):
+        query_statement = r"select classid from student"
+        self.cursor.execute(query_statement)
+        return set(self.cursor.fetchall())
+
 
     def closeDB(self):
         # 关闭Cursor:
@@ -77,13 +82,18 @@ class ScanDB():
         self.cursor = self.conn.cursor()
         # 执行一条SQL语句，创建user表:AUTOINCREMENT类型必须是主键
         self.cursor.execute(
-            r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,classID varchar(20),stuID int,name varchar(20),quesID int,choice varchar(4))')
+            r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,examID varchar(8),classID varchar(20),stuID int,name varchar(20),quesID int,choice varchar(4))')
 
-    def insertDB(self, classid,stuid, name, quesid, choice):
+    def insertDB(self, examid,classid,stuid, name, quesid, choice):
         # 继续执行一条SQL语句，插入一条记录:
-        insert_statement = r'insert into scan (classID,stuID,name,quesID,choice) values (?,?,?,?,?)'
-        self.conn.execute(insert_statement, (classid,stuid, name, quesid,choice))
+        insert_statement = r'insert into scan (examID,classID,stuID,name,quesID,choice) values (?,?,?,?,?,?)'
+        self.conn.execute(insert_statement, (examid,classid,stuid, name, quesid,choice))
         self.conn.commit()  # 修改类操作必须commit
+
+    def checkData(self, stuid, examid,classid):
+        query_statement = r"select * from scan where stuID='" + str(stuid) + "' and examID='" + str(examid)+ "' and classID='" + str(classid) + "'"
+        self.cursor.execute(query_statement)
+        return self.cursor.fetchall()
 
     def closeDB(self):
         # 关闭Cursor:
@@ -157,5 +167,9 @@ class ReportForm():
 
 
 if __name__ == "__main__":
-    test=ReportForm()
+    test=StudentDB()
+    a=test.queryClassID()
+    for i in a:
+        for j in i:
+            print(j)
 

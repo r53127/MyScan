@@ -10,7 +10,7 @@ import traceback
 import win32api
 
 import cv2 as cv
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSlot, Qt, QDateTime
 from PyQt5.QtGui import QImage, QPainter, QPixmap, QPalette, QFont
 from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox, QGraphicsScene
 
@@ -47,8 +47,25 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         self.label_4.setFont(errorFont)
         self.label_4.setPalette(errorPal)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
+        #初始化时间控件
+        self.dateEdit.setDateTime(QDateTime.currentDateTime())
+        #刷新班级控件
+        self.updateComboBox()
         # 显示窗体
         self.show()
+
+    # 刷新班级控件
+    def updateComboBox(self):
+        self.comboBox_2.clear()
+        if self.dto.allClassID is not None:
+            for i in self.dto.allClassID:
+                for j in i:
+                    self.comboBox_2.addItem(j)
+
+    def getID(self):
+        self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
+        self.dto.classID=self.comboBox_2.currentText()
 
     def startScan(self, files):
         failedCount = 0
@@ -68,7 +85,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
                 continue
         else:
             if failedCount != 0:
-                QMessageBox.information(None, "提示", "共有" + str(failedCount) + '张卡阅卷失败！')
+                QMessageBox.information(None, "提示", "共有" + str(failedCount) + '张图片阅卷失败！')
             else:
                 QMessageBox.information(None, '提示', '已結束！')
 
@@ -101,10 +118,10 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             self.dto.nowAnswerFile = file
             self.dto.nowAnswer = answers
             # 答案校对
-            ansinfo = ''
-            for answer in self.dto.nowAnswer.items():
-                ansinfo += '题号:' + str(answer[0]) + ' 答案为：' + str(answer[1][0]) + " 分值为：" + str(answer[1][1]) + "\n"
-            QMessageBox.information(None, '请核对答案分值:', ansinfo)
+            # ansinfo = ''
+            # for answer in self.dto.nowAnswer.items():
+            #     ansinfo += '题号:' + str(answer[0]) + ' 答案为：' + str(answer[1][0]) + " 分值为：" + str(answer[1][1]) + "\n"
+            QMessageBox.information(None, '提示:', '成功导入！')
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")
 
@@ -114,6 +131,10 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         Slot documentation goes here.
         """
         # 未导入答案，返回
+        self.getID()
+        if not self.dto.classID:
+            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+            return
         if not self.dto.nowAnswer:
             QMessageBox.information(None, '提示', '请先导入答案!')
             return
@@ -130,6 +151,10 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         Slot documentation goes here.
         """
         # 未导入答案，返回
+        self.getID()
+        if not self.dto.classID:
+            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+            return
         if not self.dto.nowAnswer:
             QMessageBox.information(None, '提示', '请先导入答案!')
             return
@@ -182,6 +207,10 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
+        self.getID()
+        if not self.dto.classID:
+            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+            return
         self.examControl.makeReport()
 
     @pyqtSlot()
@@ -222,6 +251,12 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         if not file:
             return
         if self.examControl.stuDB.importStuFromXLS(file):
+            try:
+                self.examControl.updateClassID()
+                self.updateComboBox()
+            except:
+                traceback.print_exc()
+
             QMessageBox.information(None, '消息', '结束！')
 
     @pyqtSlot()

@@ -48,9 +48,9 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         self.label_4.setPalette(errorPal)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
-        #初始化时间控件
+        # 初始化时间控件
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
-        #刷新班级控件
+        # 刷新班级控件
         self.updateComboBox()
         # 显示窗体
         self.show()
@@ -65,7 +65,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
 
     def getID(self):
         self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
-        self.dto.classID=self.comboBox_2.currentText()
+        self.dto.classID = self.comboBox_2.currentText()
 
     def startScan(self, files):
         failedCount = 0
@@ -130,11 +130,13 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
-        # 未导入答案，返回
+
+        # 獲取班級和examID
         self.getID()
         if not self.dto.classID:
             QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
             return
+        # 未导入答案，返回
         if not self.dto.nowAnswer:
             QMessageBox.information(None, '提示', '请先导入答案!')
             return
@@ -150,11 +152,13 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
-        # 未导入答案，返回
+
+        # 獲取班級和examID
         self.getID()
         if not self.dto.classID:
             QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
             return
+        # 未导入答案，返回
         if not self.dto.nowAnswer:
             QMessageBox.information(None, '提示', '请先导入答案!')
             return
@@ -207,6 +211,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
+        #獲取班級和examID
         self.getID()
         if not self.dto.classID:
             QMessageBox.information(None, '提示', '请先导入学生库生成班级!')

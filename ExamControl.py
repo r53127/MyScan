@@ -1,6 +1,5 @@
 import sys
 import traceback
-from datetime import date
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
@@ -30,14 +29,14 @@ class ExamControl():
         self.examServ = ExamService(self.dto)
 
     def updateClassID(self):
-        self.dto.allClassID=self.stuDB.queryClassID()
+        self.dto.allClassID = self.stuDB.queryClassID()
 
     def startMarking(self):
         choices, stuID = self.examServ.marking()
-        #阅卷结果为空
+        # 阅卷结果为空
         if choices is None:
             return False
-        #少答案
+        # 少答案
         if len(choices) > len(self.dto.nowAnswer):
             QMessageBox.information(None, '提示',
                                     '学生选项比答案多，题有' + str(len(choices)) + '个，答案有' + str(len(self.dto.nowAnswer)) + '个！')
@@ -51,16 +50,16 @@ class ExamControl():
             QMessageBox.information(None, '提示', '未找到该学生！')
             return False
         stuName = result[0][2]
-        #检查阅卷是否重复
-        result=self.scanDB.checkData(stuID,examID,classID)
+        # 检查阅卷是否重复
+        result = self.scanDB.checkData(stuID, examID, classID)
         if result:
-            QMessageBox.information(None,'提示', '重复阅卷，该学号已阅过！')
+            QMessageBox.information(None, '提示', '重复阅卷，该学号已阅过！')
             return False
         # 判分
         score = self.getScore(choices, self.dto.nowAnswer)
         # 答案入库，choice[0]是题号，choice[1]是填涂选项
         for choice in choices:
-            self.scanDB.insertDB(examID,classID, stuID, stuName, choice[0], choice[1])
+            self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
         # 分数入库
         self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
 
@@ -70,9 +69,10 @@ class ExamControl():
         print('make report')
         # 初始化报表文件
         self.reportFile = ReportForm()
+        #TODO:从数据库查询需要生成报表的数据
+
         self.reportFile.makeReport(self.dto.currentExamResults)
         print('make report over')
-
 
     def getScore(self, choices, answer):
         # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值
@@ -94,8 +94,6 @@ class ExamControl():
         except:
             traceback.print_exc()
             return
-
-
 
 
 if __name__ == "__main__":

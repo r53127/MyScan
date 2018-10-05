@@ -64,10 +64,10 @@ class StudentDB():
         self.cursor.execute(query_statement)
         return set(self.cursor.fetchall())
 
-
     def closeDB(self):
         # 关闭Cursor:
         self.cursor.close()
+
 
 class ScanDB():
     def __init__(self):
@@ -84,14 +84,15 @@ class ScanDB():
         self.cursor.execute(
             r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,examID varchar(8),classID varchar(20),stuID int,name varchar(20),quesID int,choice varchar(4))')
 
-    def insertDB(self, examid,classid,stuid, name, quesid, choice):
+    def insertDB(self, examid, classid, stuid, name, quesid, choice):
         # 继续执行一条SQL语句，插入一条记录:
         insert_statement = r'insert into scan (examID,classID,stuID,name,quesID,choice) values (?,?,?,?,?,?)'
-        self.conn.execute(insert_statement, (examid,classid,stuid, name, quesid,choice))
+        self.conn.execute(insert_statement, (examid, classid, stuid, name, quesid, choice))
         self.conn.commit()  # 修改类操作必须commit
 
-    def checkData(self, stuid, examid,classid):
-        query_statement = r"select * from scan where stuID='" + str(stuid) + "' and examID='" + str(examid)+ "' and classID='" + str(classid) + "'"
+    def checkData(self, stuid, examid, classid):
+        query_statement = r"select * from scan where stuID='" + str(stuid) + "' and examID='" + str(
+            examid) + "' and classID='" + str(classid) + "'"
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
 
@@ -115,10 +116,10 @@ class ScoreDB():
         self.cursor.execute(
             r'CREATE TABLE IF NOT EXISTS score (scoreID INTEGER  primary key AUTOINCREMENT ,classID varchar(20),stuID int,name varchar(20),score int,examID varchar(8))')
 
-    def insertDB(self, classid,stuid, name, score, examid):
+    def insertDB(self, classid, stuid, name, score, examid):
         # 继续执行一条SQL语句，插入一条记录:
         insert_statement = r'insert into score (classID,stuID,name,score,examID) values (?,?,?,?,?)'
-        self.conn.execute(insert_statement, (classid,stuid, name, score, examid))
+        self.conn.execute(insert_statement, (classid, stuid, name, score, examid))
         self.conn.commit()  # 修改类操作必须commit
 
     def closeDB(self):
@@ -144,9 +145,10 @@ class AnswerDB():
                 answer[row[0].value] = (row[1].value, row[2].value)
         return answer
 
+
 class ReportForm():
     def __init__(self):
-        self.reportTemplate= 'data/结果报表.xlsx'
+        self.reportTemplate = 'data/结果报表.xlsx'
         if not os.path.exists(self.reportTemplate):
             QMessageBox.information(None, '提示', '找不到报表模板文件！')
             return None
@@ -155,21 +157,20 @@ class ReportForm():
         if self.sheet['A1'].value != '成绩表':
             QMessageBox.information(None, '提示', '这不是有效的模板文件！')
 
-    def makeReport(self,examResults):
+    def makeReport(self, examResults):
         ##examResults内数据：班级，学号，姓名，题号，填涂选项，答案，总分
-        examResults=sorted(examResults,key=lambda x: x[6], reverse=True)
-        for i,r in enumerate(examResults):
-            self.sheet["A%d" % (i + 3)].value = r[0]#班級
-            self.sheet["B%d" % (i + 3)].value = r[2]#姓名
-            self.sheet["C%d" % (i + 3)].value = r[1]#学号
-            self.sheet["D%d" % (i + 3)].value = r[6]#总分
+        examResults = sorted(examResults, key=lambda x: x[6], reverse=True)
+        for i, r in enumerate(examResults):
+            self.sheet["A%d" % (i + 3)].value = r[0]  # 班級
+            self.sheet["B%d" % (i + 3)].value = r[2]  # 姓名
+            self.sheet["C%d" % (i + 3)].value = r[1]  # 学号
+            self.sheet["D%d" % (i + 3)].value = r[6]  # 总分
         self.wb.save('result.xlsx')
 
 
 if __name__ == "__main__":
-    test=StudentDB()
-    a=test.queryClassID()
+    test = StudentDB()
+    a = test.queryClassID()
     for i in a:
         for j in i:
             print(j)
-

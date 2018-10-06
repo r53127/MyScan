@@ -211,19 +211,27 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         """
         Slot documentation goes here.
         """
-        #獲取班級和examID
-        self.getID()
-        if not self.dto.classID:
-            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
-            return
-        self.examControl.makeReport()
+        try:
+            # 獲取班級和examID
+            self.getID()
+            if not self.dto.classID:
+                QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+                return
+            self.examControl.makeScoreReport()
+        except:
+            traceback.print_exc()
 
     @pyqtSlot()
     def on_pushButton_6_clicked(self):
         """
         Slot documentation goes here.
         """
-        self.close()
+        # 獲取班級和examID
+        self.getID()
+        if not self.dto.nowAnswer:
+            QMessageBox.information(None, '提示', '请先导入答案!')
+            return
+        self.examControl.makePaperReport()
 
     @pyqtSlot()
     def on_pushButton_7_clicked(self):

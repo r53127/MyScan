@@ -189,14 +189,14 @@
        <item>
         <widget class="QPushButton" name="pushButton_5">
          <property name="text">
-          <string>生成报表</string>
+          <string>生成成绩报表</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_6">
          <property name="text">
-          <string>退出</string>
+          <string>生成试卷分析</string>
          </property>
         </widget>
        </item>

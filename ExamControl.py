@@ -3,7 +3,7 @@ import traceback
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from DB import StudentDB, AnswerDB, ScanDB, ScoreDB, ReportForm
+from DB import StudentDB, AnswerDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm
 from ExamDto import ExamDto
 from ExamService import ExamService
 from ScanWindow import ScanWindow
@@ -65,15 +65,39 @@ class ExamControl():
 
         return True
 
-    def makeReport(self):
+    def makeScoreReport(self):
         # 初始化报表文件
         try:
-            self.reportFile = ReportForm()
+            reportFile = ScoreReportForm()
+            #查询分数
             result=self.scoreDB.queryData(self.dto.classID,self.dto.examID)
             if result:
-                self.reportFile.makeReport(result)
+                reportFile.makeScoreReport(result)
             else:
-                QMessageBox.information(None, '提示', '没有查询到数据！')
+                QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
+        except:
+            traceback.print_exc()
+
+    def makePaperReport(self):
+        # 初始化报表文件
+        try:
+            reportFile = PaperReportForm()
+            stu_count=self.scanDB.queryPersonCount(self.dto.examID,self.dto.classID)
+            if not stu_count:
+                QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
+                return
+            ques_count=len(self.dto.nowAnswer)
+            paperResult=[]
+            for quesid in range(1,ques_count+1):
+                correct_ans=self.dto.nowAnswer.get(quesid)[0]
+                correct_count=len(self.scanDB.queryData(self.dto.classID,self.dto.examID,quesid,correct_ans))/stu_count
+                A_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'A'))/stu_count
+                B_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'B'))/stu_count
+                C_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'C'))/stu_count
+                D_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'D'))/stu_count
+                #根据模板存放需要的数据：考试时间，班级，题号，正确答案，正确率，A选项率，B选项率，C选项率，D选项率,总人数，总题数
+                paperResult.append([self.dto.examID,self.dto.classID,quesid,correct_ans,correct_count,A_count,B_count,C_count,D_count,stu_count,ques_count])
+            reportFile.makePaperReport(paperResult)
         except:
             traceback.print_exc()
 

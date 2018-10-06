@@ -38,18 +38,18 @@ class StudentDB():
             if row[0].value is not None:
                 student['学号'] = row[0].value
                 student['姓名'] = row[1].value
-                student['性别'] = row[2].value
-                student['班级'] = row[3].value
+                # student['性别'] = row[2].value
+                student['班级'] = row[2].value
                 students.append(student)
         for stud in students:
             # 检查重复
             if self.checkData(stud['学号'], stud['班级']):
                 QMessageBox.information(None, '提示', '该学生重复！' + str(stud['姓名'] + str(stud['学号'])) + str(stud['班级']))
                 continue
-            self.insertDB(stud['学号'], stud['姓名'], stud['性别'], stud['班级'])
+            self.insertDB(stud['学号'], stud['姓名'], stud['班级'])
         return True
 
-    def insertDB(self, stuid, name, gender, classid):
+    def insertDB(self, stuid, name, classid, gender=''):
         # 继续执行一条SQL语句，插入一条记录:
         insert_statement = r'insert into student (stuid,name,gender,classid) values (?,?,?,?)'
         self.conn.execute(insert_statement, (stuid, name, gender, classid))
@@ -96,6 +96,19 @@ class ScanDB():
             examid) + "' and classID='" + str(classid) + "'"
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
+
+    def queryData(self, classid, examid,quesid,choice):
+        query_statement = r"select * from scan where classID='" + str(classid) + "' and examID='" + str(
+            examid) + "' and choice='" + str(choice) + "' and quesID='" + str(quesid) + "'"
+        self.cursor.execute(query_statement)
+        return self.cursor.fetchall()
+
+    def queryPersonCount(self, examid, classid):
+        query_statement = r"select stuid from scan where examID='" + str(
+            examid) + "' and classID='" + str(classid) + "'"
+        self.cursor.execute(query_statement)
+        return len(set(self.cursor.fetchall()))
+
 
     def closeDB(self):
         # 关闭Cursor:
@@ -153,18 +166,18 @@ class AnswerDB():
         return answer
 
 
-class ReportForm():
+class ScoreReportForm():
     def __init__(self):
-        self.reportTemplate = 'data/结果报表模板.xlsx'
-        if not os.path.exists(self.reportTemplate):
+        self.scoreTemplate = 'data/成绩报表模板.xlsx'
+        if not os.path.exists(self.scoreTemplate):
             QMessageBox.information(None, '提示', '找不到报表模板文件！')
             return None
-        self.wb = load_workbook(self.reportTemplate)
-        self.sheet = self.wb["Sheet1"]
+        self.wb = load_workbook(self.scoreTemplate)
+        self.sheet = self.wb["成绩表"]
         if self.sheet['A1'].value != '成绩表':
             QMessageBox.information(None, '提示', '这不是有效的模板文件！')
 
-    def makeReport(self, examResults):
+    def makeScoreReport(self, examResults):
         ##examResults内数据：班级，学号，姓名，题号，填涂选项，答案，总分
         examResults = sorted(examResults, key=lambda x: x[4], reverse=True)
         for i, r in enumerate(examResults):
@@ -175,12 +188,45 @@ class ReportForm():
             self.sheet["C%d" % (i + 3)].value = r[3]  # 姓名
             self.sheet["D%d" % (i + 3)].value = r[2]  # 学号
             self.sheet["E%d" % (i + 3)].value = r[4]  # 总分
-        file=r'tmp\\'+classid+examid+r'.xlsx'
-        print(file)
+        file=r'tmp\\'+classid+examid+r'成绩表.xlsx'
         self.wb.save(file)
         win32api.ShellExecute(0, 'open', file, '', '', 1)
 
 
+class PaperReportForm():
+    def __init__(self):
+        self.paperTemplate = 'data/试卷分析模板.xlsx'
+        if not os.path.exists(self.paperTemplate):
+            QMessageBox.information(None, '提示', '找不到报表模板文件！')
+            return None
+        self.wb = load_workbook(self.paperTemplate)
+        self.sheet=self.wb["试卷分析"]
+        if self.sheet['A1'].value != '试卷分析':
+            QMessageBox.information(None, '提示', '这不是有效的模板文件！')
+
+    def makePaperReport(self, paperResult):
+        ##paperResult内数据：考试时间，班级，题号，正确答案，正确率，A选项率，B选项率，C选项率，D选项率,总人数，总题数
+        for i, r in enumerate(paperResult):
+            classid=r[1]
+            examid=r[0]
+            stuCount=r[10]
+            quesCount= r[9]
+            self.sheet["A%d" % (i + 5)].value = r[2]  # 题号
+            self.sheet["B%d" % (i + 5)].value = r[3]  # 正确答案
+            self.sheet["C%d" % (i + 5)].value = r[4]  # 正确率
+            self.sheet["D%d" % (i + 5)].value = r[5]  # A选项率
+            self.sheet["E%d" % (i + 5)].value = r[6]  # B选项率
+            self.sheet["F%d" % (i + 5)].value = r[7]  # C选项率
+            self.sheet["G%d" % (i + 5)].value = r[8]  # D选项率
+
+        self.sheet["B2"].value = stuCount  # 总人数
+        self.sheet["G2"].value = quesCount  # 总题数
+        self.sheet["B3"].value = examid  # 总人数
+        self.sheet["G3"].value = classid  # 总题数
+
+        file=r'tmp\\'+classid+examid+r'试卷分析.xlsx'
+        self.wb.save(file)
+        win32api.ShellExecute(0, 'open', file, '', '', 1)
 
 if __name__ == "__main__":
     test = StudentDB()

@@ -66,13 +66,16 @@ class ExamControl():
         return True
 
     def makeReport(self):
-        print('make report')
         # 初始化报表文件
-        self.reportFile = ReportForm()
-        #TODO:从数据库查询需要生成报表的数据
-
-        self.reportFile.makeReport(self.dto.currentExamResults)
-        print('make report over')
+        try:
+            self.reportFile = ReportForm()
+            result=self.scoreDB.queryData(self.dto.classID,self.dto.examID)
+            if result:
+                self.reportFile.makeReport(result)
+            else:
+                QMessageBox.information(None, '提示', '没有查询到数据！')
+        except:
+            traceback.print_exc()
 
     def getScore(self, choices, answer):
         # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值

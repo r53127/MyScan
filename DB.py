@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import win32api
 
 from PyQt5.QtWidgets import QMessageBox
 from openpyxl import load_workbook
@@ -122,6 +123,12 @@ class ScoreDB():
         self.conn.execute(insert_statement, (classid, stuid, name, score, examid))
         self.conn.commit()  # 修改类操作必须commit
 
+    def queryData(self, classid, examid):
+        query_statement = r"select * from score where classID='" + str(classid) + "' and examID='" + str(
+            examid) + "'"
+        self.cursor.execute(query_statement)
+        return self.cursor.fetchall()
+
     def closeDB(self):
         # 关闭Cursor:
         self.cursor.close()
@@ -148,7 +155,7 @@ class AnswerDB():
 
 class ReportForm():
     def __init__(self):
-        self.reportTemplate = 'data/结果报表.xlsx'
+        self.reportTemplate = 'data/结果报表模板.xlsx'
         if not os.path.exists(self.reportTemplate):
             QMessageBox.information(None, '提示', '找不到报表模板文件！')
             return None
@@ -159,13 +166,20 @@ class ReportForm():
 
     def makeReport(self, examResults):
         ##examResults内数据：班级，学号，姓名，题号，填涂选项，答案，总分
-        examResults = sorted(examResults, key=lambda x: x[6], reverse=True)
+        examResults = sorted(examResults, key=lambda x: x[4], reverse=True)
         for i, r in enumerate(examResults):
-            self.sheet["A%d" % (i + 3)].value = r[0]  # 班級
-            self.sheet["B%d" % (i + 3)].value = r[2]  # 姓名
-            self.sheet["C%d" % (i + 3)].value = r[1]  # 学号
-            self.sheet["D%d" % (i + 3)].value = r[6]  # 总分
-        self.wb.save('result.xlsx')
+            classid=r[1]
+            examid=r[5]
+            self.sheet["A%d" % (i + 3)].value = r[5]  # 时间
+            self.sheet["B%d" % (i + 3)].value = r[1]  # 班級
+            self.sheet["C%d" % (i + 3)].value = r[3]  # 姓名
+            self.sheet["D%d" % (i + 3)].value = r[2]  # 学号
+            self.sheet["E%d" % (i + 3)].value = r[4]  # 总分
+        file=r'tmp\\'+classid+examid+r'.xlsx'
+        print(file)
+        self.wb.save(file)
+        win32api.ShellExecute(0, 'open', file, '', '', 1)
+
 
 
 if __name__ == "__main__":

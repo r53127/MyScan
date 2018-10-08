@@ -221,8 +221,8 @@ class PaperReportForm():
 
         self.sheet["B2"].value = stuCount  # 总人数
         self.sheet["G2"].value = quesCount  # 总题数
-        self.sheet["B3"].value = examid  # 总人数
-        self.sheet["G3"].value = classid  # 总题数
+        self.sheet["B3"].value = examid  # 考試時間
+        self.sheet["G3"].value = classid  # 班級
 
         file=r'tmp\\'+classid+examid+r'试卷分析.xlsx'
         self.wb.save(file)

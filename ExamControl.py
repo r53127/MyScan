@@ -3,9 +3,10 @@ import traceback
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from DB import StudentDB, AnswerDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm
+from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm
 from ExamDto import ExamDto
 from ExamService import ExamService
+from ScanMainWindow import ScanMainWindow
 from ScanWindow import ScanWindow
 from error import PaperRegionCountError
 
@@ -17,14 +18,13 @@ class ExamControl():
         # 鏈接学生數據庫
         self.stuDB = StudentDB()
         self.updateClassID()
-        # 连接答案库
-        self.answerDB = AnswerDB()
         # 连接阅卷结果库
         self.scanDB = ScanDB()
         # 连接成绩库
         self.scoreDB = ScoreDB()
         # 创建阅卷面板(连接数据源、 安装控制器）
-        self.scanWin = ScanWindow(self.dto, self)
+        self.scanWin = ScanMainWindow(self.dto, self)
+        # self.scanWin = ScanWindow(self.dto, self)
         # 创建阅卷逻辑块（连接数据源）
         self.examServ = ExamService(self.dto)
 
@@ -33,6 +33,7 @@ class ExamControl():
 
     def startMarking(self):
         choices, stuID = self.examServ.marking()
+        # print(choices,stuID)
         # 阅卷结果为空
         if choices is None:
             return False

@@ -12,11 +12,11 @@ img = cv.imread('tmp/ansImg.png')
 cv.namedWindow('image',0)
 
 
-cv.createTrackbar('medianBlur', 'image', 1, 100, nothing)
+cv.createTrackbar('medianBlur', 'image', 5, 100, nothing)
 
-cv.createTrackbar('GaussianBlur', 'image', 0, 100, nothing)
+cv.createTrackbar('GaussianBlur', 'image', 15, 100, nothing)
 
-cv.createTrackbar('aTh Block', 'image', 0, 255, nothing)
+cv.createTrackbar('aTh Block', 'image', 255, 255, nothing)
 cv.createTrackbar('aTh C', 'image', 0, 255, nothing)
 
 
@@ -36,7 +36,7 @@ while (1):
 
     m = cv.getTrackbarPos('medianBlur', 'image')
 
-    b = cv.getTrackbarPos('GaussianBlur', 'image')
+    g = cv.getTrackbarPos('GaussianBlur', 'image')
 
     thl = cv.getTrackbarPos('threshold low', 'image')
     thh = cv.getTrackbarPos('threshold high', 'image')
@@ -58,7 +58,7 @@ while (1):
     processed_img = cv.medianBlur(img, 2*m+1)
     processed_img = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)
 
-    processed_img = cv.GaussianBlur(processed_img, (2*b+3,2*b+3), 0)
+    processed_img = cv.GaussianBlur(processed_img, (2*g+3,2*g+3), 0)
 
     ANS_IMG_KERNEL = np.ones((kernel,kernel), np.uint8)
     # 识别所涂写区域时的膨胀参数
@@ -74,6 +74,7 @@ while (1):
     # ans_img = cv.adaptiveThreshold(processed_img, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 41, 35)
     # ans_img = cv.erode(processed_img, ANS_IMG_KERNEL, iterations= e)
     # ans_img= cv.dilate(ans_img,ANS_IMG_KERNEL,iterations = d)
+    # ret3, ans_img = cv.threshold(processed_img.copy(), 130, 255, cv.THRESH_BINARY)
     ans_img = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 2*B+3, C)
     # ans_img = cv.erode(ans_img, ANS_IMG_KERNEL, iterations= e)
     # ans_img= cv.dilate(ans_img,ANS_IMG_KERNEL,iterations = d)

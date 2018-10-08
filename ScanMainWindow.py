@@ -1,42 +1,40 @@
 # -*- coding: utf-8 -*-
 
 """
-Module implementing ScanWindow.
+Module implementing ScanMainWindow.
 """
+
 import logging
 import os
 import shutil
 import traceback
 import win32api
 
-import cv2 as cv
 from PyQt5.QtCore import pyqtSlot, Qt, QDateTime
-from PyQt5.QtGui import QImage, QPainter, QPixmap, QPalette, QFont
-from PyQt5.QtWidgets import QTabWidget, QFileDialog, QMessageBox, QGraphicsScene
+from PyQt5.QtGui import QPainter, QPalette, QFont
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow
 
 from DB import AnswerDB
-from Ui_ScanWindow import Ui_TabWidget
+from Ui_ScanMainWindow import Ui_MainWindow
 
 
-class ScanWindow(QTabWidget, Ui_TabWidget):
+class ScanMainWindow(QMainWindow, Ui_MainWindow):
     """
     Class documentation goes here.
     """
-
-    def __init__(self, dto, examControl):
+    def __init__(self, dto, examControl, parent=None):
         """
         Constructor
-
+        
         @param parent reference to the parent widget
         @type QWidget
         """
-        super(ScanWindow, self).__init__()
-        # 初始化
+        super(ScanMainWindow, self).__init__(parent)
         self.dto = dto
         self.examControl = examControl
         self.setupUi(self)
-        self.scene = QGraphicsScene()
-        self.graphicsView.setScene(self.scene)
+        # self.scene = QGraphicsScene()
+        # self.graphicsView.setScene(self.scene)
 
         # 设置错误消息label_4的字体
         errorFont = QFont()
@@ -46,7 +44,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         errorPal.setColor(QPalette.WindowText, Qt.red)
         self.label_4.setFont(errorFont)
         self.label_4.setPalette(errorPal)
-        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        # self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
         # 初始化时间控件
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
@@ -54,6 +52,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         self.updateComboBox()
         # 显示窗体
         self.show()
+
 
     # 刷新班级控件
     def updateComboBox(self):
@@ -63,9 +62,11 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
                 for j in i:
                     self.comboBox_2.addItem(j)
 
+
     def getID(self):
         self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
         self.dto.classID = self.comboBox_2.currentText()
+
 
     def startScan(self, files):
         failedCount = 0
@@ -89,6 +90,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             else:
                 QMessageBox.information(None, '提示', '已結束！')
 
+
     @pyqtSlot()
     def on_pushButton_1_clicked(self):
         """
@@ -102,6 +104,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             win32api.ShellExecute(0, 'open', answerfile, '', '', 1)
         except Exception as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "！")
+
 
     @pyqtSlot()
     def on_pushButton_2_clicked(self):
@@ -125,6 +128,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")
 
+
     @pyqtSlot()
     def on_pushButton_3_clicked(self):
         """
@@ -146,6 +150,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             return
         # 开始阅卷
         self.startScan(files)
+
 
     @pyqtSlot()
     def on_pushButton_4_clicked(self):
@@ -173,6 +178,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         # 开始阅卷
         self.startScan(files)
 
+
     def paintEvent(self, QPaintEvent):
         super().paintEvent(QPaintEvent)
         try:
@@ -181,30 +187,10 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             if not self.dto.nowPaper:
                 return
             if self.dto.nowPaper.showingImg is not None:
-                pic = ScanWindow.convertImg(self.dto.nowPaper.showingImg)
                 painter = QPainter(self)
-                painter.drawImage(50, 50, pic)
-
-                # view_size=self.graphicsView.size()
-                # pic_size=pic.size()
-                # print(view_size,pic_size)
-                # ratio=(view_size.height()*view_size.width())/(pic_size.height()*pic_size.width())
-                # pic.scaled(view_size,1)
-                # self.graphicsItem=self.scene.addPixmap(pic)
-                # self.graphicsItem.setFlag(QGraphicsItem.ItemIsMovable)
+                painter.drawPixmap(310, 20,  self.dto.nowPaper.showingImg)#450, 400,
         except:
             traceback.print_exc()
-
-    @staticmethod
-    def convertImg(img):
-        height, width, bytesPerComponent = img.shape
-        bytesPerLine = bytesPerComponent * width
-        # 变换彩色空间顺序
-        cv.cvtColor(img, cv.COLOR_BGR2RGB, img)
-        # 转为QImage对象
-        showimg = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        showpix = QPixmap.fromImage(showimg)
-        return showimg
 
     @pyqtSlot()
     def on_pushButton_5_clicked(self):
@@ -221,6 +207,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         except:
             traceback.print_exc()
 
+
     @pyqtSlot()
     def on_pushButton_6_clicked(self):
         """
@@ -232,6 +219,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             QMessageBox.information(None, '提示', '请先导入答案!')
             return
         self.examControl.makePaperReport()
+
 
     @pyqtSlot()
     def on_pushButton_7_clicked(self):
@@ -247,12 +235,14 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         for file in self.dto.failedFiles:
             self.saveFailedFiles(file, direc)
 
+
     def saveFailedFiles(self, file, dstPath):
         try:
             newfilepath = os.path.join(dstPath, os.path.basename(file))
             shutil.copyfile(file, newfilepath)
         except Exception as e:
             QMessageBox.information(None, '提示', '另存失败！错误是：' + str(e))
+
 
     @pyqtSlot()
     def on_pushButton_clicked(self):
@@ -272,6 +262,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
 
             QMessageBox.information(None, '消息', '结束！')
 
+
     @pyqtSlot()
     def on_pushButton_8_clicked(self):
         """
@@ -285,6 +276,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
             win32api.ShellExecute(0, 'open', stufile, '', '', 1)
         except Exception as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "！")
+
 
     @pyqtSlot()
     def on_pushButton_9_clicked(self):

@@ -7,10 +7,12 @@ class ExamService():
         answer_img, stu_Img = self.dto.nowPaper.get_roi_img(self.dto.nowPaper.img)
         if answer_img is None:
             return None,None
-        # 获取答题结果
-        choices = self.dto.nowPaper.getChoices(answer_img)
+
         # 获取学号
         stuID = self.dto.nowPaper.getStuID(stu_Img)
+
+        # 获取答题结果
+        choices = self.dto.nowPaper.getChoices(answer_img)
         return choices, stuID
 
     def test(self, file):

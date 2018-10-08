@@ -149,70 +149,80 @@
 # cv2.imshow('image', img)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
-import cv2 as cv
-from imutils import contours
-import numpy as np
-from ExamPaper import ANSWER_COLS, ANSWER_ROWS
-
-src_img=cv.imread('stuImg.png')
-cv.imshow('stuid', src_img)
-gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
-blur = cv.GaussianBlur(gray, (5, 5), 0)
-# 自适应二值化算法
-thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 403, 40)
-cv.imshow('thresh2', thresh2)
-cv.waitKey(0)
-image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)
-stuCnts = []
-stuBoudingCnts=[]
-# 找填凃框
-for c in sortcnts:
-    x, y, w, h = cv.boundingRect(c)
-    # cv.rectangle(src_img, (x, y), (x + w, y + h), (0, 0, 255), 2)
-    # cv.imshow('e', src_img)
-    # cv.waitKey(0)
-    ratio = w / float(h)
-    if ratio > 1.5 and ratio < 3.0 and w > 30 and h > 10:
-        stuCnts.append(c)
-        top_left=[x,y]
-        top_right=[x+w,y]
-        bottom_right=[x+w,y+h]
-        bottom_left=[x,y+h]
-        stuBoudingCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
-# 按坐标从上到下排序
-stuBoudingCnts= contours.sort_contours(stuBoudingCnts, method="left-to-right")[0]
-stuBoudingCnts= contours.sort_contours(stuBoudingCnts, method="top-to-bottom")[0]
-print(stuBoudingCnts)
-for s in stuBoudingCnts:
-    cv.drawContours(src_img, [s], -1, (255, 0, 0), 1)
-    cv.imshow('i',src_img)
-    cv.waitKey(0)
-# 使用np函数，按5个元素，生成一个集合
-first_num=[]
-second_num=[]
-m=0#十位辅助计数
-n=0#个位辅助计数
-for (i, c) in enumerate(stuBoudingCnts):
-    # 生成一个大小与透视图一样的全黑背景图布
-    mask = np.zeros(gray.shape, dtype="uint8")
-    # 将指定的轮廓+白色的填充写到画板上,255代表亮度值，亮度=255的时候，颜色是白色，等于0的时候是黑色
-    cv.drawContours(mask, [c], -1, 255, -1)
-    # 做两个图片做位运算，把每个选项独自显示到画布上，为了统计非0像素值使用，这部分像素最大的其实就是答案
-    mask = cv.bitwise_and(thresh2, thresh2, mask=mask)
-    # 获取每个答案的像素值
-    total = cv.countNonZero(mask)
-    # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
-    if i%2==0:
-        first_num.append((m,total))
-        print('firnum is :',first_num)
-        m+=1
-    else:
-        second_num.append((n,total))
-        print('secnum is :',second_num)
-        n+=1
-# 按像素值排序
-first_num = sorted(first_num, key=lambda x: x[1], reverse=True)
-second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
-
-print('学号是：',str(first_num[0][0])+str(second_num[0][0]))
+# import cv2 as cv
+# from imutils import contours
+# import numpy as np
+# from ExamPaper import ANSWER_COLS, ANSWER_ROWS
+#
+# src_img=cv.imread('stuImg.png')
+# cv.imshow('stuid', src_img)
+# gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
+# blur = cv.GaussianBlur(gray, (5, 5), 0)
+# # 自适应二值化算法
+# thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 403, 40)
+# cv.imshow('thresh2', thresh2)
+# cv.waitKey(0)
+# image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+# sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)
+# stuCnts = []
+# stuBoudingCnts=[]
+# # 找填凃框
+# for c in sortcnts:
+#     x, y, w, h = cv.boundingRect(c)
+#     # cv.rectangle(src_img, (x, y), (x + w, y + h), (0, 0, 255), 2)
+#     # cv.imshow('e', src_img)
+#     # cv.waitKey(0)
+#     ratio = w / float(h)
+#     if ratio > 1.5 and ratio < 3.0 and w > 30 and h > 10:
+#         stuCnts.append(c)
+#         top_left=[x,y]
+#         top_right=[x+w,y]
+#         bottom_right=[x+w,y+h]
+#         bottom_left=[x,y+h]
+#         stuBoudingCnts.append(np.array([[top_left],[top_right],[bottom_right],[bottom_left]],dtype=np.int32))
+# # 按坐标从上到下排序
+# stuBoudingCnts= contours.sort_contours(stuBoudingCnts, method="left-to-right")[0]
+# stuBoudingCnts= contours.sort_contours(stuBoudingCnts, method="top-to-bottom")[0]
+# print(stuBoudingCnts)
+# for s in stuBoudingCnts:
+#     cv.drawContours(src_img, [s], -1, (255, 0, 0), 1)
+#     cv.imshow('i',src_img)
+#     cv.waitKey(0)
+# # 使用np函数，按5个元素，生成一个集合
+# first_num=[]
+# second_num=[]
+# m=0#十位辅助计数
+# n=0#个位辅助计数
+# for (i, c) in enumerate(stuBoudingCnts):
+#     # 生成一个大小与透视图一样的全黑背景图布
+#     mask = np.zeros(gray.shape, dtype="uint8")
+#     # 将指定的轮廓+白色的填充写到画板上,255代表亮度值，亮度=255的时候，颜色是白色，等于0的时候是黑色
+#     cv.drawContours(mask, [c], -1, 255, -1)
+#     # 做两个图片做位运算，把每个选项独自显示到画布上，为了统计非0像素值使用，这部分像素最大的其实就是答案
+#     mask = cv.bitwise_and(thresh2, thresh2, mask=mask)
+#     # 获取每个答案的像素值
+#     total = cv.countNonZero(mask)
+#     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
+#     if i%2==0:
+#         first_num.append((m,total))
+#         print('firnum is :',first_num)
+#         m+=1
+#     else:
+#         second_num.append((n,total))
+#         print('secnum is :',second_num)
+#         n+=1
+# # 按像素值排序
+# first_num = sorted(first_num, key=lambda x: x[1], reverse=True)
+# second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
+#
+# print('学号是：',str(first_num[0][0])+str(second_num[0][0]))
+import cv2
+video="http://admin:admin@192.168.31.34:8081/"  #ip摄像头的地址
+cap = cv2.VideoCapture(video)
+while(1):
+    ret, frame = cap.read()
+    cv2.imshow('frame',frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+cap.release()
+cv2.destroyAllWindows()

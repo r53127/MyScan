@@ -86,9 +86,24 @@ class ExamPaper():
         processed_img = cv.GaussianBlur(gray, (33, 33), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
                                        503, 44)
-        # 按坐标从上到下排序
-        # cv.imshow('src_img',src_img)
-        # cv.waitKey(0)
+
+        # # 识别所涂写区域时的膨胀腐蚀的kernel
+        # ANS_IMG_KERNEL = np.ones((2, 2), np.uint8)
+        # # 识别所涂写区域时的二值化参数
+        # ANS_IMG_THRESHOLD = (88, 255)
+        # # 识别所涂写区域时的膨胀参数
+        # ANS_IMG_DILATE_ITERATIONS = 9
+        # # 识别所涂写区域时的腐蚀参数
+        # ANS_IMG_ERODE_ITERATIONS = 0
+
+        # gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)
+        # processed_img = cv.GaussianBlur(gray, (9, 9), 0)
+        # # 通过二值化和膨胀腐蚀获得填涂区域
+        # thresh2 = cv.adaptiveThreshold(processed_img, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 41,35)
+        # thresh2 = cv.dilate(thresh2, ANS_IMG_KERNEL, iterations=ANS_IMG_DILATE_ITERATIONS)
+        # thresh2 = cv.erode(thresh2, ANS_IMG_KERNEL, iterations=ANS_IMG_ERODE_ITERATIONS)
+
+        # 坐标从上到下排序
         choiceCnts = self.makeAnswerCnts(src_img)
 
         self.showingImg=ExamPaper.convertImg(src_img.copy())

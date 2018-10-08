@@ -34,28 +34,31 @@ class ExamControl():
     def startMarking(self):
         choices, stuID = self.examServ.marking()
         # print(choices,stuID)
-        # 阅卷结果为空
-        if choices is None:
-            return False
-        # 少答案
-        if len(choices) > len(self.dto.nowAnswer):
-            QMessageBox.information(None, '提示',
-                                    '学生选项比答案多，题有' + str(len(choices)) + '个，答案有' + str(len(self.dto.nowAnswer)) + '个！')
-            return False
 
         classID = self.dto.classID
         examID = self.dto.examID
+
         # 根据学号查姓名
         result = self.stuDB.checkData(stuID, classID)
         if not result:
             QMessageBox.information(None, '提示', '未找到该学生！')
-            return False
+            return 0 #计入失败
         stuName = result[0][2]
         # 检查阅卷是否重复
         result = self.scanDB.checkData(stuID, examID, classID)
         if result:
             QMessageBox.information(None, '提示', '重复阅卷，该学号已阅过！')
-            return False
+            return -1  #重复，不计入失败
+
+        # 阅卷结果为空
+        if choices is None:
+            return 0 #计入失败
+        # 少答案
+        if len(choices) > len(self.dto.nowAnswer):
+            QMessageBox.information(None, '提示',
+                                    '学生选项比答案多，题有' + str(len(choices)) + '个，答案有' + str(len(self.dto.nowAnswer)) + '个！')
+            return 0 #计入失败
+
         # 判分
         score = self.getScore(choices, self.dto.nowAnswer)
         # 答案入库，choice[0]是题号，choice[1]是填涂选项
@@ -64,7 +67,7 @@ class ExamControl():
         # 分数入库
         self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
 
-        return True
+        return 1  #成功
 
     def makeScoreReport(self):
         # 初始化报表文件

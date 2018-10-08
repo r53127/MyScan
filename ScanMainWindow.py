@@ -10,7 +10,7 @@ import shutil
 import traceback
 import win32api
 
-from PyQt5.QtCore import pyqtSlot, Qt, QDateTime
+from PyQt5.QtCore import pyqtSlot, Qt, QDateTime, QRect
 from PyQt5.QtGui import QPainter, QPalette, QFont
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow
 
@@ -74,7 +74,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
             try:
                 self.dto.setCurrentPaper(file)
                 markingFlag = self.examControl.startMarking()
-                if not markingFlag:
+                if markingFlag==0:
                     failedCount += 1
                     self.dto.failedFiles.append(file)
             except Exception as e:
@@ -88,7 +88,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
             if failedCount != 0:
                 QMessageBox.information(None, "提示", "共有" + str(failedCount) + '张图片阅卷失败！')
             else:
-                QMessageBox.information(None, '提示', '已結束！')
+                QMessageBox.information(None, '提示', '已成功結束！')
 
 
     @pyqtSlot()
@@ -188,7 +188,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
                 return
             if self.dto.nowPaper.showingImg is not None:
                 painter = QPainter(self)
-                painter.drawPixmap(310, 20,  self.dto.nowPaper.showingImg)#450, 400,
+                painter.drawPixmap(QRect(310, 20,450, 400),self.dto.nowPaper.showingImg),
         except:
             traceback.print_exc()
 

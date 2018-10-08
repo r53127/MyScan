@@ -81,7 +81,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
                 self.dto.failedFiles.append(file)
                 logging.basicConfig(filename='log.log', filemode='w', level=logging.DEBUG)
                 logging.debug(traceback.format_exc())
-                # traceback.print_exc()
+                traceback.print_exc()
                 continue
         else:
             if failedCount != 0:

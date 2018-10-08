@@ -1,3 +1,5 @@
+import traceback
+
 import cv2 as cv
 import numpy as np
 from PyQt5.QtGui import QImage, QPixmap
@@ -29,6 +31,8 @@ PER_CHOICE_COUNT = 4
 class ExamPaper():
     def __init__(self):
         self.showingImg = None
+        self.showingThresh=None
+        self.showingWrong=None
 
     def cv_imread(self, file_path=""):
         img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
@@ -36,9 +40,6 @@ class ExamPaper():
 
     def initProcess(self, imgFile):
         self.img = self.cv_imread(imgFile)
-        # self.showingImg=self.img
-        # cv.imshow('1.origin', self.img)
-        # cv.waitKey(0)
 
     def test(self, imgFile):
         # 预处理获取所有轮廓
@@ -81,12 +82,13 @@ class ExamPaper():
 
     # 获取选项
     def getChoices(self, src_img):
-        processed_img = cv.medianBlur(src_img, 13)
-        gray = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
-        processed_img = cv.GaussianBlur(gray, (33, 33), 0)
+        # processed_img = cv.medianBlur(src_img, 13)
+        self.showingImg=ExamPaper.convertImg(src_img)
+        gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
+        processed_img = cv.GaussianBlur(gray, (3, 3), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
-                                       503, 44)
-
+                                       157, 30)
+        self.showingThresh=ExamPaper.convertImg(thresh2)
         # # 识别所涂写区域时的膨胀腐蚀的kernel
         # ANS_IMG_KERNEL = np.ones((2, 2), np.uint8)
         # # 识别所涂写区域时的二值化参数
@@ -104,11 +106,7 @@ class ExamPaper():
         # thresh2 = cv.erode(thresh2, ANS_IMG_KERNEL, iterations=ANS_IMG_ERODE_ITERATIONS)
 
         # 坐标从上到下排序
-        choiceCnts = self.makeAnswerCnts(src_img)
-
-        self.showingImg=ExamPaper.convertImg(src_img.copy())
-        # cv.drawContours(self.showingImg, choiceCnts, -1, (255, 255, 255), 1)
-        # cv.imshow('choices', self.showingImg)
+        choiceCnts = self.makeAnswerCnts(src_img,expandingFlag=False,offset=2)
         cv.imwrite('tmp/ansImgThresh.png', thresh2)
 
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
@@ -140,7 +138,7 @@ class ExamPaper():
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
                     row_answers.append((total, inlineID))
                 # 行内按像素值排序
-                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT / 4  # 取一半作为阈值
+                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT / 2  # 取一半作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
                 # print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
@@ -157,7 +155,7 @@ class ExamPaper():
                     no_answer_count+=1
                 choices.append((questionID,answer))
         if no_answer_count:
-            self.showingImg=ExamPaper.convertImg(wrong_img)
+            self.showingWrong=ExamPaper.convertImg(wrong_img)
             QMessageBox.information(None,'提示','该学生共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！')
         return choices
 
@@ -337,11 +335,23 @@ class ExamPaper():
 
     @staticmethod
     def convertImg(img):
-        height, width, bytesPerComponent = img.shape
-        bytesPerLine = bytesPerComponent * width
-        # 变换彩色空间顺序
-        cv.cvtColor(img, cv.COLOR_BGR2RGB, img)
-        # 转为QImage对象
-        showimg = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        showpix = QPixmap.fromImage(showimg)
+        try:
+            if len(img.shape)==2:
+                cimg=cv.cvtColor(img, cv.COLOR_GRAY2BGR)
+            else:
+                cimg=img
+            height, width, bytesPerComponent = cimg.shape
+            bytesPerLine = bytesPerComponent * width
+            # 变换彩色空间顺序
+            if bytesPerComponent==3:
+                cv.cvtColor(cimg, cv.COLOR_BGR2RGB, cimg)
+                showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGB888)
+            elif bytesPerComponent==4:
+                cv.cvtColor(cimg, cv.COLOR_BGRA2RGB, cimg)
+                showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGBA8888)
+            # 转为QImage对象
+            showpix = QPixmap.fromImage(showimg)
+        except:
+            traceback.print_exc()
+
         return showpix

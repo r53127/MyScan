@@ -33,7 +33,7 @@ class ExamControl():
 
     def startMarking(self):
         choices, stuID = self.examServ.marking()
-        # print(choices,stuID)
+        print(choices,stuID)
 
         classID = self.dto.classID
         examID = self.dto.examID

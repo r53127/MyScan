@@ -173,38 +173,38 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         # 开始阅卷
         self.startScan(files)
 
-    def paintEvent(self, QPaintEvent):
-        super().paintEvent(QPaintEvent)
-        try:
-            self.label_4.setText(self.dto.errorMsg)
-            self.label_4.adjustSize()
-            if not self.dto.nowPaper:
-                return
-            if self.dto.nowPaper.showingImg is not None:
-                pic = ScanWindow.convertImg(self.dto.nowPaper.showingImg)
-                painter = QPainter(self)
-                painter.drawImage(50, 50, pic)
-
-                # view_size=self.graphicsView.size()
-                # pic_size=pic.size()
-                # print(view_size,pic_size)
-                # ratio=(view_size.height()*view_size.width())/(pic_size.height()*pic_size.width())
-                # pic.scaled(view_size,1)
-                # self.graphicsItem=self.scene.addPixmap(pic)
-                # self.graphicsItem.setFlag(QGraphicsItem.ItemIsMovable)
-        except:
-            traceback.print_exc()
-
-    @staticmethod
-    def convertImg(img):
-        height, width, bytesPerComponent = img.shape
-        bytesPerLine = bytesPerComponent * width
-        # 变换彩色空间顺序
-        cv.cvtColor(img, cv.COLOR_BGR2RGB, img)
-        # 转为QImage对象
-        showimg = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        showpix = QPixmap.fromImage(showimg)
-        return showimg
+    # def paintEvent(self, QPaintEvent):
+    #     super().paintEvent(QPaintEvent)
+    #     try:
+    #         self.label_4.setText(self.dto.errorMsg)
+    #         self.label_4.adjustSize()
+    #         if not self.dto.nowPaper:
+    #             return
+    #         if self.dto.nowPaper.showingImg is not None:
+    #             pic = ScanWindow.convertImg(self.dto.nowPaper.showingImg)
+    #             painter = QPainter(self)
+    #             painter.drawImage(50, 50, pic)
+    #
+    #             # view_size=self.graphicsView.size()
+    #             # pic_size=pic.size()
+    #             # print(view_size,pic_size)
+    #             # ratio=(view_size.height()*view_size.width())/(pic_size.height()*pic_size.width())
+    #             # pic.scaled(view_size,1)
+    #             # self.graphicsItem=self.scene.addPixmap(pic)
+    #             # self.graphicsItem.setFlag(QGraphicsItem.ItemIsMovable)
+    #     except:
+    #         traceback.print_exc()
+    #
+    # @staticmethod
+    # def convertImg(img):
+    #     height, width, bytesPerComponent = img.shape
+    #     bytesPerLine = bytesPerComponent * width
+    #     # 变换彩色空间顺序
+    #     cv.cvtColor(img, cv.COLOR_BGR2RGB, img)
+    #     # 转为QImage对象
+    #     showimg = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
+    #     showpix = QPixmap.fromImage(showimg)
+    #     return showimg
 
     @pyqtSlot()
     def on_pushButton_5_clicked(self):

@@ -9,18 +9,16 @@ import os
 import shutil
 import traceback
 import win32api
-import cv2 as cv
 
-
-from PyQt5.QtCore import pyqtSlot, Qt, QDateTime, QRect, QTimer
-from PyQt5.QtGui import QPainter, QPalette, QFont, QImage, QPixmap
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow
+from PyQt5.QtCore import pyqtSlot, Qt, QDateTime, QRect
+from PyQt5.QtGui import QPainter, QPalette, QFont
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget
 
 from DB import AnswerDB
-from Ui_ScanMainWindow import Ui_MainWindow
+from Ui_PicMainWindow import Ui_MainWindow
 
 
-class ScanMainWindow(QMainWindow, Ui_MainWindow):
+class PicMainWindow(QMainWindow, Ui_MainWindow):
     """
     Class documentation goes here.
     """
@@ -31,14 +29,11 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         @param parent reference to the parent widget
         @type QWidget
         """
-        super(ScanMainWindow, self).__init__(parent)
+        super(PicMainWindow, self).__init__(parent)
         self.dto = dto
         self.examControl = examControl
-        #初始化攝像頭
-        self.camera_init()
-
-
         self.setupUi(self)
+        self.line.setFixedHeight(QDesktopWidget().screenGeometry().height())
 
         # 设置错误消息label_4的字体
         errorFont = QFont()
@@ -48,6 +43,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         errorPal.setColor(QPalette.WindowText, Qt.red)
         self.label_4.setFont(errorFont)
         self.label_4.setPalette(errorPal)
+        self.label_4.move(350,860)
         # self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
         # 初始化时间控件
@@ -56,45 +52,27 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         self.updateComboBox()
         # 显示窗体
         self.showMaximized()
-        self.timer_camera.start(30)
 
-    def camera_init(self):
-        self.timer_camera = QTimer()
-        self.cap = cv.VideoCapture()
-        self.CAM_NUM = 0
-        flag = self.cap.open(self.CAM_NUM)
-        if flag == False:
-            QMessageBox.warning(None, u"Warning", u"请检测相机与电脑是否连接正确", buttons=QMessageBox.Ok,
-                                            defaultButton=QMessageBox.Ok)
-            return
-        else:
-            self.timer_camera.timeout.connect(self.show_camera)
-
-    def show_camera(self):
-        ret, camImg = self.cap.read()
-        if ret:
-            show = cv.resize(camImg, (2000, 2000))
-            show = cv.cvtColor(show, cv.COLOR_BGR2RGB)
-            height, width, bytesPerComponent = show.shape
-            bytesPerLine = bytesPerComponent * width
-            showImage = QImage(show.data, width, height,bytesPerLine, QImage.Format_RGB888)
-            self.update()
-            return  QPixmap.fromImage(showImage)
-        else:
-            return None
 
     def paintEvent(self, QPaintEvent):
         super().paintEvent(QPaintEvent)
         try:
+            x,y,w,h,padding=350,20,450,400,20
             painter = QPainter(self)
-            if self.show_camera():
-                painter.drawPixmap(QRect(20, 20, 280, 280), self.show_camera())
             self.label_4.setText(self.dto.errorMsg)
             self.label_4.adjustSize()
             if (self.dto.nowPaper is not None) and (self.dto.nowPaper.showingImg is not None):
-                painter.drawPixmap(QRect(330, 20,450, 400),self.dto.nowPaper.showingImg)
-                painter.drawPixmap(QRect(800, 20, 450, 400), self.dto.nowPaper.showingThresh)
-                painter.drawPixmap(QRect(1270, 20, 450, 400), self.dto.nowPaper.showingWrong)
+                painter.drawImage(QRect(x, y,w, h),self.dto.nowPaper.showingImg)
+            if self.dto.nowPaper.showingPaper is not None:
+                painter.drawImage(QRect(x+w+padding, y, w, h), self.dto.nowPaper.showingPaper)
+            if self.dto.nowPaper.showingPaperCnts is not None:
+                painter.drawImage(QRect(x+(w+padding)*2, y, w, h), self.dto.nowPaper.showingPaperCnts)
+            if self.dto.nowPaper.showingThresh is not None:
+                painter.drawImage(QRect(x, y+h+padding, w, h), self.dto.nowPaper.showingThresh)
+            if self.dto.nowPaper.showingWrong is not None:
+                painter.drawImage(QRect(x+w+padding, y+h+padding, w, h), self.dto.nowPaper.showingWrong)
+            if self.dto.nowPaper.showingStu is not None:
+                painter.drawImage(QRect(x+(w+padding)*2, y+h+padding, w/2, h), self.dto.nowPaper.showingStu)
         except:
             traceback.print_exc()
 
@@ -113,6 +91,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
 
 
     def startScan(self, files):
+        self.dto.testFlag = False
         failedCount = 0
         for file in files:
             try:
@@ -153,6 +132,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
     @pyqtSlot()
     def on_pushButton_2_clicked(self):
         try:
+            self.dto.testFlag=False
             file, filetype = QFileDialog.getOpenFileName(self, '导入答案文件', r'.\data', r'EXCEL文件 (*.xlsx)')
             # 如果未选择，返回
             if not file:
@@ -193,6 +173,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         if not files:
             return
         # 开始阅卷
+        self.dto.testFlag = False
         self.startScan(files)
 
 
@@ -220,6 +201,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         for filename in filesname:
             files.append(os.path.join(direc + '/', filename))
         # 开始阅卷
+        self.dto.testFlag = False
         self.startScan(files)
 
 
@@ -319,4 +301,19 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         if not file:
             return
         # 开始阅卷
+        self.dto.testFlag=True
+        self.dto.testFile=file
         self.examControl.test(file)
+    
+    @pyqtSlot(float)
+    def on_doubleSpinBox_valueChanged(self, p0):
+        """
+        Slot documentation goes here.
+        
+        @param p0 DESCRIPTION
+        @type float
+        """
+        self.dto.answerThreshhold=p0
+        if self.dto.testFlag:
+            self.examControl.test(self.dto.testFile)
+        self.update()

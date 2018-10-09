@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import QMessageBox
 from imutils import contours
 from imutils.perspective import four_point_transform
 
+from error import PaperRegionCountError
+
 ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
 # 行數
 ANSWER_ROWS = 20
@@ -29,17 +31,28 @@ PER_CHOICE_COUNT = 4
 
 
 class ExamPaper():
-    def __init__(self):
+    def __init__(self,dto):
+        self.dto=dto
+        self.init()
+
+
+    def init(self):
         self.showingImg = None
         self.showingThresh=None
         self.showingWrong=None
+        self.showingStu=None
+        self.showingPaper=None
+        self.showingPaperCnts=None
+        self.dto.errorMsg=''
 
     def cv_imread(self, file_path=""):
         img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
         return img
 
     def initProcess(self, imgFile):
+        self.init()
         self.img = self.cv_imread(imgFile)
+        self.showingImg=ExamPaper.convertImg(self.img)
 
     def test(self, imgFile):
         # 预处理获取所有轮廓
@@ -48,13 +61,9 @@ class ExamPaper():
         answer_img, stu_Img = self.get_roi_img(self.img)
         if answer_img is None:
             return
-        # cv.imshow('answer_img', answer_img)
-        # cv.imshow('stu_img', stu_Img)
-        # cv.waitKey(0)
-        ans_choices = self.getChoices(answer_img)
         stuID = self.getStuID(stu_Img)
-        print(ans_choices)
-        print(stuID)
+        ans_choices = self.getChoices(answer_img)
+
 
     # 根据答题区域大小生成每个选框的绝对坐标
     def makeAnswerCnts(self, src_img, expandingFlag=True, offset=0):
@@ -83,7 +92,6 @@ class ExamPaper():
     # 获取选项
     def getChoices(self, src_img):
         # processed_img = cv.medianBlur(src_img, 13)
-        self.showingImg=ExamPaper.convertImg(src_img)
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
@@ -108,6 +116,11 @@ class ExamPaper():
         # 坐标从上到下排序
         choiceCnts = self.makeAnswerCnts(src_img)
         cv.imwrite('tmp/ansImgThresh.png', thresh2)
+
+        showingPaper=src_img.copy()
+        self.showingPaper=ExamPaper.convertImg(showingPaper)
+        cv.drawContours(showingPaper,choiceCnts,-1,(255,0,0),2)
+        self.showingPaperCnts=ExamPaper.convertImg(showingPaper)
 
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
         choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
@@ -140,7 +153,7 @@ class ExamPaper():
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
                     row_answers.append((total, inlineID))
                 # 行内按像素值排序
-                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT *0.7 # 取0.7作为阈值
+                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT * self.dto.answerThreshhold # 取0.7作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
                 # print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
@@ -153,12 +166,15 @@ class ExamPaper():
                 #     choices.append((questionID, ''))
                 answer=self.getAnswerChars(row_answers, ANSWER_THRESHOLD)
                 if not answer.strip():
-                    cv.drawContours(wrong_img,cnts,-1,(255,0,0),2)
+                    cv.drawContours(wrong_img,cnts,-1,(0,0,255),2)
                     no_answer_count+=1
                 choices.append((questionID,answer))
         self.showingWrong = ExamPaper.convertImg(wrong_img)
-        if no_answer_count:
-            QMessageBox.information(None,'提示','该学生共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！')
+        if no_answer_count:#存在未凃答案
+            if not self.dto.testFlag:
+                QMessageBox.information(None, '提示', '该学生共有' + str(no_answer_count) + '个题未涂或涂的不符合要求！')
+            self.dto.errorMsg='该学生共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！'
+
         return choices
 
     # 根据选项 的涂色阈值换算选项字母
@@ -209,11 +225,12 @@ class ExamPaper():
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
                                        85, 18)
         # 按坐标从上到下排序
-        # cv.imshow('thresh2',thresh2)
-        # cv.waitKey(0)
+
         stuidCnts = self.makeStuidCnts(src_img)
-        # cv.drawContours(src_img, stuidCnts, -1, (255, 0, 0), 1)
-        # cv.imshow('i', src_img)
+        stu_Img=src_img.copy()
+        cv.drawContours(stu_Img, stuidCnts, -1, (255, 0, 0), 1)
+        self.showingStu = ExamPaper.convertImg(stu_Img)
+
         # 使用np函数，按5个元素，生成一个集合
         first_num = []
         second_num = []
@@ -348,5 +365,5 @@ class ExamPaper():
         height, width, bytesPerComponent = cimg.shape
         bytesPerLine = bytesPerComponent * width
         showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        showpix = QPixmap.fromImage(showimg)
-        return showpix
+        # showpix = QPixmap.fromImage(showimg)
+        return showimg

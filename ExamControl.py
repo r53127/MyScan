@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm
 from ExamDto import ExamDto
 from ExamService import ExamService
+from PicMainWindow import PicMainWindow
 from ScanMainWindow import ScanMainWindow
 from ScanWindow import ScanWindow
 from error import PaperRegionCountError
@@ -23,7 +24,8 @@ class ExamControl():
         # 连接成绩库
         self.scoreDB = ScoreDB()
         # 创建阅卷面板(连接数据源、 安装控制器）
-        self.scanWin = ScanMainWindow(self.dto, self)
+        self.scanWin = PicMainWindow(self.dto, self)
+        # self.scanWin = ScanMainWindow(self.dto, self)
         # self.scanWin = ScanWindow(self.dto, self)
         # 创建阅卷逻辑块（连接数据源）
         self.examServ = ExamService(self.dto)
@@ -33,7 +35,6 @@ class ExamControl():
 
     def startMarking(self):
         choices, stuID = self.examServ.marking()
-        print(choices,stuID)
 
         classID = self.dto.classID
         examID = self.dto.examID
@@ -119,7 +120,7 @@ class ExamControl():
         try:
             self.examServ.test(file)
         except PaperRegionCountError as e:
-            self.dto.errorMsg = '错误！找到的选项个数为：' + str(e.errorValue) + e.errorMsg
+            self.dto.errorMsg = '该学生共有'+str(e.errorValue)+'个题未涂或涂的不符合要求！'
             self.scanWin.update()
             return
         except:

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-6.0.dtd">
 <!-- eric project file for project MyScan -->
-<!-- Saved: 2018-10-08, 21:12:13 -->
+<!-- Saved: 2018-10-09, 14:54:43 -->
 <!-- Copyright (C) 2018 ,  -->
 <Project version="6.0">
   <Language></Language>
@@ -15,11 +15,13 @@
   <Sources>
     <Source>ScanMainWindow.py</Source>
     <Source>ScanWindow.py</Source>
+    <Source>Ui_PicMainWindow.py</Source>
     <Source>Ui_ScanMainWindow.py</Source>
     <Source>Ui_ScanWindow.py</Source>
     <Source>__init__.py</Source>
   </Sources>
   <Forms>
+    <Form>PicMainWindow.ui</Form>
     <Form>ScanMainWindow.ui</Form>
     <Form>ScanWindow.ui</Form>
   </Forms>

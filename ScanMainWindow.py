@@ -36,7 +36,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         self.examControl = examControl
         #初始化攝像頭
         self.camera_init()
-        self.timer_camera.timeout.connect(self.show_camera)
+
 
         self.setupUi(self)
 
@@ -64,27 +64,32 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         self.CAM_NUM = 0
         flag = self.cap.open(self.CAM_NUM)
         if flag == False:
-            QMessageBox.warning(None, u"Warning", u"请检测相机与电脑是否连接正确", buttons=Qt.QMessageBox.Ok,
-                                            defaultButton=Qt.QMessageBox.Ok)
+            QMessageBox.warning(None, u"Warning", u"请检测相机与电脑是否连接正确", buttons=QMessageBox.Ok,
+                                            defaultButton=QMessageBox.Ok)
+            return
+        else:
+            self.timer_camera.timeout.connect(self.show_camera)
 
     def show_camera(self):
         ret, camImg = self.cap.read()
-        show = cv.resize(camImg, (280, 280))
-        show = cv.cvtColor(show, cv.COLOR_BGR2RGB)
-        showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
-        self.update()
-        return  QPixmap.fromImage(showImage)
+        if ret:
+            show = cv.resize(camImg, (280, 280))
+            show = cv.cvtColor(show, cv.COLOR_BGR2RGB)
+            showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
+            self.update()
+            return  QPixmap.fromImage(showImage)
+        else:
+            return None
 
     def paintEvent(self, QPaintEvent):
         super().paintEvent(QPaintEvent)
         try:
             painter = QPainter(self)
-            painter.drawPixmap(QRect(20, 20, 280, 280), self.show_camera())
+            if self.show_camera():
+                painter.drawPixmap(QRect(20, 20, 280, 280), self.show_camera())
             self.label_4.setText(self.dto.errorMsg)
             self.label_4.adjustSize()
-            if not self.dto.nowPaper:
-                return
-            if self.dto.nowPaper.showingImg is not None:
+            if (self.dto.nowPaper is not None) and (self.dto.nowPaper.showingImg is not None):
                 painter.drawPixmap(QRect(310, 20,450, 400),self.dto.nowPaper.showingImg)
                 painter.drawPixmap(QRect(780, 20, 450, 400), self.dto.nowPaper.showingThresh)
                 painter.drawPixmap(QRect(1250, 20, 450, 400), self.dto.nowPaper.showingWrong)

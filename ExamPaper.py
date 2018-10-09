@@ -87,7 +87,7 @@ class ExamPaper():
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
-                                       157, 30)
+                                       503, 14)
         self.showingThresh=ExamPaper.convertImg(thresh2)
         # # 识别所涂写区域时的膨胀腐蚀的kernel
         # ANS_IMG_KERNEL = np.ones((2, 2), np.uint8)
@@ -106,7 +106,7 @@ class ExamPaper():
         # thresh2 = cv.erode(thresh2, ANS_IMG_KERNEL, iterations=ANS_IMG_ERODE_ITERATIONS)
 
         # 坐标从上到下排序
-        choiceCnts = self.makeAnswerCnts(src_img,expandingFlag=False,offset=2)
+        choiceCnts = self.makeAnswerCnts(src_img)
         cv.imwrite('tmp/ansImgThresh.png', thresh2)
 
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
@@ -114,7 +114,9 @@ class ExamPaper():
         # 使用np函数，按5个元素，生成一个集合
         choices = []
         no_answer_count=0
+        #轉換為3通道圖片
         wrong_img = src_img.copy()
+        wrong_img=cv.cvtColor(wrong_img,cv.COLOR_BGRA2BGR)
         # questionID为題号，j为行内序号
         for col in range(ANSWER_COLS):  # 列循环3列
             for row in range(ANSWER_ROWS):  # 行循环20行
@@ -138,7 +140,7 @@ class ExamPaper():
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
                     row_answers.append((total, inlineID))
                 # 行内按像素值排序
-                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT / 2  # 取一半作为阈值
+                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT *0.7 # 取0.7作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
                 # print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
@@ -154,8 +156,8 @@ class ExamPaper():
                     cv.drawContours(wrong_img,cnts,-1,(255,0,0),2)
                     no_answer_count+=1
                 choices.append((questionID,answer))
+        self.showingWrong = ExamPaper.convertImg(wrong_img)
         if no_answer_count:
-            self.showingWrong=ExamPaper.convertImg(wrong_img)
             QMessageBox.information(None,'提示','该学生共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！')
         return choices
 
@@ -347,7 +349,7 @@ class ExamPaper():
                 cv.cvtColor(cimg, cv.COLOR_BGR2RGB, cimg)
                 showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGB888)
             elif bytesPerComponent==4:
-                cv.cvtColor(cimg, cv.COLOR_BGRA2RGB, cimg)
+                cv.cvtColor(cimg, cv.COLOR_BGRA2RGBA,cimg)
                 showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGBA8888)
             # 转为QImage对象
             showpix = QPixmap.fromImage(showimg)

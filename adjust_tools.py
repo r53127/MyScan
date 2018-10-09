@@ -76,8 +76,8 @@ while (1):
     # ans_img= cv.dilate(ans_img,ANS_IMG_KERNEL,iterations = d)
     # ret3, ans_img = cv.threshold(processed_img.copy(), 130, 255, cv.THRESH_BINARY)
     ans_img = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 2*B+3, C)
-    # ans_img = cv.erode(ans_img, ANS_IMG_KERNEL, iterations= e)
-    # ans_img= cv.dilate(ans_img,ANS_IMG_KERNEL,iterations = d)
+    ans_img = cv.erode(ans_img, ANS_IMG_KERNEL, iterations= e)
+    ans_img= cv.dilate(ans_img,ANS_IMG_KERNEL,iterations = d)
 
     # ret, ans_img = cv.threshold(ans_img, thl, thh, cv.THRESH_BINARY)
     # ret, ans_img1 = cv.threshold(ans_img.copy(), 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)

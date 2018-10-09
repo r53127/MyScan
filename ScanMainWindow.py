@@ -73,9 +73,11 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
     def show_camera(self):
         ret, camImg = self.cap.read()
         if ret:
-            show = cv.resize(camImg, (280, 280))
+            show = cv.resize(camImg, (2000, 2000))
             show = cv.cvtColor(show, cv.COLOR_BGR2RGB)
-            showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
+            height, width, bytesPerComponent = show.shape
+            bytesPerLine = bytesPerComponent * width
+            showImage = QImage(show.data, width, height,bytesPerLine, QImage.Format_RGB888)
             self.update()
             return  QPixmap.fromImage(showImage)
         else:

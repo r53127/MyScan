@@ -116,7 +116,7 @@ class ExamPaper():
         no_answer_count=0
         #轉換為3通道圖片
         wrong_img = src_img.copy()
-        wrong_img=cv.cvtColor(wrong_img,cv.COLOR_BGRA2BGR)
+        # wrong_img=cv.cvtColor(wrong_img,cv.COLOR_BGRA2BGR)
         # questionID为題号，j为行内序号
         for col in range(ANSWER_COLS):  # 列循环3列
             for row in range(ANSWER_ROWS):  # 行循环20行
@@ -337,23 +337,16 @@ class ExamPaper():
 
     @staticmethod
     def convertImg(img):
-        try:
-            if len(img.shape)==2:
-                cimg=cv.cvtColor(img, cv.COLOR_GRAY2BGR)
-            else:
-                cimg=img
-            height, width, bytesPerComponent = cimg.shape
-            bytesPerLine = bytesPerComponent * width
-            # 变换彩色空间顺序
-            if bytesPerComponent==3:
-                cv.cvtColor(cimg, cv.COLOR_BGR2RGB, cimg)
-                showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGB888)
-            elif bytesPerComponent==4:
-                cv.cvtColor(cimg, cv.COLOR_BGRA2RGBA,cimg)
-                showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGBA8888)
-            # 转为QImage对象
-            showpix = QPixmap.fromImage(showimg)
-        except:
-            traceback.print_exc()
-
+        # 变换彩色空间顺序
+        if len(img.shape)==2:
+            cimg=cv.cvtColor(img, cv.COLOR_GRAY2RGB)
+        elif len(img.shape)==3 and img.shape[2]==3:
+            cimg=cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        elif len(img.shape) == 3 and img.shape[2] == 4:
+            cimg=cv.cvtColor(img, cv.COLOR_BGRA2RGB)
+        # 转为QImage对象
+        height, width, bytesPerComponent = cimg.shape
+        bytesPerLine = bytesPerComponent * width
+        showimg = QImage(cimg.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        showpix = QPixmap.fromImage(showimg)
         return showpix

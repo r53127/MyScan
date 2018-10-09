@@ -33,10 +33,10 @@ PER_CHOICE_COUNT = 4
 class ExamPaper():
     def __init__(self,dto):
         self.dto=dto
-        self.init()
+        self.initPaper()
 
 
-    def init(self):
+    def initPaper(self):
         self.showingImg = None
         self.showingThresh=None
         self.showingWrong=None
@@ -49,14 +49,14 @@ class ExamPaper():
         img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
         return img
 
-    def initProcess(self, imgFile):
-        self.init()
+    def initImgProcess(self, imgFile):
+        self.initPaper()
         self.img = self.cv_imread(imgFile)
         self.showingImg=ExamPaper.convertImg(self.img)
 
     def test(self, imgFile):
         # 预处理获取所有轮廓
-        self.initProcess(imgFile)
+        self.initImgProcess(imgFile)
         # 获取答题卡上的答题和学号区域
         answer_img, stu_Img = self.get_roi_img(self.img)
         if answer_img is None:
@@ -95,7 +95,7 @@ class ExamPaper():
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
-                                       503, 14)
+                                       157, 19)
         self.showingThresh=ExamPaper.convertImg(thresh2)
         # # 识别所涂写区域时的膨胀腐蚀的kernel
         # ANS_IMG_KERNEL = np.ones((2, 2), np.uint8)
@@ -126,10 +126,8 @@ class ExamPaper():
         choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
         # 使用np函数，按5个元素，生成一个集合
         choices = []
-        no_answer_count=0
-        #轉換為3通道圖片
+        no_answer_count=0#未涂答案的题数
         wrong_img = src_img.copy()
-        # wrong_img=cv.cvtColor(wrong_img,cv.COLOR_BGRA2BGR)
         # questionID为題号，j为行内序号
         for col in range(ANSWER_COLS):  # 列循环3列
             for row in range(ANSWER_ROWS):  # 行循环20行
@@ -144,10 +142,15 @@ class ExamPaper():
                     mask = np.zeros(gray.shape, dtype="uint8")
                     # 将指定的轮廓+白色的填充写到画板上,255代表亮度值，亮度=255的时候，颜色是白色，等于0的时候是黑色
                     cv.drawContours(mask, [c], -1, 255, -1)
-                    maxPixel = cv.countNonZero(mask)
-                    pixelCount += maxPixel
+                    # cv.imshow('c', mask)
+                    # cv.waitKey(0)
+                    maxPixel = cv.countNonZero(mask)#单个蒙板的像素
+                    print(maxPixel)
+                    pixelCount += maxPixel#累加最大像素值
                     # 做两个图片做位运算，把每个选项独自显示到画布上，为了统计非0像素值使用，这部分像素最大的其实就是答案
                     mask = cv.bitwise_and(thresh2, thresh2, mask=mask)
+                    # cv.imshow('m', mask)
+                    # cv.waitKey(0)
                     # 获取每个答案的像素值
                     total = cv.countNonZero(mask)
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
@@ -156,7 +159,7 @@ class ExamPaper():
                 ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT * self.dto.answerThreshhold # 取0.7作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
-                # print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
+                print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
                 #以下为取最大值，实现单选
                 #  row_answers[0][0]為total，row_answers[0][1]為選項號
                 # choices.append((questionID, ANSWER_CHAR.get(row_answers[0][1])))
@@ -174,7 +177,6 @@ class ExamPaper():
             if not self.dto.testFlag:
                 QMessageBox.information(None, '提示', '该学生共有' + str(no_answer_count) + '个题未涂或涂的不符合要求！')
             self.dto.errorMsg='该学生共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！'
-
         return choices
 
     # 根据选项 的涂色阈值换算选项字母
@@ -191,8 +193,8 @@ class ExamPaper():
     def makeStuidCnts(self, src_img, expandingFlag=True, offset=0):
         width = src_img.shape[1]
         height = src_img.shape[0]
-        height_scale_size = height / Stuid_AREA_ROWS
-        width_scale_size = width / Stuid_AREA_COLS
+        height_scale_size = height / Stuid_AREA_ROWS #每单元格高度
+        width_scale_size = width / Stuid_AREA_COLS #每单元格宽度
         stuidCnts = []
         for x in range(ID_BITS):  # x为列相对坐标:表示2位数
             for y in range(NUM_BITS):  # y为行相对坐标:表示每位10个数字
@@ -231,9 +233,8 @@ class ExamPaper():
         cv.drawContours(stu_Img, stuidCnts, -1, (255, 0, 0), 1)
         self.showingStu = ExamPaper.convertImg(stu_Img)
 
-        # 使用np函数，按5个元素，生成一个集合
-        first_num = []
-        second_num = []
+        first_num = [] #第一位数字
+        second_num = [] #第二位数字
         m = 0  # 十位辅助计数
         n = 0  # 个位辅助计数
         for (i, c) in enumerate(stuidCnts):
@@ -282,7 +283,7 @@ class ExamPaper():
                 ratio = maxImg_tmp.shape[1] / maxImg_tmp.shape[0]  # 寬高比
                 if ratio > 1.3 and ratio < 2.0 and maxImg_tmp.shape[0] > src_img.shape[0] / 4 and maxImg_tmp.shape[1] > \
                         src_img.shape[1] / 4:
-                    cv.imwrite('tmp/paper.png', maxImg_tmp)
+                    # cv.imwrite('tmp/paper.png', maxImg_tmp)
                     maxImg = maxImg_tmp
                     break
         else:
@@ -333,7 +334,7 @@ class ExamPaper():
                         ansImg.shape[1] and stuImg_tmp.shape[0] > maxImg.shape[0] / 4 and stuImg_tmp.shape[1] > \
                         maxImg.shape[1] / 7:
                     stuImg = stuImg_tmp
-                    cv.imwrite('tmp/stuImg.png', stuImg)
+                    # cv.imwrite('tmp/stuImg.png', stuImg)
                     break
         else:
             QMessageBox.information(None, '提示', '找不到有效的学号区域！')

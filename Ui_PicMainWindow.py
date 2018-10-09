@@ -127,8 +127,8 @@ class Ui_MainWindow(object):
         self.doubleSpinBox.setDecimals(2)
         self.doubleSpinBox.setMinimum(0.1)
         self.doubleSpinBox.setMaximum(1.0)
-        self.doubleSpinBox.setSingleStep(0.02)
-        self.doubleSpinBox.setProperty("value", 0.5)
+        self.doubleSpinBox.setSingleStep(0.01)
+        self.doubleSpinBox.setProperty("value", 0.6)
         self.doubleSpinBox.setObjectName("doubleSpinBox")
         MainWindow.setCentralWidget(self.centralWidget)
 

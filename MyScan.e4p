@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-6.0.dtd">
 <!-- eric project file for project MyScan -->
-<!-- Saved: 2018-10-09, 14:54:43 -->
+<!-- Saved: 2018-10-09, 20:41:44 -->
 <!-- Copyright (C) 2018 ,  -->
 <Project version="6.0">
   <Language></Language>
@@ -13,6 +13,7 @@
   <Email></Email>
   <Eol index="0"/>
   <Sources>
+    <Source>PicMainWindow.py</Source>
     <Source>ScanMainWindow.py</Source>
     <Source>ScanWindow.py</Source>
     <Source>Ui_PicMainWindow.py</Source>

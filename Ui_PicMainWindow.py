@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'E:\MyScan\PicMainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -137,7 +137,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "多宝阅卷"))
         self.label_3.setText(_translate("MainWindow", "第一步：设置答案"))
         self.pushButton_8.setText(_translate("MainWindow", "打开学生库模板"))
         self.pushButton.setText(_translate("MainWindow", "导入学生库"))

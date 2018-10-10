@@ -16,6 +16,10 @@ class ExamControl():
         self.dto = ExamDto()
         if not os.path.exists('data'):
             os.mkdir('data')
+        if not os.path.exists('tmp'):
+            os.mkdir('tmp')
+        if not os.path.exists('image'):
+            os.mkdir('image')
         # 鏈接学生數據庫
         self.stuDB = StudentDB()
         self.updateClassID()

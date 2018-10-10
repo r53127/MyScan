@@ -1,5 +1,5 @@
+import os
 import sys
-import traceback
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
@@ -7,8 +7,6 @@ from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm
 from ExamDto import ExamDto
 from ExamService import ExamService
 from PicMainWindow import PicMainWindow
-from ScanMainWindow import ScanMainWindow
-from ScanWindow import ScanWindow
 from error import PaperRegionCountError
 
 
@@ -16,6 +14,8 @@ class ExamControl():
     def __init__(self):
         # 创建数据源
         self.dto = ExamDto()
+        if not os.path.exists('data'):
+            os.mkdir('data')
         # 鏈接学生數據庫
         self.stuDB = StudentDB()
         self.updateClassID()
@@ -25,8 +25,6 @@ class ExamControl():
         self.scoreDB = ScoreDB()
         # 创建阅卷面板(连接数据源、 安装控制器）
         self.scanWin = PicMainWindow(self.dto, self)
-        # self.scanWin = ScanMainWindow(self.dto, self)
-        # self.scanWin = ScanWindow(self.dto, self)
         # 创建阅卷逻辑块（连接数据源）
         self.examServ = ExamService(self.dto)
 
@@ -80,8 +78,8 @@ class ExamControl():
                 reportFile.makeScoreReport(result)
             else:
                 QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
-        except:
-            traceback.print_exc()
+        except Exception as e:
+            QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
     def makePaperReport(self):
         # 初始化报表文件
@@ -103,8 +101,8 @@ class ExamControl():
                 #根据模板存放需要的数据：考试时间，班级，题号，正确答案，正确率，A选项率，B选项率，C选项率，D选项率,总人数，总题数
                 paperResult.append([self.dto.examID,self.dto.classID,quesid,correct_ans,correct_count,A_count,B_count,C_count,D_count,stu_count,ques_count])
             reportFile.makePaperReport(paperResult)
-        except:
-            traceback.print_exc()
+        except Exception as e:
+            QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
     def getScore(self, choices, answer):
         # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值
@@ -123,9 +121,8 @@ class ExamControl():
             self.dto.errorMsg = '该学生共有'+str(e.errorValue)+'个题未涂或涂的不符合要求！'
             self.scanWin.update()
             return
-        except:
-            traceback.print_exc()
-            return
+        except Exception as e:
+            QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
 
 if __name__ == "__main__":

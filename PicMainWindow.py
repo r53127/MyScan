@@ -11,7 +11,7 @@ import traceback
 import win32api
 
 from PyQt5.QtCore import pyqtSlot, Qt, QDateTime, QRect
-from PyQt5.QtGui import QPainter, QPalette, QFont
+from PyQt5.QtGui import QPainter, QPalette, QFont, QIcon
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget
 
 from DB import AnswerDB
@@ -33,6 +33,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.dto = dto
         self.examControl = examControl
         self.setupUi(self)
+        self.setWindowIcon(QIcon("scan.ico"))
         self.line.setFixedHeight(QDesktopWidget().screenGeometry().height())
 
         # 设置错误消息label_4的字体
@@ -73,8 +74,9 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 painter.drawImage(QRect(x+w+padding, y+h+padding, w, h), self.dto.nowPaper.showingWrong)
             if self.dto.nowPaper.showingStu is not None:
                 painter.drawImage(QRect(x+(w+padding)*2, y+h+padding, w/2, h), self.dto.nowPaper.showingStu)
-        except:
-            traceback.print_exc()
+        except Exception as e:
+            QMessageBox.information(None, '提示', '显示图像失败！错误是：' + str(e))
+
 
     # 刷新班级控件
     def updateComboBox(self):
@@ -105,7 +107,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 self.dto.failedFiles.append(file)
                 logging.basicConfig(filename='log.log', filemode='w', level=logging.DEBUG)
                 logging.debug(traceback.format_exc())
-                # traceback.print_exc()
+                QMessageBox.information(None, '提示', '此图片阅卷失败！错误是：' + str(e))
                 continue
         else:
             if failedCount != 0:
@@ -144,11 +146,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 return
             self.dto.nowAnswerFile = file
             self.dto.nowAnswer = answers
-            # 答案校对
-            # ansinfo = ''
-            # for answer in self.dto.nowAnswer.items():
-            #     ansinfo += '题号:' + str(answer[0]) + ' 答案为：' + str(answer[1][0]) + " 分值为：" + str(answer[1][1]) + "\n"
-            QMessageBox.information(None, '提示:', '成功导入！')
+            QMessageBox.information(None, '提示:', '共导入'+str(len(answers))+'个题答案！')
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")
 
@@ -217,8 +215,8 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
                 return
             self.examControl.makeScoreReport()
-        except:
-            traceback.print_exc()
+        except Exception as e:
+            QMessageBox.information(None, '提示', '错误是：' + str(e))
 
 
     @pyqtSlot()
@@ -266,15 +264,13 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 如果未选择，返回
         if not file:
             return
-        if self.examControl.stuDB.importStuFromXLS(file):
-            try:
+        try:
+            if self.examControl.stuDB.importStuFromXLS(file):
                 self.examControl.updateClassID()
                 self.updateComboBox()
-            except:
-                traceback.print_exc()
-
-            QMessageBox.information(None, '消息', '结束！')
-
+                QMessageBox.information(None, '消息', '结束！')
+        except Exception as e:
+            QMessageBox.information(None, '提示', '导入失败！错误是：' + str(e)+'，请选择正确的学生库文件！')
 
     @pyqtSlot()
     def on_pushButton_8_clicked(self):

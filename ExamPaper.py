@@ -8,7 +8,7 @@ from imutils import contours
 from imutils.perspective import four_point_transform
 
 from error import PaperRegionCountError
-
+#选项字母表
 ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
 # 行數
 ANSWER_ROWS = 20
@@ -74,8 +74,8 @@ class ExamPaper():
         height_scale_size = height / rows
         width_scale_size = width / cols
         answerCnts = []
-        for x in range(1, 2 * ANSWER_COLS * PER_CHOICE_COUNT, 2):
-            for y in range(1, 2 * ANSWER_ROWS, 2):
+        for x in range(1, 2 * ANSWER_COLS * PER_CHOICE_COUNT, 2): #列循环
+            for y in range(1, 2 * ANSWER_ROWS, 2): #行循环
                 if expandingFlag:  # 扩大
                     top_left = [x * width_scale_size - offset, y * height_scale_size - offset]
                     top_right = [(x + 1) * width_scale_size + offset, y * height_scale_size - offset]
@@ -119,17 +119,23 @@ class ExamPaper():
 
         showingPaper=src_img.copy()
         self.showingPaper=ExamPaper.convertImg(showingPaper)
-        cv.drawContours(showingPaper,choiceCnts,-1,(255,0,0),2)
-        self.showingPaperCnts=ExamPaper.convertImg(showingPaper)
 
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
         choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
+
+        if self.dto.nowAnswer is None:#如果未导入答案，标注所有的定位框
+            cv.drawContours(showingPaper, choiceCnts, -1, (255, 0, 0), 2)
+
         # 使用np函数，按5个元素，生成一个集合
         choices = []
         no_answer_count=0#未涂答案的题数
         wrong_img = src_img.copy()
         # questionID为題号，j为行内序号
+        questionID=0
         for col in range(ANSWER_COLS):  # 列循环3列
+            if self.dto.nowAnswer is not None:#如果已导入答案，如果题号等于最大题数，也停止列循环
+                if questionID == len(self.dto.nowAnswer):
+                    break
             for row in range(ANSWER_ROWS):  # 行循环20行
                 # 获取按从左到右的排序后的4个元素
                 cnts = choiceCnts[
@@ -145,7 +151,7 @@ class ExamPaper():
                     # cv.imshow('c', mask)
                     # cv.waitKey(0)
                     maxPixel = cv.countNonZero(mask)#单个蒙板的像素
-                    print(maxPixel)
+                    # print(maxPixel)
                     pixelCount += maxPixel#累加最大像素值
                     # 做两个图片做位运算，把每个选项独自显示到画布上，为了统计非0像素值使用，这部分像素最大的其实就是答案
                     mask = cv.bitwise_and(thresh2, thresh2, mask=mask)
@@ -155,11 +161,13 @@ class ExamPaper():
                     total = cv.countNonZero(mask)
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
                     row_answers.append((total, inlineID))
+                    if self.dto.nowAnswer:#如果已导入答案，则标注相应题数的标注框
+                        cv.drawContours(showingPaper, [c], 0, (255, 0, 0), 2)
                 # 行内按像素值排序
                 ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT * self.dto.answerThreshhold # 取0.7作为阈值
                 row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
-                print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
+                #print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
                 #以下为取最大值，实现单选
                 #  row_answers[0][0]為total，row_answers[0][1]為選項號
                 # choices.append((questionID, ANSWER_CHAR.get(row_answers[0][1])))
@@ -168,15 +176,19 @@ class ExamPaper():
                 # else:
                 #     choices.append((questionID, ''))
                 answer=self.getAnswerChars(row_answers, ANSWER_THRESHOLD)
-                if not answer.strip():
+                if not answer.strip(): #如果所选答案为空，则进行画框标注，同时未涂总数+1计数
                     cv.drawContours(wrong_img,cnts,-1,(0,0,255),2)
                     no_answer_count+=1
-                choices.append((questionID,answer))
-        self.showingWrong = ExamPaper.convertImg(wrong_img)
+                choices.append((questionID,answer)) #所选结果存入
+                if self.dto.nowAnswer is not None:#如果已导入答案，如果题号等于最大题数，就停止行循环
+                    if questionID==len(self.dto.nowAnswer):
+                        break
+        self.showingPaperCnts = ExamPaper.convertImg(showingPaper)#显示所有定位标注框图片
+        self.showingWrong = ExamPaper.convertImg(wrong_img)#显示未涂或者未达标的选项标注框图片
         if no_answer_count:#存在未凃答案
             if not self.dto.testFlag:
                 QMessageBox.information(None, '提示', '该学生共有' + str(no_answer_count) + '个题未涂或涂的不符合要求！')
-            self.dto.errorMsg='该学生共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！'
+            self.dto.errorMsg='该卡共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！'
         return choices
 
     # 根据选项 的涂色阈值换算选项字母

@@ -72,7 +72,7 @@ class ScanWindow(QTabWidget, Ui_TabWidget):
         for file in files:
             try:
                 self.dto.setCurrentPaper(file)
-                markingFlag = self.examControl.startMarking()
+                markingFlag = self.examControl.markingControl()
                 if not markingFlag:
                     failedCount += 1
                     self.dto.failedFiles.append(file)

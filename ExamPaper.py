@@ -1,13 +1,10 @@
-import traceback
-
 import cv2 as cv
 import numpy as np
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QMessageBox
 from imutils import contours
 from imutils.perspective import four_point_transform
 
-from error import PaperRegionCountError
 #选项字母表
 ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
 # 行數
@@ -37,6 +34,8 @@ class ExamPaper():
 
 
     def initPaper(self):
+        self.stuID=''
+        self.score=0
         self.showingImg = None
         self.showingThresh=None
         self.showingWrong=None
@@ -49,23 +48,13 @@ class ExamPaper():
         img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
         return img
 
-    def initImgProcess(self, imgFile):
+    def initImg(self, imgFile):
         self.initPaper()
-        self.img = self.cv_imread(imgFile)
-        self.showingImg=ExamPaper.convertImg(self.img)
+        src_img = self.cv_imread(imgFile)
+        self.showingImg=ExamPaper.convertImg(src_img)
+        return src_img
 
-    def test(self, imgFile):
-        # 预处理获取所有轮廓
-        self.initImgProcess(imgFile)
-        # 获取答题卡上的答题和学号区域
-        answer_img, stu_Img = self.get_roi_img(self.img)
-        if answer_img is None:
-            return
-        stuID = self.getStuID(stu_Img)
-        ans_choices = self.getChoices(answer_img)
-
-
-    # 根据答题区域大小生成每个选框的绝对坐标
+     # 根据答题区域大小生成每个选框的绝对坐标
     def makeAnswerCnts(self, src_img, expandingFlag=True, offset=0):
         width = src_img.shape[1]
         height = src_img.shape[0]
@@ -189,6 +178,7 @@ class ExamPaper():
             if not self.dto.testFlag:
                 QMessageBox.information(None, '提示', '该学生共有' + str(no_answer_count) + '个题未涂或涂的不符合要求！')
             self.dto.errorMsg='该卡共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！'
+        #存入自有变量
         return choices
 
     # 根据选项 的涂色阈值换算选项字母
@@ -270,7 +260,9 @@ class ExamPaper():
         # 按像素值排序
         first_num = sorted(first_num, key=lambda x: x[1], reverse=True)
         second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
-        return str(first_num[0][0]) + str(second_num[0][0])
+        stuID=str(first_num[0][0]) + str(second_num[0][0])
+        self.stuID='学号：'+stuID
+        return stuID
 
     # 提取答题和学号区域
     def get_roi_img(self, src_img):

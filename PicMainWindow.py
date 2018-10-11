@@ -45,7 +45,16 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.label_4.setFont(errorFont)
         self.label_4.setPalette(errorPal)
         self.label_4.move(350,860)
-        # self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        #设置学号和分数label字体
+        IDFont = QFont("华文楷体")
+        IDFont.setBold(True)
+        IDFont.setPointSize(25)
+        IDPal = QPalette()
+        IDPal.setColor(QPalette.WindowText, Qt.red)
+        self.stuID_label.setFont(IDFont)
+        self.score_label.setFont(IDFont)
+        self.stuID_label.setPalette(IDPal)
+        self.score_label.setPalette(IDPal)
 
         # 初始化时间控件
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
@@ -62,6 +71,13 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             painter = QPainter(self)
             self.label_4.setText(self.dto.errorMsg)
             self.label_4.adjustSize()
+
+            if self.dto.nowPaper.stuID:
+                self.stuID_label.setText(self.dto.nowPaper.stuID)
+                self.stuID_label.adjustSize()
+            if self.dto.nowPaper.score:
+                self.score_label.setText(self.dto.nowPaper.score)
+                self.score_label.adjustSize()
             if (self.dto.nowPaper is not None) and (self.dto.nowPaper.showingImg is not None):
                 painter.drawImage(QRect(x, y,w, h),self.dto.nowPaper.showingImg)
             if self.dto.nowPaper.showingPaper is not None:
@@ -97,8 +113,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         failedCount = 0
         for file in files:
             try:
-                self.dto.setCurrentPaper(file)
-                markingFlag = self.examControl.startMarking()
+                markingFlag = self.examControl.markingControl(file)
                 if markingFlag==0:
                     failedCount += 1
                     self.dto.failedFiles.append(file)
@@ -144,7 +159,6 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             # 如果答案为空，返回
             if answers is None:
                 return
-            self.dto.nowAnswerFile = file
             self.dto.nowAnswer = answers
             QMessageBox.information(None, '提示:', '共导入'+str(len(answers))+'个题答案！')
         except BaseException as e:

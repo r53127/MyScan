@@ -7,7 +7,6 @@ from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm
 from ExamDto import ExamDto
 from ExamService import ExamService
 from PicMainWindow import PicMainWindow
-from error import PaperRegionCountError
 
 
 class ExamControl():
@@ -22,6 +21,7 @@ class ExamControl():
             os.mkdir('image')
         # 鏈接学生數據庫
         self.stuDB = StudentDB()
+        #刷新班级列表
         self.updateClassID()
         # 连接阅卷结果库
         self.scanDB = ScanDB()
@@ -35,35 +35,28 @@ class ExamControl():
     def updateClassID(self):
         self.dto.allClassID = self.stuDB.queryClassID()
 
-    def startMarking(self):
-        choices, stuID = self.examServ.marking()
+    def markingControl(self,imgFile):
+        choices, stuID = self.examServ.marking(imgFile)
 
         classID = self.dto.classID
         examID = self.dto.examID
+        # 判分
+        score = self.getScore(choices, self.dto.nowAnswer)
+        self.dto.nowPaper.score='分数：'+str(score)
 
-        # 根据学号查姓名
+        # 根据学号查姓名，如果未找到或者重复则不入库
         result = self.stuDB.checkData(stuID, classID)
         if not result:
-            QMessageBox.information(None, '提示', '未找到该学生！')
+            QMessageBox.information(None, '提示', '未找到该学生，计入失败！')
             return 0 #计入失败
         stuName = result[0][2]
+
         # 检查阅卷是否重复
         result = self.scanDB.checkData(stuID, examID, classID)
         if result:
-            QMessageBox.information(None, '提示', '重复阅卷，该学号已阅过！')
+            QMessageBox.information(None, '提示', '重复阅卷，该学号已阅过，不计入失败，数据不入库！')
             return -1  #重复，不计入失败
 
-        # 阅卷结果为空
-        if choices is None:
-            return 0 #计入失败
-        # 少答案
-        if len(choices) > len(self.dto.nowAnswer):
-            QMessageBox.information(None, '提示',
-                                    '学生选项比答案多，题有' + str(len(choices)) + '个，答案有' + str(len(self.dto.nowAnswer)) + '个！')
-            return 0 #计入失败
-
-        # 判分
-        score = self.getScore(choices, self.dto.nowAnswer)
         # 答案入库，choice[0]是题号，choice[1]是填涂选项
         for choice in choices:
             self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
@@ -121,10 +114,9 @@ class ExamControl():
     def test(self, file):
         try:
             self.examServ.test(file)
-        except PaperRegionCountError as e:
-            self.dto.errorMsg = '该学生共有'+str(e.errorValue)+'个题未涂或涂的不符合要求！'
-            self.scanWin.update()
-            return
+        # except PaperRegionCountError as e:
+        #     self.dto.errorMsg = '该学生共有'+str(e.errorValue)+'个题未涂或涂的不符合要求！'
+        #     self.scanWin.update()
         except Exception as e:
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 

@@ -3,8 +3,7 @@ from ExamPaper import ExamPaper
 
 class ExamDto():
     def __init__(self):
-        self.nowAnswer=None
-        self.nowAnswerFile=None
+        self.nowAnswer=None#标准答案
         self.failedFiles=[]
         self.errorMsg=''
         self.examID=''
@@ -15,8 +14,3 @@ class ExamDto():
         self.testFile=''
         self.testFlag=False #调试模式
         self.nowPaper=ExamPaper(self)
-
-
-
-    def setCurrentPaper(self,file):
-        self.nowPaper.initImgProcess(file)

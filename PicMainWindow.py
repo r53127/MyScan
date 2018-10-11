@@ -71,13 +71,16 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             painter = QPainter(self)
             self.label_4.setText(self.dto.errorMsg)
             self.label_4.adjustSize()
-
             if self.dto.nowPaper.stuID:
-                self.stuID_label.setText(self.dto.nowPaper.stuID)
+                self.stuID_label.setText('学号：'+self.dto.nowPaper.stuID)
                 self.stuID_label.adjustSize()
+            else:
+                self.stuID_label.setText('')
             if self.dto.nowPaper.score:
-                self.score_label.setText(self.dto.nowPaper.score)
+                self.score_label.setText('分数：'+str(self.dto.nowPaper.score))
                 self.score_label.adjustSize()
+            else:
+                self.score_label.setText('')
             if (self.dto.nowPaper is not None) and (self.dto.nowPaper.showingImg is not None):
                 painter.drawImage(QRect(x, y,w, h),self.dto.nowPaper.showingImg)
             if self.dto.nowPaper.showingPaper is not None:
@@ -111,31 +114,84 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
     def startScan(self, files):
         self.dto.testFlag = False
         failedCount = 0
-        for file in files:
+        for i,file in enumerate(files,start=1):
             try:
+                # 初始化一张试卷
+                self.dto.nowPaper.initPaper()
+                self.update()
                 markingFlag = self.examControl.markingControl(file)
                 if markingFlag==0:
                     failedCount += 1
                     self.dto.failedFiles.append(file)
+                if i<len(files):
+                    reply = QMessageBox.question(self, "提示",
+                                                 "是否继续下一个？",
+                                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                    if reply != 16384:
+                        break
             except Exception as e:
                 failedCount += 1
                 self.dto.failedFiles.append(file)
-                logging.basicConfig(filename='log.log', filemode='w', level=logging.DEBUG)
+                logging.basicConfig(filename='error.log', filemode='w', level=logging.DEBUG)
                 logging.debug(traceback.format_exc())
+                traceback.print_exc()
                 QMessageBox.information(None, '提示', '此图片阅卷失败！错误是：' + str(e))
                 continue
         else:
             if failedCount != 0:
-                QMessageBox.information(None, "提示", "共有" + str(failedCount) + '张图片阅卷失败！')
-            else:
-                QMessageBox.information(None, '提示', '已結束！')
+                QMessageBox.information(None, "提示", "本次共有" + str(failedCount) + '张图片阅卷失败！')
+            self.statusBar().showMessage('已全部结束！')
 
 
     @pyqtSlot()
-    def on_pushButton_1_clicked(self):
+    def on_pushButton_3_clicked(self):
+        # 獲取班級和examID
+        self.getID()
+        if not self.dto.classID:
+            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+            return
+        # 未导入答案，返回
+        if not self.dto.nowAnswer:
+            QMessageBox.information(None, '提示', '请先导入答案!')
+            return
+        files, filetype = QFileDialog.getOpenFileNames(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp;*.jpeg)')
+        # 如果未选择，返回
+        if not files:
+            return
+        # 开始阅卷
+        self.startScan(files)
+
+    @pyqtSlot()
+    def on_pushButton_4_clicked(self):
         """
         Slot documentation goes here.
         """
+        # 獲取班級和examID
+        self.getID()
+        if not self.dto.classID:
+            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+            return
+        # 未导入答案，返回
+        if not self.dto.nowAnswer:
+            QMessageBox.information(None, '提示', '请先导入答案!')
+            return
+        direc = QFileDialog.getExistingDirectory(self, '打开阅卷目录', r'.')
+        if not direc:
+            return
+        # 生成文件列表
+        files = []
+        filesname = os.listdir(direc)
+        for filename in filesname:
+            ext=os.path.splitext(filename)[1]
+            ext=ext.lower()
+            if ext!='.jpg' and ext!='.png' and ext!='.bmp' and ext!='.jpeg':
+                continue
+            files.append(os.path.join(direc + '/', filename))
+        # 开始阅卷
+        self.startScan(files)
+
+    @pyqtSlot()
+    def on_pushButton_1_clicked(self):
         answerfile = 'data\答案.xlsx'
         if not os.path.exists(answerfile):
             QMessageBox.information(None, '错误:', "答案文件不存在！")
@@ -163,58 +219,6 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(None, '提示:', '共导入'+str(len(answers))+'个题答案！')
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")
-
-
-    @pyqtSlot()
-    def on_pushButton_3_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-
-        # 獲取班級和examID
-        self.getID()
-        if not self.dto.classID:
-            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
-            return
-        # 未导入答案，返回
-        if not self.dto.nowAnswer:
-            QMessageBox.information(None, '提示', '请先导入答案!')
-            return
-        files, filetype = QFileDialog.getOpenFileNames(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp)')
-        # 如果未选择，返回
-        if not files:
-            return
-        # 开始阅卷
-        self.dto.testFlag = False
-        self.startScan(files)
-
-
-    @pyqtSlot()
-    def on_pushButton_4_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-
-        # 獲取班級和examID
-        self.getID()
-        if not self.dto.classID:
-            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
-            return
-        # 未导入答案，返回
-        if not self.dto.nowAnswer:
-            QMessageBox.information(None, '提示', '请先导入答案!')
-            return
-        direc = QFileDialog.getExistingDirectory(self, '打开阅卷目录', r'.')
-        if not direc:
-            return
-        # 生成文件列表
-        files = []
-        filesname = os.listdir(direc)
-        for filename in filesname:
-            files.append(os.path.join(direc + '/', filename))
-        # 开始阅卷
-        self.dto.testFlag = False
-        self.startScan(files)
 
 
     @pyqtSlot()
@@ -313,6 +317,9 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 开始阅卷
         self.dto.testFlag=True
         self.dto.testFile=file
+        # 初始化一张试卷
+        self.dto.nowPaper.initPaper()
+        self.update()
         self.examControl.test(file)
     
     @pyqtSlot(float)

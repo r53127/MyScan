@@ -36,13 +36,15 @@ class ExamControl():
         self.dto.allClassID = self.stuDB.queryClassID()
 
     def markingControl(self,imgFile):
-        choices, stuID = self.examServ.marking(imgFile)
+        stuID, choices, score = self.examServ.marking(imgFile)
 
         classID = self.dto.classID
         examID = self.dto.examID
-        # 判分
-        score = self.getScore(choices, self.dto.nowAnswer)
-        self.dto.nowPaper.score='分数：'+str(score)
+
+
+        #无法识别图片，直接返回0
+        if stuID is None and choices is None and score is None:
+            return 0#计入失败
 
         # 根据学号查姓名，如果未找到或者重复则不入库
         result = self.stuDB.checkData(stuID, classID)
@@ -101,15 +103,7 @@ class ExamControl():
         except Exception as e:
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
-    def getScore(self, choices, answer):
-        # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值
-        correct_count = 0
-        score = 0
-        for choice in choices:
-            if (answer.get(choice[0]))[0] == choice[1]:
-                correct_count += 1
-                score += (answer.get(choice[0]))[1]
-        return score
+
 
     def test(self, file):
         try:

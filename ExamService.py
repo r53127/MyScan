@@ -1,3 +1,6 @@
+import traceback
+
+
 class ExamService():
     def __init__(self, dto):
         self.dto = dto
@@ -7,22 +10,26 @@ class ExamService():
         src_img=self.dto.nowPaper.initImg(imgFile)
         answer_img, stu_Img = self.dto.nowPaper.get_roi_img(src_img)
         if answer_img is None:
-            return None,None
+            return None,None,None
 
         # 获取学号
         stuID = self.dto.nowPaper.getStuID(stu_Img)
 
         # 获取答题结果
-        choices = self.dto.nowPaper.getChoices(answer_img)
-        return choices, stuID
+        choices,score = self.dto.nowPaper.getChoicesAndScore(answer_img)
+        return stuID,choices,score
 
     def test(self, imgFile):
         # 预处理获取所有轮廓
         src_img=self.dto.nowPaper.initImg(imgFile)
         # 获取答题卡上的答题和学号区域
         answer_img, stu_Img = self.dto.nowPaper.get_roi_img(src_img)
-        if answer_img is None:
+        if answer_img is None or stu_Img is None:
             return
-        self.dto.nowPaper.getStuID(stu_Img)
-        self.dto.nowPaper.getChoices(answer_img)
+        try:
+            self.dto.nowPaper.getStuID(stu_Img)
+            self.dto.nowPaper.getChoicesAndScore(answer_img)
+        except:
+            traceback.print_exc()
+
         return

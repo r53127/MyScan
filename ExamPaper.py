@@ -49,7 +49,6 @@ class ExamPaper():
         return img
 
     def initImg(self, imgFile):
-        self.initPaper()
         src_img = self.cv_imread(imgFile)
         self.showingImg=ExamPaper.convertImg(src_img)
         return src_img
@@ -79,7 +78,7 @@ class ExamPaper():
         return answerCnts
 
     # 获取选项
-    def getChoices(self, src_img):
+    def getChoicesAndScore(self, src_img):
         # processed_img = cv.medianBlur(src_img, 13)
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
@@ -168,18 +167,24 @@ class ExamPaper():
                 if not answer.strip(): #如果所选答案为空，则进行画框标注，同时未涂总数+1计数
                     cv.drawContours(wrong_img,cnts,-1,(0,0,255),2)
                     no_answer_count+=1
-                choices.append((questionID,answer)) #所选结果存入
+                choices.append((questionID,answer)) #所选结果存入 题号+答案
                 if self.dto.nowAnswer is not None:#如果已导入答案，如果题号等于最大题数，就停止行循环
                     if questionID==len(self.dto.nowAnswer):
                         break
+        #判分
+        if not self.dto.testFlag:
+            score = self.getScore(choices, self.dto.nowAnswer)
+            self.dto.nowPaper.score=score
+        #显示图像
         self.showingPaperCnts = ExamPaper.convertImg(showingPaper)#显示所有定位标注框图片
         self.showingWrong = ExamPaper.convertImg(wrong_img)#显示未涂或者未达标的选项标注框图片
         if no_answer_count:#存在未凃答案
-            if not self.dto.testFlag:
-                QMessageBox.information(None, '提示', '该学生共有' + str(no_answer_count) + '个题未涂或涂的不符合要求！')
             self.dto.errorMsg='该卡共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！'
-        #存入自有变量
-        return choices
+
+        if self.dto.testFlag:
+            return choices
+        else:
+            return choices,score
 
     # 根据选项 的涂色阈值换算选项字母
     # param:ANSWER_THRESHOLD 像素阈值；每行4个选项
@@ -190,6 +195,14 @@ class ExamPaper():
             if b[0] > ANSWER_THRESHOLD:
                 answerChars += ANSWER_CHAR[b[1]]
         return ''.join(sorted(list(answerChars)))  # 按字母顺序排序
+
+    def getScore(self, choices, answers):
+        # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值
+        score = 0
+        for choice in choices:
+            if (answers.get(choice[0]))[0] == choice[1]:
+                score += (answers.get(choice[0]))[1]
+        return score
 
     # 生成学号绝对坐标
     def makeStuidCnts(self, src_img, expandingFlag=True, offset=0):
@@ -232,7 +245,7 @@ class ExamPaper():
 
         stuidCnts = self.makeStuidCnts(src_img)
         stu_Img=src_img.copy()
-        cv.drawContours(stu_Img, stuidCnts, -1, (255, 0, 0), 1)
+        cv.drawContours(stu_Img, stuidCnts, -1, (255, 0, 0), 2)
         self.showingStu = ExamPaper.convertImg(stu_Img)
 
         first_num = [] #第一位数字
@@ -261,7 +274,7 @@ class ExamPaper():
         first_num = sorted(first_num, key=lambda x: x[1], reverse=True)
         second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
         stuID=str(first_num[0][0]) + str(second_num[0][0])
-        self.stuID='学号：'+stuID
+        self.stuID=stuID
         return stuID
 
     # 提取答题和学号区域

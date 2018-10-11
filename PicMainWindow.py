@@ -51,7 +51,6 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
         # 刷新班级控件
         self.updateComboBox()
-        self.setWindowIcon(QIcon("scan.ico"))
         # 显示窗体
         self.showMaximized()
 

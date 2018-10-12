@@ -27,10 +27,6 @@ class ExamService():
         answer_img, stu_Img = self.dto.nowPaper.get_roi_img(src_img)
         if answer_img is None or stu_Img is None:
             return
-        try:
-            self.dto.nowPaper.getStuID(stu_Img)
-            self.dto.nowPaper.getChoicesAndScore(answer_img)
-        except:
-            traceback.print_exc()
-
+        self.dto.nowPaper.getStuID(stu_Img)
+        self.dto.nowPaper.getChoicesAndScore(answer_img)
         return

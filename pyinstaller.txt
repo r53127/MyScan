@@ -1,1 +1,0 @@
-pyinstaller --path E:\Anaconda3\envs\py36\Lib\site-packages\PyQt5\Qt\bin -F -w --icon=scan.ico ExamControl.py --noconsole

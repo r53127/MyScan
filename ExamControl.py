@@ -68,7 +68,7 @@ class ExamControl():
                 self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
             # 分数入库
             self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
-        return True  #成功
+        return (stuID, score)  #成功
 
     def makeScoreReport(self):
         # 初始化报表文件

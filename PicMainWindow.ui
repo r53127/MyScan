@@ -206,9 +206,9 @@
     <property name="geometry">
      <rect>
       <x>312</x>
-      <y>10</y>
+      <y>0</y>
       <width>21</width>
-      <height>861</height>
+      <height>871</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -227,8 +227,8 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>550</y>
+      <x>390</x>
+      <y>820</y>
       <width>391</width>
       <height>17</height>
      </rect>
@@ -295,32 +295,6 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QLabel" name="stuID_label">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>640</y>
-      <width>151</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="score_label">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>760</y>
-      <width>151</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
    <widget class="Line" name="line_3">
     <property name="geometry">
      <rect>
@@ -332,6 +306,47 @@
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_4">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>0</y>
+      <width>21</width>
+      <height>891</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="midLineWidth">
+     <number>0</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>10</y>
+      <width>231</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>华文楷体</family>
+      <pointsize>24</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>结果显示区：</string>
     </property>
    </widget>
   </widget>

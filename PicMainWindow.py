@@ -71,12 +71,15 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             painter = QPainter(self)
             self.label_4.setText(self.dto.errorMsg)
             self.label_4.adjustSize()
-            if self.dto.nowPaper.stuID:
-                self.stuID_label.setText('学号：'+self.dto.nowPaper.stuID)
+            if self.dto.nowPaper.stuID is not None:
+                if self.dto.nowPaper.stuID==0:
+                    self.stuID_label.setText('学号不全！')
+                else:
+                    self.stuID_label.setText('学号：'+str(self.dto.nowPaper.stuID))
                 self.stuID_label.adjustSize()
             else:
                 self.stuID_label.setText('')
-            if self.dto.nowPaper.score:
+            if self.dto.nowPaper.score is not None:
                 self.score_label.setText('分数：'+str(self.dto.nowPaper.score))
                 self.score_label.adjustSize()
             else:
@@ -109,6 +112,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
     def getID(self):
         self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
         self.dto.classID = self.comboBox_2.currentText()
+        self.dto.answerThreshhold=self.doubleSpinBox.value()
 
 
     def startScan(self, files):
@@ -120,7 +124,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 self.dto.nowPaper.initPaper()
                 self.update()
                 markingFlag = self.examControl.markingControl(file)
-                if markingFlag==0:
+                if not markingFlag:
                     failedCount += 1
                     self.dto.failedFiles.append(file)
                 if i<len(files):
@@ -134,7 +138,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 self.dto.failedFiles.append(file)
                 logging.basicConfig(filename='error.log', filemode='w', level=logging.DEBUG)
                 logging.debug(traceback.format_exc())
-                traceback.print_exc()
+                # traceback.print_exc()
                 QMessageBox.information(None, '提示', '此图片阅卷失败！错误是：' + str(e))
                 continue
         else:
@@ -320,6 +324,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 初始化一张试卷
         self.dto.nowPaper.initPaper()
         self.update()
+        self.dto.answerThreshhold=self.doubleSpinBox.value()
         self.examControl.test(file)
     
     @pyqtSlot(float)

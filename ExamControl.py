@@ -44,28 +44,31 @@ class ExamControl():
 
         #无法识别图片，直接返回0
         if stuID is None and choices is None and score is None:
-            return 0#计入失败
+            QMessageBox.information(None, '提示', '此图片无法阅卷计入失败！')
+            return False#计入失败
 
         # 根据学号查姓名，如果未找到或者重复则不入库
         result = self.stuDB.checkData(stuID, classID)
         if not result:
-            QMessageBox.information(None, '提示', '未找到该学生，计入失败！')
-            return 0 #计入失败
+            QMessageBox.information(None, '提示', '学生库未找到该学生，计入失败！')
+            return False #计入失败
         stuName = result[0][2]
 
         # 检查阅卷是否重复
         result = self.scanDB.checkData(stuID, examID, classID)
         if result:
-            QMessageBox.information(None, '提示', '重复阅卷，该学号已阅过，不计入失败，数据不入库！')
-            return -1  #重复，不计入失败
-
-        # 答案入库，choice[0]是题号，choice[1]是填涂选项
-        for choice in choices:
-            self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
-        # 分数入库
-        self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
-
-        return 1  #成功
+            #更新数据
+            for choice in choices:
+                self.scanDB.updateDB(stuID, choice[0], choice[1])
+            # 分数更新
+            self.scoreDB.updateDB(stuID, score)
+        else:#更新数据库
+            # 答案入库，choice[0]是题号，choice[1]是填涂选项
+            for choice in choices:
+                self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
+            # 分数入库
+            self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
+        return True  #成功
 
     def makeScoreReport(self):
         # 初始化报表文件
@@ -108,9 +111,6 @@ class ExamControl():
     def test(self, file):
         try:
             self.examServ.test(file)
-        # except PaperRegionCountError as e:
-        #     self.dto.errorMsg = '该学生共有'+str(e.errorValue)+'个题未涂或涂的不符合要求！'
-        #     self.scanWin.update()
         except Exception as e:
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 

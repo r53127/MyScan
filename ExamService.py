@@ -14,9 +14,10 @@ class ExamService():
 
         # 获取学号
         stuID = self.dto.nowPaper.getStuID(stu_Img)
-
         # 获取答题结果
         choices,score = self.dto.nowPaper.getChoicesAndScore(answer_img)
+
+
         return stuID,choices,score
 
     def test(self, imgFile):

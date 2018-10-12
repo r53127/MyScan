@@ -91,6 +91,12 @@ class ScanDB():
         self.conn.execute(insert_statement, (examid, classid, stuid, name, quesid, choice))
         self.conn.commit()  # 修改类操作必须commit
 
+    def updateDB(self, stuid, quesid, choice):
+        # 继续执行一条SQL语句，插入一条记录:
+        update_statement = "update scan set choice='"+choice+"' where quesID='"+str(quesid)+"' and stuID='"+str(stuid)+ "'"
+        self.conn.execute(update_statement)
+        self.conn.commit()  # 修改类操作必须commit
+
     def checkData(self, stuid, examid, classid):
         query_statement = r"select * from scan where stuID='" + str(stuid) + "' and examID='" + str(
             examid) + "' and classID='" + str(classid) + "'"
@@ -141,6 +147,12 @@ class ScoreDB():
             examid) + "'"
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
+
+    def updateDB(self, stuid,score):
+        # 继续执行一条SQL语句，插入一条记录:
+        update_statement = "update score set score='"+str(score)+"' where stuID='"+str(stuid)+ "'"
+        self.conn.execute(update_statement)
+        self.conn.commit()  # 修改类操作必须commit
 
     def closeDB(self):
         # 关闭Cursor:
@@ -229,8 +241,5 @@ class PaperReportForm():
         win32api.ShellExecute(0, 'open', file, '', '', 1)
 
 if __name__ == "__main__":
-    test = StudentDB()
-    a = test.queryClassID()
-    for i in a:
-        for j in i:
-            print(j)
+    test = ScoreDB()
+    test.updateDB(26,100)

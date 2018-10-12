@@ -34,8 +34,8 @@ class ExamPaper():
 
 
     def initPaper(self):
-        self.stuID=''
-        self.score=0
+        self.stuID=None
+        self.score=None
         self.showingImg = None
         self.showingThresh=None
         self.showingWrong=None
@@ -236,11 +236,11 @@ class ExamPaper():
 
     # 获取学号
     def getStuID(self, src_img):
-        processed_img = cv.medianBlur(src_img, 3)
-        gray = cv.cvtColor(processed_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
+        # processed_img = cv.medianBlur(src_img, 3)
+        gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
-                                       85, 18)
+                                       157, 19)
         # 按坐标从上到下排序
 
         stuidCnts = self.makeStuidCnts(src_img)
@@ -257,6 +257,8 @@ class ExamPaper():
             mask = np.zeros(gray.shape, dtype="uint8")
             # 将指定的轮廓+白色的填充写到画板上,255代表亮度值，亮度=255的时候，颜色是白色，等于0的时候是黑色
             cv.drawContours(mask, [c], -1, 255, -1)
+            maxPixel = cv.countNonZero(mask)  # 单个蒙板的像素
+            # print(maxPixel)
             # 做两个图片做位运算，把每个选项独自显示到画布上，为了统计非0像素值使用，这部分像素最大的其实就是答案
             mask = cv.bitwise_and(thresh2, thresh2, mask=mask)
             # 获取每个答案的像素值
@@ -270,12 +272,16 @@ class ExamPaper():
                 second_num.append((n, total))
                 # print('secnum is :', second_num)
                 n += 1
+        ANSWER_THRESHOLD = maxPixel * self.dto.answerThreshhold
         # 按像素值排序
         first_num = sorted(first_num, key=lambda x: x[1], reverse=True)
         second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
-        stuID=str(first_num[0][0]) + str(second_num[0][0])
-        self.stuID=stuID
-        return stuID
+        if first_num[0][1]<ANSWER_THRESHOLD or second_num[0][1]<ANSWER_THRESHOLD:#如果小于阈值则认为学号涂得不清晰，无效置0
+            stuID = 0
+        else:
+            stuID=str(first_num[0][0]) + str(second_num[0][0])
+        self.stuID=int(stuID)
+        return self.stuID
 
     # 提取答题和学号区域
     def get_roi_img(self, src_img):

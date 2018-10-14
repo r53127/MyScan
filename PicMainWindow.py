@@ -58,7 +58,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         try:
             painter = QPainter(self)
             self.drawImg( painter, 350,20,400,350,20)#显示图像
-            self.drawScore(painter, QDesktopWidget().screenGeometry().width()-self.line.geometry().x()+25, 70)  # 显示姓名分数
+            self.drawScore(painter, QDesktopWidget().screenGeometry().width()-self.line.geometry().x()+20, 70)  # 显示姓名分数
             self.showFailedfiles()
         except Exception as e:
             QMessageBox.information(None, '提示', '显示图像失败！错误是：' + str(e))
@@ -72,23 +72,29 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             self.label_4.setText(str(filenames))
 
     def drawImg(self, painter, x, y,w, h, padding):#显示图片
-        painter.setFont(QFont('Mine', 10))
         if self.dto.nowPaper.showingImg is not None:
             painter.drawText(x,y, '原图：')
             painter.drawImage(QRect(x, y+10, w, h), self.dto.nowPaper.showingImg)
         if self.dto.nowPaper.showingChoices is not None:
-            painter.drawText(x + w + padding, y, '所涂选项：')
+            if self.dto.nowPaper.multiChoiceCount>0:
+                painter.setFont(QFont('Mine', 14))
+                painter.setPen(Qt.red)
+                painter.drawText(x + w + padding, y, '请注意：有'+str(self.dto.nowPaper.multiChoiceCount)+'个多选！')
+                painter.setPen(Qt.black)
+                painter.setFont(QFont('Mine', 9))
+            else:
+                painter.drawText(x + w + padding, y, '所涂选项:')
             painter.drawImage(QRect(x + w + padding, y+10, w, h), self.dto.nowPaper.showingChoices)
         if self.dto.nowPaper.showingStu is not None:
             painter.drawText(x + (w + padding) * 2, y, '所涂学号：')
             painter.drawImage(QRect(x + (w + padding) * 2, y+10, w/2, h), self.dto.nowPaper.showingStu)
-        if self.dto.nowPaper.blankCount is not None:
-            if self.dto.nowPaper.showingWrong is not None:
-                painter.setPen(Qt.red)
-                painter.drawText(x , y + h + padding*3, '未作答题目有'+str(self.dto.nowPaper.blankCount)+'个！')
-                painter.drawImage(QRect(x, y + h + padding*3+10, w, h), self.dto.nowPaper.showingWrong)
-        painter.setFont(QFont('Mine', 8))
-        painter.setPen(Qt.black)
+        if self.dto.nowPaper.showingWrong is not None and self.dto.nowPaper.noChoiceCount !=0:
+            painter.setFont(QFont('Mine', 14))
+            painter.setPen(Qt.red)
+            painter.drawText(x , y + h + padding*3, '未作答题目有'+str(self.dto.nowPaper.noChoiceCount)+'个！')
+            painter.drawImage(QRect(x, y + h + padding*3+10, w, h), self.dto.nowPaper.showingWrong)
+            painter.setPen(Qt.black)
+            painter.setFont(QFont('Mine', 9))
         if self.dto.testFlag:
             if self.dto.nowPaper.showingImgThresh is not None:
                 painter.drawText(x + w + padding, y + h + padding*3, '原图二值化：')
@@ -124,12 +130,12 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
 
 
     def startScan(self, files):
-        self.dto.testFlag = False
-        self.dto.failedFiles=[]
-        self.label_4.clear()
-        failedCount = 0
-        successedCount=0
-        self.markingResultView=[]#本次所有阅卷结果
+        self.dto.testFlag = False#关闭测试开关
+        self.dto.failedFiles=[]#重置错误文件记录
+        self.label_4.clear()#清除错误文件显示
+        failedCount = 0#重置错误文件计数
+        successedCount=0#重置正确文件计数
+        self.markingResultView=[]#记录本次所有阅卷结果
         for i,file in enumerate(files,start=1):
             try:
                 # 初始化一张试卷

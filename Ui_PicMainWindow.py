@@ -175,7 +175,7 @@ class Ui_MainWindow(object):
         self.pushButton_7.setText(_translate("MainWindow", "另存失败文件"))
         self.pushButton_5.setText(_translate("MainWindow", "生成成绩报表"))
         self.pushButton_6.setText(_translate("MainWindow", "生成试卷分析"))
-        self.label_8.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:16pt; font-weight:600; color:#5500ff;\">错误文件：</span></p></body></html>"))
+        self.label_8.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:16pt; font-weight:600; color:#5500ff;\">失败文件：</span></p></body></html>"))
 
 
 if __name__ == "__main__":

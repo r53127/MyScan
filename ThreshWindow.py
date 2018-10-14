@@ -32,8 +32,10 @@ class ThreshWindow(QDialog, Ui_Dialog):
     
     @pyqtSlot(str)
     def on_doubleSpinBox_valueChanged(self, p0):
-        self.dto.answerThreshhold=self.doubleSpinBox.value()
-        self.parent.markingResult = self.parent.examControl.markingControl(self.file)
+        self.dto.answerThreshhold=self.doubleSpinBox.value()#获取局部阈值
+        self.dto.nowPaper.multiChoiceCount=0#重置多选计数器
+        self.dto.nowPaper.noChoiceCount=0#重置无选项计数器
+        self.parent.markingResult = self.parent.examControl.markingControl(self.file)#重新阅卷
         self.setupPushbutton_2()#刷新计入成功按钮，阅卷失败不允许计入成功
         self.update()
         self.parent.update()

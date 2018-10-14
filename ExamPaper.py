@@ -45,7 +45,8 @@ class ExamPaper():
         self.showingStu=None
         self.showingChoices=None
         self.showingPaperCnts=None
-        self.blankCount=None
+        self.multiChoiceCount=0
+        self.noChoiceCount=0
 
     def cv_imread(self, file_path=""):
         img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
@@ -122,7 +123,6 @@ class ExamPaper():
 
         # 使用np函数，按5个元素，生成一个集合
         choices = []
-        no_answer_count=0#未涂答案的题数
         wrong_img = src_img.copy()
         # questionID为題号，j为行内序号
         questionID=0
@@ -163,11 +163,17 @@ class ExamPaper():
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
                 #print('第'+str(questionID)+'题答案和阈值为：',row_choices,CHOICE_THRESHOLD)
                 answerAndCnts=self.getAnswerCharsAndCnts(row_choices, CHOICE_THRESHOLD)
+
+                #显示未选
                 if not answerAndCnts[0].strip(): #如果所选答案为空，则进行画框标注，同时未涂总数+1计数
                     cv.drawContours(wrong_img,cnts,-1,(0,0,255),2)
-                    no_answer_count+=1
-
-                cv.drawContours(showingChoices,answerAndCnts[1],-1,(0,255,255),2)#显示所有的已选框
+                    self.noChoiceCount+=1
+                # 显示多选
+                if len(answerAndCnts[0])>1:
+                    cv.drawContours(showingChoices, answerAndCnts[1], -1, (0, 0, 255), 2)  # 红色显示多选框
+                    self.multiChoiceCount+=1
+                else:
+                    cv.drawContours(showingChoices,answerAndCnts[1],-1,(0,255,255),2)#黄色显示单选框
 
                 choices.append((questionID,answerAndCnts[0])) #所选结果存入 题号+答案&轮廓
                 if self.dto.nowAnswer is not None:#如果已导入答案，如果题号等于最大题数，就停止行循环
@@ -181,8 +187,6 @@ class ExamPaper():
         self.showingPaperCnts = ExamPaper.convertImg(showingPaperCnts)#显示所有定位标注框图片
         self.showingWrong = ExamPaper.convertImg(wrong_img)#显示未涂或者未达标的选项标注框图片
         self.showingChoices=ExamPaper.convertImg(showingChoices)#显示已选标注框图片
-        if no_answer_count:#存在未凃答案
-            self.blankCount=no_answer_count
 
         if self.dto.testFlag:
             return choices

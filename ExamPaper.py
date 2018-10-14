@@ -1,3 +1,5 @@
+import traceback
+
 import cv2 as cv
 import numpy as np
 from PyQt5.QtGui import QImage
@@ -37,12 +39,13 @@ class ExamPaper():
         self.stuID=None
         self.score=None
         self.showingImg = None
-        self.showingThresh=None
+        self.showingImgThresh=None
+        self.showingPaperThresh=None
         self.showingWrong=None
         self.showingStu=None
-        self.showingPaper=None
+        self.showingChoices=None
         self.showingPaperCnts=None
-        self.dto.errorMsg=''
+        self.blankCount=None
 
     def cv_imread(self, file_path=""):
         img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
@@ -81,10 +84,13 @@ class ExamPaper():
     def getChoicesAndScore(self, src_img):
         # processed_img = cv.medianBlur(src_img, 13)
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
+
+        # cv.imwrite('gray.png',gray)
         processed_img = cv.GaussianBlur(gray, (3, 3), 0)
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
                                        157, 19)
-        self.showingThresh=ExamPaper.convertImg(thresh2)
+        # cv.imshow('paperth2',thresh2)
+        self.showingPaperThresh=ExamPaper.convertImg(thresh2)
         # # 识别所涂写区域时的膨胀腐蚀的kernel
         # ANS_IMG_KERNEL = np.ones((2, 2), np.uint8)
         # # 识别所涂写区域时的二值化参数
@@ -103,16 +109,16 @@ class ExamPaper():
 
         # 坐标从上到下排序
         choiceCnts = self.makeAnswerCnts(src_img)
-        cv.imwrite('tmp/ansImgThresh.png', thresh2)
+        # cv.imwrite('tmp/ansImgThresh.png', thresh2)
 
-        showingPaper=src_img.copy()
-        self.showingPaper=ExamPaper.convertImg(showingPaper)
+        showingPaperCnts=src_img.copy()
+        showingChoices=src_img.copy()
 
         choiceCnts = contours.sort_contours(choiceCnts, method="left-to-right")[0]
         choiceCnts = contours.sort_contours(choiceCnts, method="top-to-bottom")[0]
 
         if self.dto.nowAnswer is None:#如果未导入答案，标注所有的定位框
-            cv.drawContours(showingPaper, choiceCnts, -1, (255, 0, 0), 2)
+            cv.drawContours(showingPaperCnts, choiceCnts, -1, (255, 0, 0), 2)
 
         # 使用np函数，按5个元素，生成一个集合
         choices = []
@@ -129,7 +135,7 @@ class ExamPaper():
                 cnts = choiceCnts[
                        ANSWER_COLS * PER_CHOICE_COUNT * row + PER_CHOICE_COUNT * col:ANSWER_COLS * PER_CHOICE_COUNT * row + PER_CHOICE_COUNT + PER_CHOICE_COUNT * col]
                 # 遍历每一个选项
-                row_answers = []  # 暂存每行序号和像素值
+                row_choices = []  # 暂存每行序号和像素值
                 pixelCount = 0
                 for (inlineID, c) in enumerate(cnts):  # 行内循环4个选项
                     # 生成一个大小与透视图一样的全黑背景图布
@@ -148,26 +154,22 @@ class ExamPaper():
                     # 获取每个答案的像素值
                     total = cv.countNonZero(mask)
                     # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
-                    row_answers.append((total, inlineID))
+                    row_choices.append((total, inlineID,c))#分别存放总像素值，行内序号，轮廓值
                     if self.dto.nowAnswer:#如果已导入答案，则标注相应题数的标注框
-                        cv.drawContours(showingPaper, [c], 0, (255, 0, 0), 2)
+                        cv.drawContours(showingPaperCnts, [c], 0, (255, 0, 0), 2)
                 # 行内按像素值排序
-                ANSWER_THRESHOLD = pixelCount / PER_CHOICE_COUNT * self.dto.answerThreshhold # 取0.7作为阈值
-                row_answers = sorted(row_answers, key=lambda x: x[0], reverse=True)
+                CHOICE_THRESHOLD = pixelCount / PER_CHOICE_COUNT * self.dto.answerThreshhold # 取阈值
+                row_choices = sorted(row_choices, key=lambda x: x[0], reverse=True)
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
-                #print('第'+str(questionID)+'题答案和阈值为：',row_answers,ANSWER_THRESHOLD)
-                #以下为取最大值，实现单选
-                #  row_answers[0][0]為total，row_answers[0][1]為選項號
-                # choices.append((questionID, ANSWER_CHAR.get(row_answers[0][1])))
-                # if row_answers[0][0]>ANSWER_THRESHOLD:
-                #     choices.append((questionID, ANSWER_CHAR.get(row_answers[0][1])))
-                # else:
-                #     choices.append((questionID, ''))
-                answer=self.getAnswerChars(row_answers, ANSWER_THRESHOLD)
-                if not answer.strip(): #如果所选答案为空，则进行画框标注，同时未涂总数+1计数
+                #print('第'+str(questionID)+'题答案和阈值为：',row_choices,CHOICE_THRESHOLD)
+                answerAndCnts=self.getAnswerCharsAndCnts(row_choices, CHOICE_THRESHOLD)
+                if not answerAndCnts[0].strip(): #如果所选答案为空，则进行画框标注，同时未涂总数+1计数
                     cv.drawContours(wrong_img,cnts,-1,(0,0,255),2)
                     no_answer_count+=1
-                choices.append((questionID,answer)) #所选结果存入 题号+答案
+
+                cv.drawContours(showingChoices,answerAndCnts[1],-1,(0,255,255),2)#显示所有的已选框
+
+                choices.append((questionID,answerAndCnts[0])) #所选结果存入 题号+答案&轮廓
                 if self.dto.nowAnswer is not None:#如果已导入答案，如果题号等于最大题数，就停止行循环
                     if questionID==len(self.dto.nowAnswer):
                         break
@@ -176,10 +178,11 @@ class ExamPaper():
             score = self.getScore(choices, self.dto.nowAnswer)
             self.dto.nowPaper.score=score
         #显示图像
-        self.showingPaperCnts = ExamPaper.convertImg(showingPaper)#显示所有定位标注框图片
+        self.showingPaperCnts = ExamPaper.convertImg(showingPaperCnts)#显示所有定位标注框图片
         self.showingWrong = ExamPaper.convertImg(wrong_img)#显示未涂或者未达标的选项标注框图片
+        self.showingChoices=ExamPaper.convertImg(showingChoices)#显示已选标注框图片
         if no_answer_count:#存在未凃答案
-            self.dto.errorMsg='该卡共有'+str(no_answer_count)+'个题未涂或涂的不符合要求！'
+            self.blankCount=no_answer_count
 
         if self.dto.testFlag:
             return choices
@@ -188,13 +191,15 @@ class ExamPaper():
 
     # 根据选项 的涂色阈值换算选项字母
     # param:ANSWER_THRESHOLD 像素阈值；每行4个选项
-    def getAnswerChars(self, row_answers, ANSWER_THRESHOLD):
+    def getAnswerCharsAndCnts(self, row_choices, ANSWER_THRESHOLD):
         answerChars = ''
+        cnts=[]
         # bubble_row[0]為total，bubble_row[1]為選項號
-        for b in row_answers:
-            if b[0] > ANSWER_THRESHOLD:
-                answerChars += ANSWER_CHAR[b[1]]
-        return ''.join(sorted(list(answerChars)))  # 按字母顺序排序
+        for b in row_choices:
+            if b[0] > ANSWER_THRESHOLD:#大于阈值
+                answerChars += ANSWER_CHAR[b[1]]#追加字母
+                cnts.append(b[2])#追加轮廓
+        return (''.join(sorted(list(answerChars))),cnts) # 按字母顺序排序
 
     def getScore(self, choices, answers):
         # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值
@@ -245,8 +250,6 @@ class ExamPaper():
 
         stuidCnts = self.makeStuidCnts(src_img)
         stu_Img=src_img.copy()
-        cv.drawContours(stu_Img, stuidCnts, -1, (255, 0, 0), 2)
-        self.showingStu = ExamPaper.convertImg(stu_Img)
 
         first_num = [] #第一位数字
         second_num = [] #第二位数字
@@ -265,11 +268,11 @@ class ExamPaper():
             total = cv.countNonZero(mask)
             # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
             if i < 10:
-                first_num.append((m, total))
+                first_num.append((m, total,c))
                 # print('firnum is :', first_num)
                 m += 1
             else:
-                second_num.append((n, total))
+                second_num.append((n, total,c))
                 # print('secnum is :', second_num)
                 n += 1
         ANSWER_THRESHOLD = maxPixel * self.dto.answerThreshhold
@@ -280,16 +283,27 @@ class ExamPaper():
             stuID = 0
         else:
             stuID=str(first_num[0][0]) + str(second_num[0][0])
+        #显示已涂学号图
+        cv.drawContours(stu_Img, [first_num[0][2],second_num[0][2]], -1, (0, 255, 255), 2)
+        self.showingStu = ExamPaper.convertImg(stu_Img)
+
         self.stuID=int(stuID)
         return self.stuID
 
     # 提取答题和学号区域
     def get_roi_img(self, src_img):
+        if src_img.shape[1]>1500:#如果图像太大，则进行缩小
+            src_img=cv.resize(src_img,(1440,int((1440/src_img.shape[1]*src_img.shape[0]))),interpolation=cv.INTER_AREA)
+            # src_img=cv.resize(src_img,(0,0),fx=0.3,fy=0.3,interpolation=cv.INTER_AREA)
+        # cv.imshow('src',src_img)
         gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
         # 高斯滤波，清除一些杂点
-        blur = cv.GaussianBlur(gray, (5, 5), 0)
+        blur = cv.GaussianBlur(gray, (3, 3), 0)
         # 自适应二值化算法
-        thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 9, 9)
+        thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 131, 4)
+
+        self.showingImgThresh=ExamPaper.convertImg(thresh2)#显示已选标注框图片
+        # cv.imshow('th',thresh2)
         image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
         sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)
         # 找答题卡

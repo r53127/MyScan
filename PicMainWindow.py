@@ -10,11 +10,12 @@ import shutil
 import traceback
 import win32api
 
-from PyQt5.QtCore import pyqtSlot, Qt, QDateTime, QRect
-from PyQt5.QtGui import QPainter, QPalette, QFont, QIcon
+from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt
+from PyQt5.QtGui import QPainter, QIcon, QFont
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget
 
 from DB import AnswerDB
+from ThreshWindow import ThreshWindow
 from Ui_PicMainWindow import Ui_MainWindow
 
 
@@ -37,20 +38,12 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowIcon(QIcon("scan.ico"))
         self.line.setFixedHeight(QDesktopWidget().screenGeometry().height())
         self.line_4.setGeometry(QDesktopWidget().screenGeometry().width()-self.line.geometry().x(), 0, 21, QDesktopWidget().screenGeometry().height())
-
-
-        # 设置错误消息label_4的字体
-        errorFont = QFont()
-        errorFont.setBold(True)
-        errorFont.setPointSize(20)
-        errorPal = QPalette()
-        errorPal.setColor(QPalette.WindowText, Qt.red)
-        self.label_4.setFont(errorFont)
-        self.label_4.setPalette(errorPal)
-        self.label_4.move(350,860)
-        self.label_7.setFont(errorFont)
-        self.label_7.setPalette(errorPal)
-        self.label_7.move(QDesktopWidget().screenGeometry().width()-self.line.geometry().x()+50,20)
+        self.line_5.setGeometry(self.line.geometry().x()+10,800,self.line_4.geometry().x()-self.line.geometry().x(),21)
+        self.label_7.move(QDesktopWidget().screenGeometry().width()-self.line.geometry().x()+30,20)
+        self.label_8.move(self.line.geometry().x()+30,820)
+        self.label_4.setGeometry(QRect(self.line.geometry().x()+50,860, 1250, 138))
+        self.label_4.setWordWrap(True)#自动换行
+        self.label_4.setAlignment(Qt.AlignTop)
 
         # 初始化时间控件
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
@@ -65,34 +58,56 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         try:
             painter = QPainter(self)
             self.drawImg( painter, 350,20,400,350,20)#显示图像
-            self.drawScore(painter, QDesktopWidget().screenGeometry().width()-self.line.geometry().x()+10, 100)  # 显示姓名分数
-            self.label_4.setText(self.dto.errorMsg)
-            self.label_4.adjustSize()
+            self.drawScore(painter, QDesktopWidget().screenGeometry().width()-self.line.geometry().x()+25, 70)  # 显示姓名分数
+            self.showFailedfiles()
         except Exception as e:
             QMessageBox.information(None, '提示', '显示图像失败！错误是：' + str(e))
 
+    def showFailedfiles(self):
+        if len(self.dto.failedFiles)!=0:
+            filenames=[]
+            for file in self.dto.failedFiles:
+                filename=os.path.basename(file)
+                filenames.append(filename)
+            self.label_4.setText(str(filenames))
+
     def drawImg(self, painter, x, y,w, h, padding):#显示图片
+        painter.setFont(QFont('Mine', 10))
         if self.dto.nowPaper.showingImg is not None:
-            painter.drawImage(QRect(x, y, w, h), self.dto.nowPaper.showingImg)
-        if self.dto.nowPaper.showingPaper is not None:
-            painter.drawImage(QRect(x + w + padding, y, w, h), self.dto.nowPaper.showingPaper)
-        if self.dto.nowPaper.showingPaperCnts is not None:
-            painter.drawImage(QRect(x + (w + padding) * 2, y, w, h), self.dto.nowPaper.showingPaperCnts)
-        if self.dto.nowPaper.showingThresh is not None:
-            painter.drawImage(QRect(x, y + h + padding, w, h), self.dto.nowPaper.showingThresh)
-        if self.dto.nowPaper.showingWrong is not None:
-            painter.drawImage(QRect(x + w + padding, y + h + padding, w, h), self.dto.nowPaper.showingWrong)
+            painter.drawText(x,y, '原图：')
+            painter.drawImage(QRect(x, y+10, w, h), self.dto.nowPaper.showingImg)
+        if self.dto.nowPaper.showingChoices is not None:
+            painter.drawText(x + w + padding, y, '所涂选项：')
+            painter.drawImage(QRect(x + w + padding, y+10, w, h), self.dto.nowPaper.showingChoices)
         if self.dto.nowPaper.showingStu is not None:
-            painter.drawImage(QRect(x + (w + padding) * 2, y + h + padding, w / 2, h), self.dto.nowPaper.showingStu)
+            painter.drawText(x + (w + padding) * 2, y, '所涂学号：')
+            painter.drawImage(QRect(x + (w + padding) * 2, y+10, w/2, h), self.dto.nowPaper.showingStu)
+        if self.dto.nowPaper.blankCount is not None:
+            if self.dto.nowPaper.showingWrong is not None:
+                painter.setPen(Qt.red)
+                painter.drawText(x , y + h + padding*3, '未作答题目有'+str(self.dto.nowPaper.blankCount)+'个！')
+                painter.drawImage(QRect(x, y + h + padding*3+10, w, h), self.dto.nowPaper.showingWrong)
+        painter.setFont(QFont('Mine', 8))
+        painter.setPen(Qt.black)
+        if self.dto.testFlag:
+            if self.dto.nowPaper.showingImgThresh is not None:
+                painter.drawText(x + w + padding, y + h + padding*3, '原图二值化：')
+                painter.drawImage(QRect(x + w + padding, y + h + padding*3+10, w, h), self.dto.nowPaper.showingImgThresh)
+            if self.dto.nowPaper.showingPaperThresh is not None:
+                painter.drawText(x + (w + padding)*2, y + h + padding * 3, '答题区二值化：')
+                painter.drawImage(QRect(x + (w + padding)*2,y + h + padding * 3+10 , w, h), self.dto.nowPaper.showingPaperThresh)
 
     def drawScore(self,painter,startX,startY):
         if not self.markingResultView:
             return
         tmp=''
         for j,result in enumerate(self.markingResultView):
-            i=int((startY+20*j)/(QDesktopWidget().screenGeometry().height() - 50))#换列
-            tmp='学号：'+str(result[0])+' 分数：'+str(result[1])
-            painter.drawText(startX+140*i+5,startY+20*j,tmp)
+            if result[2] ==0 or result[2]==-1:
+                tmp = '第' + str(result[0]) + '个失败！'
+            else:
+                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][1]) + ' 成功！'
+            painter.drawText(startX+5,startY+20*j,tmp)
+
 
     # 刷新班级控件
     def updateComboBox(self):
@@ -106,11 +121,12 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
     def getID(self):
         self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
         self.dto.classID = self.comboBox_2.currentText()
-        self.dto.answerThreshhold=self.doubleSpinBox.value()
 
 
     def startScan(self, files):
         self.dto.testFlag = False
+        self.dto.failedFiles=[]
+        self.label_4.clear()
         failedCount = 0
         successedCount=0
         self.markingResultView=[]#本次所有阅卷结果
@@ -118,15 +134,20 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             try:
                 # 初始化一张试卷
                 self.dto.nowPaper.initPaper()
+                #刷新显示
                 self.update()
-                markingResult = self.examControl.markingControl(file)
-                if not markingResult:
-                    failedCount += 1
+                #根据界面全局参数初始化精确度阈值
+                self.dto.answerThreshhold = self.doubleSpinBox.value()
+                #阅卷
+                self.markingResult = self.examControl.markingControl(file)
+                if self.markingResult==0:#如果无法识别图片，直接计入失败跳过调节阈值
+                    failedCount+=1
                     self.dto.failedFiles.append(file)
                 else:
-                    self.markingResultView.append(markingResult)
-                    successedCount+=1
-                    self.update()
+                    #确认结果，如果有问题调节阈值
+                    failedCount, successedCount = self.confirmMarking(file, failedCount,successedCount)
+                #记录该文件阅卷结果
+                self.markingResultView.append([i,file,self.markingResult])
             except Exception as e:
                 failedCount += 1
                 self.dto.failedFiles.append(file)
@@ -137,6 +158,16 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 continue
         self.statusBar().showMessage('已全部结束！本次共阅'+str(len(files))+'份，成功'+str(successedCount)+'份，失败'+str(failedCount) + '份！')
 
+    #调节阈值窗口
+    def confirmMarking(self,file, failedCount,successedCount):
+        dialog = ThreshWindow(self.dto, file,self)
+        result = dialog.exec_()
+        if result:
+            successedCount += 1
+        else:
+            failedCount += 1
+            self.dto.failedFiles.append(file)
+        return failedCount, successedCount
 
     @pyqtSlot()
     def on_pushButton_3_clicked(self):
@@ -326,7 +357,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         @param p0 DESCRIPTION
         @type float
         """
-        self.dto.answerThreshhold=p0
+        self.dto.answerThreshhold=self.doubleSpinBox.value()
         if self.dto.testFlag:
             self.examControl.test(self.dto.testFile)
         self.update()

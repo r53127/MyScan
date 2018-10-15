@@ -195,11 +195,11 @@ class ScoreReportForm():
         for i, r in enumerate(examResults):
             classid=r[1]
             examid=r[5]
-            self.sheet["A%d" % (i + 3)].value = r[5]  # 时间
-            self.sheet["B%d" % (i + 3)].value = r[1]  # 班級
-            self.sheet["C%d" % (i + 3)].value = r[3]  # 姓名
-            self.sheet["D%d" % (i + 3)].value = r[2]  # 学号
-            self.sheet["E%d" % (i + 3)].value = r[4]  # 总分
+            self.sheet["A%d" % (i + 4)].value =r[2]  # 学号 r[5]  # 时间
+            self.sheet["B%d" % (i + 4)].value =r[3]  # 姓名 r[1]  # 班級
+            self.sheet["C%d" % (i + 4)].value = r[4]  # 客观分
+        self.sheet["B2"].value = examid
+        self.sheet["E2"].value = classid
         file=r'tmp\\'+classid+examid+r'成绩表.xlsx'
         self.wb.save(file)
         win32api.ShellExecute(0, 'open', file, '', '', 1)

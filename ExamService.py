@@ -1,6 +1,3 @@
-import traceback
-
-
 class ExamService():
     def __init__(self, dto):
         self.dto = dto
@@ -16,7 +13,6 @@ class ExamService():
         stuID = self.dto.nowPaper.getStuID(stu_Img)
         # 获取答题结果
         choices,score = self.dto.nowPaper.getChoicesAndScore(answer_img)
-
 
         return stuID,choices,score
 

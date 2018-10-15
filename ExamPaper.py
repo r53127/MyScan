@@ -1,5 +1,3 @@
-import traceback
-
 import cv2 as cv
 import numpy as np
 from PyQt5.QtGui import QImage
@@ -124,7 +122,7 @@ class ExamPaper():
         # 使用np函数，按5个元素，生成一个集合
         choices = []
         wrong_img = src_img.copy()
-        # questionID为題号，j为行内序号
+        # questionID为題号
         questionID=0
         for col in range(ANSWER_COLS):  # 列循环3列
             if self.dto.nowAnswer is not None:#如果已导入答案，如果题号等于最大题数，也停止列循环
@@ -162,7 +160,7 @@ class ExamPaper():
                 row_choices = sorted(row_choices, key=lambda x: x[0], reverse=True)
                 questionID = col * ANSWER_ROWS + row + 1  # 计算题号
                 #print('第'+str(questionID)+'题答案和阈值为：',row_choices,CHOICE_THRESHOLD)
-                answerAndCnts=self.getAnswerCharsAndCnts(row_choices, CHOICE_THRESHOLD)
+                answerAndCnts=self.getAnswerCharsAndCnts(row_choices, CHOICE_THRESHOLD)#得到所选答案和轮廓
 
                 #显示未选
                 if not answerAndCnts[0].strip(): #如果所选答案为空，则进行画框标注，同时未涂总数+1计数
@@ -175,7 +173,7 @@ class ExamPaper():
                 else:
                     cv.drawContours(showingChoices,answerAndCnts[1],-1,(0,255,255),2)#黄色显示单选框
 
-                choices.append((questionID,answerAndCnts[0])) #所选结果存入 题号+答案&轮廓
+                choices.append((questionID,answerAndCnts[0])) #所选结果存入 题号+答案
                 if self.dto.nowAnswer is not None:#如果已导入答案，如果题号等于最大题数，就停止行循环
                     if questionID==len(self.dto.nowAnswer):
                         break

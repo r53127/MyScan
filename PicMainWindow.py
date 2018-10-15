@@ -7,12 +7,13 @@ Module implementing ScanMainWindow.
 import logging
 import os
 import shutil
+import time
 import traceback
 import win32api
 
 from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt
 from PyQt5.QtGui import QPainter, QIcon, QFont
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget, QApplication
 
 from DB import AnswerDB
 from ThreshWindow import ThreshWindow
@@ -111,7 +112,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             if result[2] ==0 or result[2]==-1:
                 tmp = '第' + str(result[0]) + '个失败！'
             else:
-                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][1]) + ' 成功！'
+                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
             painter.drawText(startX+5,startY+20*j,tmp)
 
 
@@ -130,6 +131,11 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
 
 
     def startScan(self, files):
+        # print(self.dto.nowAnswer)
+        STAND_ANSWER_LEN = []#算出所选每一个标准答案的长度
+        for i in range(len(self.dto.nowAnswer)):
+            ans=self.dto.nowAnswer[i+1]
+            STAND_ANSWER_LEN.append(len(ans[0]))
         self.dto.testFlag = False#关闭测试开关
         self.dto.failedFiles=[]#重置错误文件记录
         self.label_4.clear()#清除错误文件显示
@@ -144,16 +150,38 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 self.update()
                 #根据界面全局参数初始化精确度阈值
                 self.dto.answerThreshhold = self.doubleSpinBox.value()
-                #阅卷
+                #探测阅卷
                 self.markingResult = self.examControl.markingControl(file)
                 if self.markingResult==0:#如果无法识别图片，直接计入失败跳过调节阈值
                     failedCount+=1
                     self.dto.failedFiles.append(file)
+                elif self.markingResult==-1:
+                    failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
                 else:
-                    #确认结果，如果有问题调节阈值
-                    failedCount, successedCount = self.confirmMarking(file, failedCount,successedCount)
+                    retry_flag=1#重试标识
+                    for a in range(2,10):#程序自行尝试调节阈值
+                        self.dto.answerThreshhold = a/10 # 获取阈值
+                        # print(self.dto.answerThreshhold)
+                        self.dto.nowPaper.multiChoiceCount = 0  # 重置多选计数器
+                        self.dto.nowPaper.noChoiceCount = 0  # 重置无选项计数器
+                        self.markingResult = self.examControl.markingControl(file)  # 重新阅卷
+                        # print(self.markingResult)
+                        choice_answer_len = []
+                        for ans in self.markingResult[1]:#算出所选每一个所选答案的长度
+                            # print(ans)
+                            choice_answer_len.append(len(ans[1]))
+                        # print(choice_answer_len,STAND_ANSWER_LEN)
+                        if choice_answer_len==STAND_ANSWER_LEN and self.dto.nowPaper.noChoiceCount==0:
+                            successedCount+=1
+                            retry_flag=0
+                            break
+                    if retry_flag==1:
+                        #如果程序调节失败，操作者自行调节阈值
+                        failedCount, successedCount = self.confirmMarking(file, failedCount,successedCount)
                 #记录该文件阅卷结果
                 self.markingResultView.append([i,file,self.markingResult])
+                # QApplication.processEvents()
+                # time.sleep(10)
             except Exception as e:
                 failedCount += 1
                 self.dto.failedFiles.append(file)

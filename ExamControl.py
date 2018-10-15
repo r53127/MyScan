@@ -62,13 +62,13 @@ class ExamControl():
                 self.scanDB.updateDB(stuID, choice[0], choice[1])
             # 分数更新
             self.scoreDB.updateDB(stuID, score)
-        else:#更新数据库
+        else:
             # 答案入库，choice[0]是题号，choice[1]是填涂选项
             for choice in choices:
                 self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
             # 分数入库
             self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
-        return (stuID, score)  #成功
+        return (stuID, choices, score )  #成功
 
     def makeScoreReport(self):
         # 初始化报表文件

@@ -17,7 +17,9 @@ class ExamService():
         return stuID,choices,score
 
     def test(self, imgFile):
-        # 预处理获取所有轮廓
+        # 初始化一张试卷
+        self.dto.nowPaper.initPaper()
+        # 读图
         src_img=self.dto.nowPaper.initImg(imgFile)
         # 获取答题卡上的答题和学号区域
         answer_img, stu_Img = self.dto.nowPaper.get_roi_img(src_img)

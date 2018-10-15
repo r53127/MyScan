@@ -163,15 +163,16 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                     failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
                 else:
                     retry_flag = 1  # 重试标识
-                    for a in range(2, 10):  # 程序自行尝试调节阈值
+                    for a in range(2, 8):  # 程序自行尝试调节阈值
                         self.dto.answerThreshhold = a / 10  # 获取阈值
                         self.dto.nowPaper.multiChoiceCount = 0  # 重置多选计数器
                         self.dto.nowPaper.noChoiceCount = 0  # 重置无选项计数器
                         self.markingResult = self.examControl.markingControl(file)  # 重新阅卷
+                        if self.markingResult==-1:#重阅导致学号无法识别，则直接跳过
+                            continue
                         choice_answer_len = []
                         for ans in self.markingResult[1]:  # 算出所选每一个所选答案的长度
                             choice_answer_len.append(len(ans[1]))
-                        print(choice_answer_len,STAND_ANSWER_LEN)
                         if choice_answer_len == STAND_ANSWER_LEN:
                             successedCount += 1
                             retry_flag = 0

@@ -46,7 +46,7 @@ class ExamControl():
         if stuID is None and choices is None and score is None:
             return 0#计入失败
 
-        # 根据学号查姓名，如果未找到或者重复则不入库
+        # 根据学号查姓名
         result = self.stuDB.checkData(stuID, classID)
         if not result:
             return -1 #计入失败

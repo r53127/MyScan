@@ -44,13 +44,11 @@ class ExamControl():
 
         #无法识别图片，直接返回0
         if stuID is None and choices is None and score is None:
-            QMessageBox.information(None, '提示', '找不到答题区，直接计入失败！')
             return 0#计入失败
 
         # 根据学号查姓名，如果未找到或者重复则不入库
         result = self.stuDB.checkData(stuID, classID)
         if not result:
-            QMessageBox.information(None, '提示', '请确认学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
             return -1 #计入失败
         stuName = result[0][2]
 

@@ -150,12 +150,14 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 self.update()
                 #根据界面全局参数初始化精确度阈值
                 self.dto.answerThreshhold = self.doubleSpinBox.value()
-                #探测阅卷
+                #s试探性阅卷
                 self.markingResult = self.examControl.markingControl(file)
                 if self.markingResult==0:#如果无法识别图片，直接计入失败跳过调节阈值
                     failedCount+=1
                     self.dto.failedFiles.append(file)
+                    QMessageBox.information(None, '提示', '找不到答题区，直接计入失败！')
                 elif self.markingResult==-1:
+                    QMessageBox.information(None, '提示', '请确认学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                     failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
                 else:
                     retry_flag=1#重试标识
@@ -171,7 +173,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                             # print(ans)
                             choice_answer_len.append(len(ans[1]))
                         # print(choice_answer_len,STAND_ANSWER_LEN)
-                        if choice_answer_len==STAND_ANSWER_LEN and self.dto.nowPaper.noChoiceCount==0:
+                        if choice_answer_len==STAND_ANSWER_LEN:
                             successedCount+=1
                             retry_flag=0
                             break

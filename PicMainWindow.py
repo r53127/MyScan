@@ -133,10 +133,11 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
 
     def startScan(self, files):
         # print(self.dto.nowAnswer)
+
         STAND_ANSWER_LEN = []  # 算出所选每一个标准答案的长度
         for i in range(len(self.dto.nowAnswer)):
-            ans = self.dto.nowAnswer[i + 1]
-            STAND_ANSWER_LEN.append(len(ans[0]))
+            ans = self.dto.nowAnswer[i + 1][0]
+            STAND_ANSWER_LEN.append(len(ans))
         self.dto.testFlag = False  # 关闭测试开关
         self.dto.failedFiles = []  # 重置错误文件记录
         self.label_4.clear()  # 清除错误文件显示
@@ -170,6 +171,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                         choice_answer_len = []
                         for ans in self.markingResult[1]:  # 算出所选每一个所选答案的长度
                             choice_answer_len.append(len(ans[1]))
+                        print(choice_answer_len,STAND_ANSWER_LEN)
                         if choice_answer_len == STAND_ANSWER_LEN:
                             successedCount += 1
                             retry_flag = 0

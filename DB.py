@@ -174,7 +174,10 @@ class AnswerDB():
             if row[0].value == '题号':
                 continue
             if row[0].value is not None:
-                answer[row[0].value] = (row[1].value, row[2].value)
+                if row[1].value is not None:
+                    answer[row[0].value] = (row[1].value, row[2].value)
+                else:
+                    answer[row[0].value] = ('', 0)
         return answer
 
 

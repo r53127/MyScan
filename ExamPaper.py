@@ -209,7 +209,7 @@ class ExamPaper():
         for choice in choices:
             if (answers.get(choice[0]))[0] == choice[1]:
                 score += (answers.get(choice[0]))[1]
-        return round(score,1)
+        return round(score,1) #保留一位小数
 
     # 生成学号绝对坐标
     def makeStuidCnts(self, src_img, expandingFlag=True, offset=0):
@@ -266,15 +266,13 @@ class ExamPaper():
             # 获取每个答案的像素值
             total = cv.countNonZero(mask)
             # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
-            stu_num[int(i/10)].append((i%10, total,c))
+            stu_num[int(i/NUM_BITS)].append((i%NUM_BITS, total,c))
         ANSWER_THRESHOLD = maxPixel * self.dto.answerThreshhold
         stuID=''#初始化学号字符串
         for n in range(ID_BITS):#逐位获取像素最大的数字
             tmp_num=stu_num[n]#tmp_num第n位数字所有的选项框数据
             tmp_num= sorted(tmp_num, key=lambda x: x[1], reverse=True)#按像素排序
-            if tmp_num[0][1] < ANSWER_THRESHOLD:  # 如果小于阈值则认为学号涂得不清晰，則认为无效学号置0
-                stuID = 0
-            else:
+            if tmp_num[0][1] > ANSWER_THRESHOLD:  # 如果小于阈值则认为学号涂得不清晰,则学号为空
                 stuID +=str(tmp_num[0][0])
             cv.drawContours(stu_Img, [tmp_num[0][2]], 0, (0, 255, 255), 2)#显示已涂学号图
         self.showingStu = ExamPaper.convertImg(stu_Img)

@@ -209,7 +209,7 @@ class ExamPaper():
         for choice in choices:
             if (answers.get(choice[0]))[0] == choice[1]:
                 score += (answers.get(choice[0]))[1]
-        return score
+        return round(score,1)
 
     # 生成学号绝对坐标
     def makeStuidCnts(self, src_img, expandingFlag=True, offset=0):
@@ -249,46 +249,35 @@ class ExamPaper():
         thresh2 = cv.adaptiveThreshold(processed_img.copy(), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
                                        157, 19)
         # 按坐标从上到下排序
-
         stuidCnts = self.makeStuidCnts(src_img)
         stu_Img=src_img.copy()
 
-        first_num = [] #第一位数字
-        second_num = [] #第二位数字
-        m = 0  # 十位辅助计数
-        n = 0  # 个位辅助计数
+        stu_num=[]#生成一个二维列表暂存(序号，像素，轮廓）
+        for b in range(ID_BITS):
+            stu_num.append([])
         for (i, c) in enumerate(stuidCnts):
             # 生成一个大小与透视图一样的全黑背景图布
             mask = np.zeros(gray.shape, dtype="uint8")
             # 将指定的轮廓+白色的填充写到画板上,255代表亮度值，亮度=255的时候，颜色是白色，等于0的时候是黑色
             cv.drawContours(mask, [c], -1, 255, -1)
             maxPixel = cv.countNonZero(mask)  # 单个蒙板的像素
-            # print(maxPixel)
             # 做两个图片做位运算，把每个选项独自显示到画布上，为了统计非0像素值使用，这部分像素最大的其实就是答案
             mask = cv.bitwise_and(thresh2, thresh2, mask=mask)
             # 获取每个答案的像素值
             total = cv.countNonZero(mask)
             # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
-            if i < 10:
-                first_num.append((m, total,c))
-                # print('firnum is :', first_num)
-                m += 1
-            else:
-                second_num.append((n, total,c))
-                # print('secnum is :', second_num)
-                n += 1
+            stu_num[int(i/10)].append((i%10, total,c))
         ANSWER_THRESHOLD = maxPixel * self.dto.answerThreshhold
-        # 按像素值排序
-        first_num = sorted(first_num, key=lambda x: x[1], reverse=True)
-        second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
-        if first_num[0][1]<ANSWER_THRESHOLD or second_num[0][1]<ANSWER_THRESHOLD:#如果小于阈值则认为学号涂得不清晰，无效置0
-            stuID = 0
-        else:
-            stuID=str(first_num[0][0]) + str(second_num[0][0])
-        #显示已涂学号图
-        cv.drawContours(stu_Img, [first_num[0][2],second_num[0][2]], -1, (0, 255, 255), 2)
+        stuID=''#初始化学号字符串
+        for n in range(ID_BITS):#逐位获取像素最大的数字
+            tmp_num=stu_num[n]#第n位数字所有的选项框数据
+            tmp_num= sorted(tmp_num, key=lambda x: x[1], reverse=True)#按像素排序
+            if tmp_num[0][1] < ANSWER_THRESHOLD:  # 如果小于阈值则认为学号涂得不清晰，无效学号置0
+                stuID = 0
+            else:
+                stuID +=str(tmp_num[0][0])
+            cv.drawContours(stu_Img, [tmp_num[0][2]], 0, (0, 255, 255), 2)#显示已涂学号图
         self.showingStu = ExamPaper.convertImg(stu_Img)
-
         self.stuID=int(stuID)
         return self.stuID
 

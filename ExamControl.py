@@ -8,6 +8,9 @@ from ExamDto import ExamDto
 from ExamService import ExamService
 from PicMainWindow import PicMainWindow
 
+CLASS_ID={31:'高三1班',32:'高三2班'}
+CLASS_BITS=0
+STU_BITS=2
 
 class ExamControl():
     def __init__(self):
@@ -38,35 +41,41 @@ class ExamControl():
     def markingControl(self,imgFile):
         stuID, choices, score = self.examServ.marking(imgFile)
 
-        classID = self.dto.classID
-        examID = self.dto.examID
-
-
         #无法识别图片，直接返回0
         if stuID is None and choices is None and score is None:
             return 0#计入失败
 
+        classID = self.dto.classID
+        examID = self.dto.examID
+
+        got_classID=stuID[0:CLASS_BITS]#按位截取班级
+        got_stuID=int(stuID[CLASS_BITS:CLASS_BITS+STU_BITS])##按位截取学号并转换成数字
+
+        if got_classID !='':#对比班级
+            if CLASS_ID[int(got_classID)]!=classID:
+                return -1
+
         # 根据学号查姓名
-        result = self.stuDB.checkData(stuID, classID)
+        result = self.stuDB.checkData(got_stuID, classID)
         if not result:
             return -1 #计入失败
         stuName = result[0][2]
 
         # 检查阅卷是否重复
-        result = self.scanDB.checkData(stuID, examID, classID)
+        result = self.scanDB.checkData(got_stuID, examID, classID)
         if result:
             #更新数据
             for choice in choices:
-                self.scanDB.updateDB(stuID, choice[0], choice[1])
+                self.scanDB.updateDB(got_stuID, choice[0], choice[1])
             # 分数更新
-            self.scoreDB.updateDB(stuID, score)
+            self.scoreDB.updateDB(got_stuID, score)
         else:
             # 答案入库，choice[0]是题号，choice[1]是填涂选项
             for choice in choices:
-                self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
+                self.scanDB.insertDB(examID, classID, got_stuID, stuName, choice[0], choice[1])
             # 分数入库
-            self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
-        return (stuID, choices, score )  #成功
+            self.scoreDB.insertDB(classID, got_stuID, stuName, score, examID)
+        return (got_stuID, choices, score )  #成功
 
     def makeScoreReport(self):
         # 初始化报表文件

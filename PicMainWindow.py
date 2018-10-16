@@ -165,7 +165,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                     self.dto.failedFiles.append(file)
                     QMessageBox.information(None, '提示', '找不到答题区，直接计入失败！')
                 elif self.markingResult == -1:
-                    QMessageBox.information(None, '提示', '请确认学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
+                    QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                     failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
                 else:
                     failedCount, successedCount = self.autoScan(STAND_ANSWER_LEN, failedCount, file, successedCount)

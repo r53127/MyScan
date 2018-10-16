@@ -270,15 +270,15 @@ class ExamPaper():
         ANSWER_THRESHOLD = maxPixel * self.dto.answerThreshhold
         stuID=''#初始化学号字符串
         for n in range(ID_BITS):#逐位获取像素最大的数字
-            tmp_num=stu_num[n]#第n位数字所有的选项框数据
+            tmp_num=stu_num[n]#tmp_num第n位数字所有的选项框数据
             tmp_num= sorted(tmp_num, key=lambda x: x[1], reverse=True)#按像素排序
-            if tmp_num[0][1] < ANSWER_THRESHOLD:  # 如果小于阈值则认为学号涂得不清晰，无效学号置0
+            if tmp_num[0][1] < ANSWER_THRESHOLD:  # 如果小于阈值则认为学号涂得不清晰，則认为无效学号置0
                 stuID = 0
             else:
                 stuID +=str(tmp_num[0][0])
             cv.drawContours(stu_Img, [tmp_num[0][2]], 0, (0, 255, 255), 2)#显示已涂学号图
         self.showingStu = ExamPaper.convertImg(stu_Img)
-        self.stuID=int(stuID)
+        self.stuID=stuID
         return self.stuID
 
     # 提取答题和学号区域

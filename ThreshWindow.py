@@ -26,6 +26,10 @@ class ThreshWindow(QDialog, Ui_Dialog):
         self.dto=dto
         self.parent=parent
         self.setupUi(self)
+        # 根据最优阈值存在则使用最优阈值初始化调节控件
+        if self.dto.bestAnswerThreshhold is not None:
+            self.doubleSpinBox.setValue(self.dto.bestAnswerThreshhold)
+
         self.setupPushbutton_2()#刷新计入成功按钮，阅卷失败不允许计入成功
         self.pushButton_1.clicked.connect(self.reject)
         self.pushButton_2.clicked.connect(self.accept)
@@ -41,7 +45,7 @@ class ThreshWindow(QDialog, Ui_Dialog):
         self.parent.update()
 
     def setupPushbutton_2(self):
-        if not self.parent.markingResult:
+        if self.parent.markingResult==0 or self.parent.markingResult==-1:
             self.pushButton_2.setDisabled(True)
         else:
             self.pushButton_2.setEnabled(True)

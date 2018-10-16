@@ -138,6 +138,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         for i in range(len(self.dto.nowAnswer)):
             ans = self.dto.nowAnswer[i + 1][0]
             STAND_ANSWER_LEN.append(len(ans))
+
         self.dto.testFlag = False  # 关闭测试开关
         self.dto.failedFiles = []  # 重置错误文件记录
         self.label_4.clear()  # 清除错误文件显示
@@ -150,8 +151,13 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 self.dto.nowPaper.initPaper()
                 # 刷新显示
                 self.update()
-                # 根据界面全局参数初始化精确度阈值
-                self.dto.answerThreshhold = self.doubleSpinBox.value()
+
+                # 根据最优阈值存在使用最优阈值，如果不存在使用全局阈值初始化精确度阈值
+                if self.dto.bestAnswerThreshhold is not None:
+                    self.dto.answerThreshhold=self.dto.bestAnswerThreshhold
+                else:
+                    self.dto.answerThreshhold = self.doubleSpinBox.value()
+
                 # s试探性阅卷
                 self.markingResult = self.examControl.markingControl(file)
                 if self.markingResult == 0:  # 如果无法识别图片，直接计入失败跳过调节阈值
@@ -162,24 +168,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.information(None, '提示', '请确认学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                     failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
                 else:
-                    retry_flag = 1  # 重试标识
-                    for a in range(2, 8):  # 程序自行尝试调节阈值
-                        self.dto.answerThreshhold = a / 10  # 获取阈值
-                        self.dto.nowPaper.multiChoiceCount = 0  # 重置多选计数器
-                        self.dto.nowPaper.noChoiceCount = 0  # 重置无选项计数器
-                        self.markingResult = self.examControl.markingControl(file)  # 重新阅卷
-                        if self.markingResult==-1:#重阅导致学号无法识别，则直接跳过
-                            continue
-                        choice_answer_len = []
-                        for ans in self.markingResult[1]:  # 算出所选每一个所选答案的长度
-                            choice_answer_len.append(len(ans[1]))
-                        if choice_answer_len == STAND_ANSWER_LEN:
-                            successedCount += 1
-                            retry_flag = 0
-                            break
-                    if retry_flag == 1:
-                        # 如果程序调节失败，操作者自行调节阈值
-                        failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
+                    failedCount, successedCount = self.autoScan(STAND_ANSWER_LEN, failedCount, file, successedCount)
                 # 记录该文件阅卷结果
                 self.markingResultView.append([i, file, self.markingResult])
                 # QApplication.processEvents()
@@ -194,6 +183,28 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 continue
         self.statusBar().showMessage(
             '已全部结束！本次共阅' + str(len(files)) + '份，成功' + str(successedCount) + '份，失败' + str(failedCount) + '份！')
+
+    def autoScan(self, STAND_ANSWER_LEN, failedCount, file, successedCount):
+        retry_flag = 1  # 重试标识
+        for a in range(2, 8):  # 程序自行尝试调节阈值
+            self.dto.answerThreshhold = a / 10  # 获取阈值
+            self.dto.nowPaper.multiChoiceCount = 0  # 重置多选计数器
+            self.dto.nowPaper.noChoiceCount = 0  # 重置无选项计数器
+            self.markingResult = self.examControl.markingControl(file)  # 重新阅卷
+            if self.markingResult == -1:  # 重阅导致学号无法识别，则直接跳过
+                break
+            choice_answer_len = []  # 暂存该卡的所涂答案长度
+            for ans in self.markingResult[1]:  # 算出所选每一个所选答案的长度
+                choice_answer_len.append(len(ans[1]))
+            if choice_answer_len == STAND_ANSWER_LEN:  # 比对所涂答案长度和标准答案的长度，如果一直说明阈值适合则直接结束
+                successedCount += 1
+                retry_flag = 0
+                self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
+                break
+        if retry_flag == 1:
+            # 如果程序调节失败，操作者自行调节阈值
+            failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
+        return failedCount, successedCount
 
     # 调节阈值窗口
     def confirmMarking(self, file, failedCount, successedCount):

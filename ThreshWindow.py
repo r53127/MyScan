@@ -39,13 +39,14 @@ class ThreshWindow(QDialog, Ui_Dialog):
         self.dto.answerThreshhold=self.doubleSpinBox.value()#获取局部阈值
         self.dto.nowPaper.multiChoiceCount=0#重置多选计数器
         self.dto.nowPaper.noChoiceCount=0#重置无选项计数器
-        self.parent.markingResult = self.parent.examControl.markingControl(self.file)#重新阅卷
+        self.parent.examControl.markingResult = self.parent.examControl.marking(self.file)#重新阅卷
         self.setupPushbutton_2()#刷新计入成功按钮，阅卷失败不允许计入成功
         self.update()
         self.parent.update()
 
+
     def setupPushbutton_2(self):
-        if self.parent.markingResult==0 or self.parent.markingResult==-1:
+        if self.parent.examControl.markingResult==0 or self.parent.examControl.markingResult==-1:
             self.pushButton_2.setDisabled(True)
         else:
             self.pushButton_2.setEnabled(True)

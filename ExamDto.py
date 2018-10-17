@@ -15,3 +15,4 @@ class ExamDto():
         self.testFile=''
         self.testFlag=False #调试模式
         self.nowPaper=ExamPaper(self)
+        self.STAND_ANSWER_LEN=None

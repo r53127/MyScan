@@ -32,7 +32,6 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         @type QWidget
         """
         super(PicMainWindow, self).__init__(parent)
-        self.markingResultView = []
         self.dto = dto
         self.examControl = examControl
         self.setupUi(self)
@@ -109,10 +108,10 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                                   self.dto.nowPaper.showingPaperThresh)
 
     def drawScore(self, painter, startX, startY):
-        if not self.markingResultView:
+        if not self.examControl.markingResultView:
             return
         tmp = ''
-        for j, result in enumerate(self.markingResultView):
+        for j, result in enumerate(self.examControl.markingResultView):
             if result[2] == 0 or result[2] == -1:
                 tmp = '第' + str(result[0]) + '个失败！'
             else:
@@ -131,91 +130,6 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
         self.dto.classID = self.comboBox_2.currentText()
 
-    def startScan(self, files):
-        # print(self.dto.nowAnswer)
-
-        STAND_ANSWER_LEN = []  # 算出所选每一个标准答案的长度
-        for i in range(len(self.dto.nowAnswer)):
-            ans = self.dto.nowAnswer[i + 1][0]
-            STAND_ANSWER_LEN.append(len(ans))
-
-        self.dto.testFlag = False  # 关闭测试开关
-        self.dto.failedFiles = []  # 重置错误文件记录
-        self.label_4.clear()  # 清除错误文件显示
-        failedCount = 0  # 重置错误文件计数
-        successedCount = 0  # 重置正确文件计数
-        self.markingResultView = []  # 记录本次所有阅卷结果
-        for i, file in enumerate(files, start=1):
-            try:
-                # 初始化一张试卷
-                self.dto.nowPaper.initPaper()
-                # 刷新显示
-                self.update()
-
-                # 根据最优阈值存在使用最优阈值，如果不存在使用全局阈值初始化精确度阈值
-                if self.dto.bestAnswerThreshhold is not None:
-                    self.dto.answerThreshhold=self.dto.bestAnswerThreshhold
-                else:
-                    self.dto.answerThreshhold = self.doubleSpinBox.value()
-
-                # s试探性阅卷
-                self.markingResult = self.examControl.markingControl(file)
-                if self.markingResult == 0:  # 如果无法识别图片，直接计入失败跳过调节阈值
-                    failedCount += 1
-                    self.dto.failedFiles.append(file)
-                    QMessageBox.information(None, '提示', '找不到答题区，直接计入失败！')
-                elif self.markingResult == -1:
-                    QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
-                    failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
-                else:
-                    failedCount, successedCount = self.autoScan(STAND_ANSWER_LEN, failedCount, file, successedCount)
-                # 记录该文件阅卷结果
-                self.markingResultView.append([i, file, self.markingResult])
-                # QApplication.processEvents()
-                # time.sleep(10)
-            except Exception as e:
-                failedCount += 1
-                self.dto.failedFiles.append(file)
-                logging.basicConfig(filename='error.log', filemode='w', level=logging.DEBUG)
-                logging.debug(traceback.format_exc())
-                # traceback.print_exc()
-                QMessageBox.information(None, '提示', '此图片阅卷失败！错误是：' + str(e))
-                continue
-        self.statusBar().showMessage(
-            '已全部结束！本次共阅' + str(len(files)) + '份，成功' + str(successedCount) + '份，失败' + str(failedCount) + '份！')
-
-    def autoScan(self, STAND_ANSWER_LEN, failedCount, file, successedCount):
-        retry_flag = 1  # 重试标识
-        for a in range(2, 8):  # 程序自行尝试调节阈值
-            self.dto.answerThreshhold = a / 10  # 获取阈值
-            self.dto.nowPaper.multiChoiceCount = 0  # 重置多选计数器
-            self.dto.nowPaper.noChoiceCount = 0  # 重置无选项计数器
-            self.markingResult = self.examControl.markingControl(file)  # 重新阅卷
-            if self.markingResult == -1:  # 重阅导致学号无法识别，则直接跳过
-                break
-            choice_answer_len = []  # 暂存该卡的所涂答案长度
-            for ans in self.markingResult[1]:  # 算出所选每一个所选答案的长度
-                choice_answer_len.append(len(ans[1]))
-            if choice_answer_len == STAND_ANSWER_LEN:  # 比对所涂答案长度和标准答案的长度，如果一直说明阈值适合则直接结束
-                successedCount += 1
-                retry_flag = 0
-                self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
-                break
-        if retry_flag == 1:
-            # 如果程序调节失败，操作者自行调节阈值
-            failedCount, successedCount = self.confirmMarking(file, failedCount, successedCount)
-        return failedCount, successedCount
-
-    # 调节阈值窗口
-    def confirmMarking(self, file, failedCount, successedCount):
-        dialog = ThreshWindow(self.dto, file, self)
-        result = dialog.exec_()
-        if result:
-            successedCount += 1
-        else:
-            failedCount += 1
-            self.dto.failedFiles.append(file)
-        return failedCount, successedCount
 
     @pyqtSlot()
     def on_pushButton_3_clicked(self):
@@ -233,7 +147,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         if not files:
             return
         # 开始阅卷
-        self.startScan(files)
+        self.examControl.startMarking(files)
 
     @pyqtSlot()
     def on_pushButton_4_clicked(self):
@@ -262,7 +176,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 continue
             files.append(os.path.join(direc + '/', filename))
         # 开始阅卷
-        self.startScan(files)
+        self.examControl.startMarking(files)
 
     @pyqtSlot()
     def on_pushButton_1_clicked(self):
@@ -289,6 +203,10 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             if answers is None:
                 return
             self.dto.nowAnswer = answers
+            self.dto.STAND_ANSWER_LEN = []  # 算出所选每一个标准答案的长度
+            for i in range(len(self.dto.nowAnswer)):
+                ans = self.dto.nowAnswer[i + 1][0]
+                self.dto.STAND_ANSWER_LEN.append(len(ans))
             QMessageBox.information(None, '提示:', '共导入' + str(len(answers)) + '个题答案！')
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")

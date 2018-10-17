@@ -117,7 +117,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
         for file in files:
             try:
                 self.dto.setCurrentPaper(file)
-                markingFlag = self.examControl.markingControl()
+                markingFlag = self.examControl.marking()
                 if markingFlag==0:
                     failedCount += 1
                     self.dto.failedFiles.append(file)

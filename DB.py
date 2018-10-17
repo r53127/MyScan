@@ -65,6 +65,11 @@ class StudentDB():
         self.cursor.execute(query_statement)
         return set(self.cursor.fetchall())
 
+    def queryStuByClassID(self, classid):
+        query_statement = r"select * from student where classid='" + str(classid) + "' order by stuid ASC"
+        self.cursor.execute(query_statement)
+        return self.cursor.fetchall()
+
     def closeDB(self):
         # 关闭Cursor:
         self.cursor.close()
@@ -142,7 +147,7 @@ class ScoreDB():
         self.conn.execute(insert_statement, (classid, stuid, name, score, examid))
         self.conn.commit()  # 修改类操作必须commit
 
-    def queryData(self, classid, examid):
+    def queryScore(self, classid, examid):
         query_statement = r"select * from score where classID='" + str(classid) + "' and examID='" + str(
             examid) + "'"
         self.cursor.execute(query_statement)
@@ -193,14 +198,17 @@ class ScoreReportForm():
             QMessageBox.information(None, '提示', '这不是有效的模板文件！')
 
     def makeScoreReport(self, examResults):
-        ##examResults内数据：班级，学号，姓名，题号，填涂选项，答案，总分
-        examResults = sorted(examResults, key=lambda x: x[4], reverse=True)
+        ##examResults内数据分别为scoreID ,classID varchar(20),stuID int,name varchar(20),score int,examID varchar(8))
+        examResults = sorted(examResults, key=lambda x: x[1], reverse=True)
         for i, r in enumerate(examResults):
             classid=r[1]
             examid=r[5]
             self.sheet["A%d" % (i + 4)].value =r[2]  # 学号 r[5]  # 时间
             self.sheet["B%d" % (i + 4)].value =r[3]  # 姓名 r[1]  # 班級
             self.sheet["C%d" % (i + 4)].value = r[4]  # 客观分
+            if r[0]==0:
+                self.sheet["F%d" % (i + 4)].value = '未交卷'  # 如果分数代号为0则显示未交卷
+
         self.sheet["B2"].value = examid
         self.sheet["E2"].value = classid
         file=r'tmp\\'+classid+examid+r'成绩表.xlsx'

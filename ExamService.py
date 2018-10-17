@@ -10,11 +10,11 @@ class ExamService():
             return None,None,None
 
         # 获取学号
-        stuID = self.dto.nowPaper.getStuID(stu_Img)
+        ID = self.dto.nowPaper.getStuID(stu_Img)
         # 获取答题结果
         choices,score = self.dto.nowPaper.getChoicesAndScore(answer_img)
 
-        return stuID,choices,score
+        return ID,choices,score
 
     def test(self, imgFile):
         # 初始化一张试卷

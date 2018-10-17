@@ -26,7 +26,7 @@ class ThreshWindow(QDialog, Ui_Dialog):
         self.dto=dto
         self.parent=parent
         self.setupUi(self)
-        # 根据最优阈值存在则使用最优阈值初始化调节控件
+        # 根据最优阈值存在则使用最优阈值初始化调节控件,如果doubleSpinBox设置的默认值和此处的初始化值不一致，该界面加载的时候会执行一次on_doubleSpinBox_valueChanged刷新
         if self.dto.bestAnswerThreshhold is not None:
             self.doubleSpinBox.setValue(self.dto.bestAnswerThreshhold)
 

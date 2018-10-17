@@ -157,7 +157,6 @@ class ExamControl():
     def saveMarkingData(self, stuID, choices, score, stuName):
         classID = self.dto.classID
         examID = self.dto.examID
-        print('save',stuID, choices, score, stuName)
         # 检查阅卷是否重复
         result = self.scanDB.checkData(stuID, examID, classID)
         if result:
@@ -186,14 +185,13 @@ class ExamControl():
             reportFile = ScoreReportForm()
             #查询分数
             scoreList=self.scoreDB.queryScore(self.dto.classID, self.dto.examID)#根据班级，考试时间查成绩
-            print(scoreList)
             if not scoreList:
                 QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
                 return
             stuList=self.stuDB.queryStuByClassID(self.dto.classID)#根据班级查名单
             for stu in stuList:#stu内数据分别为userid INTEGER  primary key AUTOINCREMENT ,stuid int,name varchar(20),gender varchar(4),classid varchar(20))
                 for scor in scoreList:#score内数据分别为scoreID ,classID varchar(20),stuID int,name varchar(20),score int,examID varchar(8))
-                    if stu[1]==scor[2] and stu[2]==scor[3]:
+                    if stu[1]==scor[2] and stu[2]==scor[3]: #如果姓名和学号一致
                         break
                 else:
                     scoreList.append([0,self.dto.classID,stu[1],stu[2],0,self.dto.examID])

@@ -43,7 +43,7 @@ class ExamControl():
     def updateClassID(self):
         self.dto.allClassID = self.stuDB.queryClassID()
 
-    def marking(self, imgFile):#只是阅一张卷子
+    def marking(self, imgFile):#阅单卡
         ID, choices, score = self.examServ.marking(imgFile)
 
         # 无法识别图片，直接返回0
@@ -70,7 +70,7 @@ class ExamControl():
 
         return (stuID, choices, score, stuName)  # 成功
 
-    def startMarking(self, files):#自适应阈值阅卷并做各种记录和保存处理
+    def startMarking(self, files):#自适应阈值批量阅卷并做各种记录和保存处理
         self.scanWin.statusBar().showMessage('')#清除状态栏信息
         self.dto.testFlag = False  # 关闭测试开关
         self.dto.failedFiles = []  # 重置错误文件记录

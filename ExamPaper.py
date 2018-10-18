@@ -6,13 +6,14 @@ from imutils import contours
 from imutils.perspective import four_point_transform
 
 # 选项字母表
-ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G"}
+ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G", 7: "H"}
 # 十个学号数字
 NUM_BITS = 10
 
 class ExamPaper():
     def __init__(self, dto):
         self.dto = dto
+        #加载配置
         self.loadConfig()
         # 初始化試卷
         self.initPaper()

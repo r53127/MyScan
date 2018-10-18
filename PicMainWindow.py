@@ -44,7 +44,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.label_4.setGeometry(QRect(self.line.geometry().x() + 50, 860, 1250, 138))
         self.label_4.setWordWrap(True)  # 自动换行
         self.label_4.setAlignment(Qt.AlignTop)
-        self.setupAction.triggered.connect(self.openSetupWindow)
+        self.setupAction.triggered.connect(self.openConfigDialog)
         # 初始化时间控件
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
         # 刷新班级控件
@@ -52,8 +52,8 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 显示窗体
         self.showMaximized()
 
-    def openSetupWindow(self):
-        dialog = configDialog()
+    def openConfigDialog(self):
+        dialog = configDialog(self.dto)
         dialog.exec_()
         return
 

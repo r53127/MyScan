@@ -12,19 +12,17 @@ from PicMainWindow import PicMainWindow
 from ThreshWindow import ThreshWindow
 
 CLASS_ID={31:'高三1班',32:'高三2班'}
-CLASS_BITS=0
-STU_BITS=2
 
 class ExamControl():
     def __init__(self):
-        # 创建数据源
-        self.dto = ExamDto()
         if not os.path.exists('data'):
             os.mkdir('data')
         if not os.path.exists('tmp'):
             os.mkdir('tmp')
         if not os.path.exists('image'):
             os.mkdir('image')
+        # 创建数据源
+        self.dto = ExamDto()
         # 鏈接学生數據庫
         self.stuDB = StudentDB()
         #刷新班级列表
@@ -52,9 +50,9 @@ class ExamControl():
 
         classID = self.dto.classID
 
-        got_classID = ID[0:CLASS_BITS]  # 按位截取班级
+        got_classID = ID[0:self.dto.cfg.CLASS_BITS]  # 按位截取班级
         if ID!='':
-            stuID = int(ID[CLASS_BITS:(CLASS_BITS + STU_BITS)])  ##按位截取学号并转换成数字
+            stuID = int(ID[self.dto.cfg.CLASS_BITS:(self.dto.cfg.CLASS_BITS + self.dto.cfg.STU_BITS)])  ##按位截取学号并转换成数字
         else:
             return -1#未识别出学号
 

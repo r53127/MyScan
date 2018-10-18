@@ -1,8 +1,10 @@
 from ExamPaper import ExamPaper
+from configFile import Config
 
 
 class ExamDto():
     def __init__(self):
+        self.cfg=Config()
         self.nowAnswer=None#标准答案
         self.failedFiles=[]
         self.errorMsg=''

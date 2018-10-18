@@ -4,10 +4,8 @@
 Module implementing ScanMainWindow.
 """
 
-import logging
 import os
 import shutil
-import traceback
 import win32api
 
 from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt
@@ -15,8 +13,8 @@ from PyQt5.QtGui import QPainter, QIcon, QFont
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget
 
 from DB import AnswerDB
-from ThreshWindow import ThreshWindow
 from Ui_PicMainWindow import Ui_MainWindow
+from configWindow import configDialog
 
 
 class PicMainWindow(QMainWindow, Ui_MainWindow):
@@ -46,7 +44,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.label_4.setGeometry(QRect(self.line.geometry().x() + 50, 860, 1250, 138))
         self.label_4.setWordWrap(True)  # 自动换行
         self.label_4.setAlignment(Qt.AlignTop)
-
+        self.setupAction.triggered.connect(self.openSetupWindow)
         # 初始化时间控件
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
         # 刷新班级控件
@@ -54,13 +52,18 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 显示窗体
         self.showMaximized()
 
+    def openSetupWindow(self):
+        dialog = configDialog()
+        dialog.exec_()
+        return
+
     def paintEvent(self, QPaintEvent):
         super().paintEvent(QPaintEvent)
         try:
             painter = QPainter(self)
-            self.drawImg(painter, 350, 20, 400, 350, 20)  # 显示图像
+            self.drawImg(painter, 350, 65, 400, 350, 20)  # 显示图像
             self.drawScore(painter, QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 20,
-                           70)  # 显示姓名分数
+                           110)  # 显示姓名分数
             self.showFailedfiles()
         except Exception as e:
             QMessageBox.information(None, '提示', '显示图像失败！错误是：' + str(e))

@@ -19,7 +19,7 @@ class StudentDB():
         self.cursor = self.conn.cursor()
         # 执行一条SQL语句，创建user表:AUTOINCREMENT类型必须是主键
         self.cursor.execute(
-            r'CREATE TABLE IF NOT EXISTS student (userid INTEGER  primary key AUTOINCREMENT ,stuid int,name varchar(20),gender varchar(4),classid varchar(20))')
+            r'CREATE TABLE IF NOT EXISTS student (userid INTEGER  primary key AUTOINCREMENT ,stuid int,name varchar(50),gender varchar(4),classid varchar(20))')
 
     def importStuFromXLS(self, file):
         students = []
@@ -88,7 +88,7 @@ class ScanDB():
         self.cursor = self.conn.cursor()
         # 执行一条SQL语句，创建user表:AUTOINCREMENT类型必须是主键
         self.cursor.execute(
-            r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,examID varchar(8),classID varchar(20),stuID int,name varchar(20),quesID int,choice varchar(4))')
+            r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,examID varchar(8),classID varchar(20),stuID int,name varchar(50),quesID int,choice varchar(4))')
 
     def insertDB(self, examid, classid, stuid, name, quesid, choice):
         # 继续执行一条SQL语句，插入一条记录:
@@ -139,7 +139,7 @@ class ScoreDB():
         self.cursor = self.conn.cursor()
         # 执行一条SQL语句，创建user表:AUTOINCREMENT类型必须是主键
         self.cursor.execute(
-            r'CREATE TABLE IF NOT EXISTS score (scoreID INTEGER  primary key AUTOINCREMENT ,classID varchar(20),stuID int,name varchar(20),score int,examID varchar(8))')
+            r'CREATE TABLE IF NOT EXISTS score (scoreID INTEGER  primary key AUTOINCREMENT ,classID varchar(20),stuID int,name varchar(50),score int,examID varchar(8))')
 
     def insertDB(self, classid, stuid, name, score, examid):
         # 继续执行一条SQL语句，插入一条记录:

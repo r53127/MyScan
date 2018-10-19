@@ -41,32 +41,6 @@ class ExamControl():
     def updateClassID(self):
         self.dto.allClassID = self.stuDB.queryClassID()
 
-    def marking(self, imgFile):#阅单卡
-        ID, choices, score = self.examServ.marking(imgFile)
-
-        # 无法识别图片，直接返回0
-        if ID is None and choices is None and score is None:
-            return 0  # 无法识别
-
-        classID = self.dto.classID
-
-        got_classID = ID[0:self.dto.cfg.CLASS_BITS]  # 按位截取班级
-        if ID!='':
-            stuID = int(ID[self.dto.cfg.CLASS_BITS:(self.dto.cfg.CLASS_BITS + self.dto.cfg.STU_BITS)])  ##按位截取学号并转换成数字
-        else:
-            return -1#未识别出学号
-
-        if got_classID != '':  # 对比班级
-            if CLASS_ID[int(got_classID)] != classID:
-                return -1 #班级冲突
-
-        # 根据学号查姓名
-        result = self.stuDB.checkData(stuID, classID)
-        if not result:
-            return -1  #学号不存在
-        stuName = result[0][2]
-
-        return (stuID, choices, score, stuName)  # 成功
 
     def startMarking(self, files):#自适应阈值批量阅卷并做各种记录和保存处理
         self.scanWin.statusBar().showMessage('')#清除状态栏信息
@@ -96,7 +70,6 @@ class ExamControl():
                     self.markingResultView.append([i, file, self.markingResult])
                 else:#计入失败，markingResult记录为-1
                     self.markingResultView.append([i, file, -1])
-                self.scanWin.update()
                 QApplication.processEvents()#停顿刷新界面
             except Exception as e:
                 failedCount += 1
@@ -109,6 +82,37 @@ class ExamControl():
         self.scanWin.statusBar().showMessage(
             '已全部结束！本次共阅' + str(len(files)) + '份，成功' + str(successedCount) + '份，失败' + str(failedCount) + '份！')
 
+    def marking(self, imgFile):  # 阅单卡
+        ID, choices, score = self.examServ.marking(imgFile)
+
+        # 无法识别图片，直接返回0
+        if ID is None and choices is None and score is None:
+            return 0  # 无法识别
+
+        classID = self.dto.classID
+        examID = self.dto.examID
+
+        if ID != '':
+            stuID = int(ID[self.dto.cfg.CLASS_BITS:(self.dto.cfg.CLASS_BITS + self.dto.cfg.STU_BITS)])  ##按位截取学号并转换成数字
+        else:
+            return (0, choices, score, '',-1 )  # 未识别出学号
+
+        got_classID = ID[0:self.dto.cfg.CLASS_BITS]  # 按位截取班级
+        if got_classID != '':  # 对比班级
+            if CLASS_ID[int(got_classID)] != classID:
+                return ( stuID, choices, score, '班级有错',-2)  # 班级冲突或无法识别
+
+        # 根据学号查姓名
+        result = self.stuDB.checkData(stuID, classID)
+        if not result:
+            return ( stuID, choices, score, '未查到',-3)  # 学号不存在
+        stuName = result[0][2]
+
+        result = self.scanDB.checkData(stuID, examID, classID)
+        if result:
+            return (stuID, choices, score, stuName,-4 )  # 重复阅卷或者学号涂重
+
+        return ( stuID, choices, score, stuName,1)  # 成功
 
     def autoScan(self, file,failedCount, successedCount):#自适应阈值扫描
         confirmResult=1#手动确认结果，无需手动调节的都默认计入成功！
@@ -122,9 +126,14 @@ class ExamControl():
                 retry_flag=0#不再重试
                 failedCount += 1
                 self.dto.failedFiles.append(file)
-                QMessageBox.information(None, '提示', '找不到答题区，直接计入失败！')
                 break
-            if self.markingResult == -1:  # 学号无法识别，则跳出循环，手动调节
+            if self.markingResult[4] == -2:# 班级冲突
+                retry_flag=0#不再重试
+                failedCount += 1
+                self.dto.failedFiles.append(file)
+                QMessageBox.information(None, '提示', '学生涂的班级和老师选的班级不一致，直接计入失败！')
+                break
+            if self.markingResult[4] == -1 or self.markingResult[4]==-3:  # 学号无法识别或学号查不到，则跳出循环，手动调节
                 retry_flag = 1  # 重试
                 QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                 break
@@ -132,10 +141,15 @@ class ExamControl():
             for choice in self.markingResult[1]:  # 算出所选每一个所选答案的长度
                 choice_answer_len.append(len(choice[1]))
             if choice_answer_len == self.dto.STAND_ANSWER_LEN:  # 比对所涂答案长度和标准答案的长度，如果一致说明阈值适合则结束
-                successedCount += 1
-                retry_flag = 0
-                self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
-                self.saveMarkingData(*self.markingResult)#成功则保存数据
+                if self.markingResult[4] == -4:  # 重复阅卷或者学号涂重
+                    self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
+                    retry_flag = 1  # 重试
+                    QMessageBox.information(None, '提示', '该学号已阅过，请确实此学生是否错涂别人的学号，计入成功则覆盖，计入失败则不保存！')
+                else:
+                    successedCount += 1
+                    retry_flag = 0
+                    self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
+                    self.saveMarkingData(*self.markingResult)#成功则保存数据
                 break
         if retry_flag == 1:#手动调节阈值
             # 如果程序调节失败，操作者自行调节阈值
@@ -155,17 +169,11 @@ class ExamControl():
         return result
 
     # 保存阅卷数据
-    def saveMarkingData(self, stuID, choices, score, stuName):
+    def saveMarkingData(self, stuID, choices, score, stuName,flag):
         classID = self.dto.classID
         examID = self.dto.examID
-        # 检查阅卷是否重复
-        result = self.scanDB.checkData(stuID, examID, classID)
-        if result:
-            reply = QMessageBox.question(None, "提示",
-                                         "已经阅过，数据已存在，是否覆盖？",
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            if reply != 16384:
-                return
+        # 阅卷重复
+        if flag==-4:
             # 更新数据
             for choice in choices:
                 self.scanDB.updateDB(stuID, choice[0], choice[1])  # 学号，题号，答案
@@ -177,8 +185,6 @@ class ExamControl():
                 self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
             # 分数入库
             self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
-
-
 
     def makeScoreReport(self):
         # 初始化报表文件

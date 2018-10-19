@@ -65,7 +65,7 @@ class Ui_MainWindow(object):
         self.doubleSpinBox.setMinimum(0.1)
         self.doubleSpinBox.setMaximum(1.0)
         self.doubleSpinBox.setSingleStep(0.01)
-        self.doubleSpinBox.setProperty("value", 0.3)
+        self.doubleSpinBox.setProperty("value", 0.2)
         self.doubleSpinBox.setObjectName("doubleSpinBox")
         self.layoutWidget = QtWidgets.QWidget(self.centralWidget)
         self.layoutWidget.setGeometry(QtCore.QRect(30, 620, 251, 211))

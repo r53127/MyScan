@@ -28,7 +28,9 @@ class ThreshWindow(QDialog, Ui_Dialog):
         self.setupUi(self)
         # 根据最优阈值存在则使用最优阈值初始化调节控件,如果doubleSpinBox设置的默认值和此处的初始化值不一致，该界面加载的时候会执行一次on_doubleSpinBox_valueChanged刷新
         if self.dto.bestAnswerThreshhold is not None:
-            self.doubleSpinBox.setValue(self.dto.bestAnswerThreshhold)
+            self.doubleSpinBox.setValue(self.dto.bestAnswerThreshhold)#如果最优阈值存在则使用最优阈值
+        else:
+            self.doubleSpinBox.setValue(self.parent.doubleSpinBox.value())#如果最优阈值存在则使用全局阈值
 
         self.setupPushbutton_2()#刷新计入成功按钮，阅卷失败不允许计入成功
         self.pushButton_1.clicked.connect(self.reject)
@@ -46,8 +48,12 @@ class ThreshWindow(QDialog, Ui_Dialog):
 
 
     def setupPushbutton_2(self):
-        if self.parent.examControl.markingResult==0 or self.parent.examControl.markingResult==-1:
-            self.pushButton_2.setDisabled(True)
+        if self.parent.examControl.markingResult!=0:
+            if self.parent.examControl.markingResult[4]==-1 or self.parent.examControl.markingResult[4]==-3:
+                self.pushButton_2.setDisabled(True)
+            else:
+                self.pushButton_2.setEnabled(True)
         else:
-            self.pushButton_2.setEnabled(True)
+            self.pushButton_2.setDisabled(True)
+
 

@@ -10,10 +10,11 @@ ANSWER_CHAR = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G", 7: "H"}
 # 十个学号数字
 NUM_BITS = 10
 
+
 class ExamPaper():
     def __init__(self, dto):
         self.dto = dto
-        #加载配置
+        # 加载配置
         self.loadConfig()
         # 初始化試卷
         self.initPaper()
@@ -214,7 +215,7 @@ class ExamPaper():
 
     # 生成学号绝对坐标
     def makeStuidCnts(self, src_img, expandingFlag=True, offset=0):
-        ID_BITS = self.dto.cfg.CLASS_BITS + self.dto.cfg.STU_BITS#学号区总位数
+        ID_BITS = self.dto.cfg.CLASS_BITS + self.dto.cfg.STU_BITS  # 学号区总位数
         width = src_img.shape[1]
         height = src_img.shape[0]
         height_scale_size = height / self.Stuid_AREA_ROWS  # 每单元格高度
@@ -254,7 +255,7 @@ class ExamPaper():
         # 按坐标从上到下排序
         stuidCnts = self.makeStuidCnts(src_img)
         stu_Img = src_img.copy()
-        cv.drawContours(stu_Img,stuidCnts,-1,(255,0,255),1)
+        cv.drawContours(stu_Img, stuidCnts, -1, (255, 0, 255), 1)
 
         stu_num = []  # 生成一个二维列表暂存(序号，像素，轮廓）
         for b in range(ID_BITS):
@@ -271,7 +272,7 @@ class ExamPaper():
             total = cv.countNonZero(mask)
             # 存到一个数组里面，tuple里面的参数分别是，像素大小和行内序号
             stu_num[int(i / NUM_BITS)].append((i % NUM_BITS, total, c))
-        ANSWER_THRESHOLD = maxPixel * (self.dto.answerThreshhold+0.1)#增大阈值0.1，防止未涂误识别
+        ANSWER_THRESHOLD = maxPixel * (self.dto.answerThreshhold + 0.1)  # 增大阈值0.1，防止未涂误识别
         stuID = ''  # 初始化学号字符串
         for n in range(ID_BITS):  # 逐位获取像素最大的数字
             tmp_num = stu_num[n]  # tmp_num为第n位数字所有的选项框数据
@@ -279,6 +280,9 @@ class ExamPaper():
             if tmp_num[0][1] > ANSWER_THRESHOLD:  # 如果小于阈值则认为学号涂得不清晰,则学号为空
                 stuID += str(tmp_num[0][0])
                 cv.drawContours(stu_Img, [tmp_num[0][2]], 0, (0, 255, 255), 2)  # 显示已涂学号图
+            else:
+                stuID = ''  # 如果学号有任何一位识别不出，那么学号还原为空字符串
+                break
         self.showingStu = ExamPaper.convertImg(stu_Img)
         self.stuID = stuID
         return self.stuID
@@ -318,18 +322,18 @@ class ExamPaper():
                     maxImg = maxImg_tmp
                     break
         else:
-            QMessageBox.information(None, '提示', '找不到有效的答题卡！')
+            QMessageBox.information(None, '提示', '找不到有效的答题卡，直接计入失败！')
             return None, None
 
         # print(maxImg.shape[1]/src_img.shape[1],maxImg.shape[0]/src_img.shape[0])
         if maxImg.shape[1] < 0.8 * src_img.shape[1]:
-            QMessageBox.information(None, '提示', '可能太远导致目标识别区太小！')
+            QMessageBox.information(None, '提示', '可能太远导致目标识别区太小，直接计入失败！')
             return None, None
 
         ratio = maxImg.shape[1] / maxImg.shape[0]
         # print(ratio)
         if ratio < 1.4 or ratio > 2.0:  # 标准卡宽高比为1.7
-            QMessageBox.information(None, '提示', '可能太斜导致目标识别区不准！')
+            QMessageBox.information(None, '提示', '可能太斜导致目标识别区不准，直接计入失败！')
             return None, None
 
         # 找选项区

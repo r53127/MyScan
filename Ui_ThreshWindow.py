@@ -26,7 +26,7 @@ class Ui_Dialog(object):
         self.doubleSpinBox.setMinimum(0.1)
         self.doubleSpinBox.setMaximum(1.0)
         self.doubleSpinBox.setSingleStep(0.01)
-        self.doubleSpinBox.setProperty("value", 0.3)
+        self.doubleSpinBox.setProperty("value", 0.1)
         self.doubleSpinBox.setObjectName("doubleSpinBox")
         self.pushButton_1 = QtWidgets.QPushButton(Dialog)
         self.pushButton_1.setGeometry(QtCore.QRect(60, 160, 101, 41))

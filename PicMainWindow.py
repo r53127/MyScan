@@ -91,7 +91,14 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 painter.drawText(x + w + padding, y, '所涂选项:')
             painter.drawImage(QRect(x + w + padding, y + 10, w, h), self.dto.nowPaper.showingChoices)
         if self.dto.nowPaper.showingStu is not None:
-            painter.drawText(x + (w + padding) * 2, y, '所涂学号：')
+            if self.dto.nowPaper.stuID !='':
+                painter.drawText(x + (w + padding) * 2, y, '所涂学号：')
+            else:
+                painter.setFont(QFont('Mine', 14))
+                painter.setPen(Qt.red)
+                painter.drawText(x + (w + padding) * 2, y, '无法识别学号！')
+                painter.setPen(Qt.black)
+                painter.setFont(QFont('Mine', 9))
             painter.drawImage(QRect(x + (w + padding) * 2, y + 10, w / 2, h), self.dto.nowPaper.showingStu)
         if self.dto.nowPaper.showingWrong is not None and self.dto.nowPaper.noChoiceCount != 0:
             painter.setFont(QFont('Mine', 14))

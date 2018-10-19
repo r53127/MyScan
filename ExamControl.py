@@ -88,13 +88,16 @@ class ExamControl():
                     self.dto.answerThreshhold=self.dto.bestAnswerThreshhold
                 else:
                     self.dto.answerThreshhold = self.scanWin.doubleSpinBox.value()
+
                 #自动适应阈值阅卷
-                failedCount, successedCount,self.markingResult,confirmFlag= self.autoScan(file, failedCount, successedCount)
+                failedCount, successedCount,self.markingResult,confirmResult= self.autoScan(file, failedCount, successedCount)
                 # 记录该文件阅卷结果
-                if confirmFlag:#默认是1，记录结果
+                if confirmResult:#计入成功，记录结果
                     self.markingResultView.append([i, file, self.markingResult])
-                else:#选择计入失败，markingResult记录为-1
+                else:#计入失败，markingResult记录为-1
                     self.markingResultView.append([i, file, -1])
+                self.scanWin.update()
+                QApplication.processEvents()#停顿刷新界面
             except Exception as e:
                 failedCount += 1
                 self.dto.failedFiles.append(file)
@@ -108,8 +111,8 @@ class ExamControl():
 
 
     def autoScan(self, file,failedCount, successedCount):#自适应阈值扫描
+        confirmResult=1#手动确认结果，无需手动调节的都默认计入成功！
         retry_flag = 1  # 重试标识
-        confirmFlag=1  #确认结果标识
         for a in range(2, 8):  # 程序自行尝试调节阈值
             self.dto.answerThreshhold = a / 10  # 获取阈值
             self.dto.nowPaper.multiChoiceCount = 0  # 重置多选计数器
@@ -122,6 +125,7 @@ class ExamControl():
                 QMessageBox.information(None, '提示', '找不到答题区，直接计入失败！')
                 break
             if self.markingResult == -1:  # 学号无法识别，则跳出循环，手动调节
+                retry_flag = 1  # 重试
                 QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                 break
             choice_answer_len = []  # 暂存本次所阅的答案长度
@@ -135,15 +139,14 @@ class ExamControl():
                 break
         if retry_flag == 1:#手动调节阈值
             # 如果程序调节失败，操作者自行调节阈值
-            result= self.confirmMarking(file)
-            if result:#计入成功
+            confirmResult= self.confirmMarking(file)
+            if confirmResult:#计入成功
                 successedCount += 1
                 self.saveMarkingData(*self.markingResult)  # 选择计入成功则保存数据
             else:#计入失败
                 failedCount += 1
                 self.dto.failedFiles.append(file)
-                confirmFlag = 0
-        return failedCount, successedCount,self.markingResult,confirmFlag
+        return failedCount, successedCount,self.markingResult,confirmResult
 
     # 调节阈值窗口
     def confirmMarking(self, file):

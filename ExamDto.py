@@ -18,3 +18,4 @@ class ExamDto():
         self.testFlag=False #调试模式
         self.nowPaper=ExamPaper(self)
         self.STAND_ANSWER_LEN=None
+        self.STAND_ONE_ANSWER_ORDER = None

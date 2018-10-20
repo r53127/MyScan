@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import time
 import traceback
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
@@ -70,6 +71,7 @@ class ExamControl():
                     self.markingResultView.append([i, file, self.markingResult])
                 else:#计入失败，markingResult记录为-1
                     self.markingResultView.append([i, file, -1])
+                # time.sleep(0.5)#以秒为单位
                 QApplication.processEvents()#停顿刷新界面
             except Exception as e:
                 failedCount += 1
@@ -137,10 +139,7 @@ class ExamControl():
                 retry_flag = 1  # 重试
                 QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                 break
-            choice_answer_len = []  # 暂存本次所阅的答案长度
-            for choice in self.markingResult[1]:  # 算出所选每一个所选答案的长度
-                choice_answer_len.append(len(choice[1]))
-            if choice_answer_len == self.dto.STAND_ANSWER_LEN:  # 比对所涂答案长度和标准答案的长度，如果一致说明阈值适合则结束
+            if self.comparison(self.markingResult[1]):  # 比对所有单选的序号是否一致，如果一致说明阈值适合则结束
                 if self.markingResult[4] == -4:  # 重复阅卷或者学号涂重
                     self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
                     retry_flag = 1  # 重试
@@ -161,6 +160,15 @@ class ExamControl():
                 failedCount += 1
                 self.dto.failedFiles.append(file)
         return failedCount, successedCount,self.markingResult,confirmResult
+
+    def comparison(self,choices):#对比标准答案和读卡结果所有单选的序号是否一致
+        for n in self.dto.STAND_ONE_ANSWER_ORDER:
+            if len(choices[n-1][1]) ==1:#判断选项长度是否也为1个
+                continue
+            else:
+                return False
+        else:
+            return True
 
     # 调节阈值窗口
     def confirmMarking(self, file):

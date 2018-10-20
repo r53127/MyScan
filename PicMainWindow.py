@@ -213,10 +213,11 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             if answers is None:
                 return
             self.dto.nowAnswer = answers
-            self.dto.STAND_ANSWER_LEN = []  # 算出所选每一个标准答案的长度
+            self.dto.STAND_ONE_ANSWER_ORDER=[]#计算并保存标准答案长度为1的题号
             for i in range(len(self.dto.nowAnswer)):
                 ans = self.dto.nowAnswer[i + 1][0]
-                self.dto.STAND_ANSWER_LEN.append(len(ans))
+                if len(ans)==1:
+                    self.dto.STAND_ONE_ANSWER_ORDER.append(i+1)
             QMessageBox.information(None, '提示:', '共导入' + str(len(answers)) + '个题答案！')
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")

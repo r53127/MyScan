@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import time
 import traceback
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
@@ -12,7 +11,6 @@ from ExamService import ExamService
 from PicMainWindow import PicMainWindow
 from ThreshWindow import ThreshWindow
 
-CLASS_ID={31:'高三1班',32:'高三2班'}
 
 class ExamControl():
     def __init__(self):
@@ -27,7 +25,7 @@ class ExamControl():
         # 鏈接学生數據庫
         self.stuDB = StudentDB()
         #刷新班级列表
-        self.updateClassID()
+        self.updateClassname()
         # 连接阅卷结果库
         self.scanDB = ScanDB()
         # 连接成绩库
@@ -39,8 +37,8 @@ class ExamControl():
         #阅卷进度视图
         self.markingResultView = []
 
-    def updateClassID(self):
-        self.dto.allClassID = self.stuDB.queryClassID()
+    def updateClassname(self):
+        self.dto.allClassname = self.stuDB.queryClassname()
 
 
     def startMarking(self, files):#自适应阈值批量阅卷并做各种记录和保存处理
@@ -67,10 +65,12 @@ class ExamControl():
                 #自动适应阈值阅卷
                 failedCount, successedCount,self.markingResult,confirmResult= self.autoScan(file, failedCount, successedCount)
                 # 记录该文件阅卷结果
-                if confirmResult:#计入成功，记录结果
+                if confirmResult==1:#计入成功，记录结果
                     self.markingResultView.append([i, file, self.markingResult])
-                else:#计入失败，markingResult记录为-1
+                elif confirmResult==0:#计入失败，markingResult记录为-1
                     self.markingResultView.append([i, file, -1])
+                elif confirmResult==-1:#退出不阅了
+                    return
                 # time.sleep(0.5)#以秒为单位
                 QApplication.processEvents()#停顿刷新界面
             except Exception as e:
@@ -91,7 +91,7 @@ class ExamControl():
         if ID is None and choices is None and score is None:
             return 0  # 无法识别
 
-        classID = self.dto.classID
+        classname = self.dto.classname
         examID = self.dto.examID
 
         if ID != '':
@@ -100,17 +100,22 @@ class ExamControl():
             return (0, choices, score, '',-1 )  # 未识别出学号
 
         got_classID = ID[0:self.dto.cfg.CLASS_BITS]  # 按位截取班级
-        if got_classID != '':  # 对比班级
-            if CLASS_ID[int(got_classID)] != classID:
-                return ( stuID, choices, score, '班级有错',-2)  # 班级冲突或无法识别
 
-        # 根据学号查姓名
-        result = self.stuDB.checkData(stuID, classID)
+        if len(self.stuDB.queryClassnameByClassID(got_classID))>1:
+            QMessageBox.information(None, '提示', '班级库有错，一个班级代号不能对应多个班级！')
+            return 0
+
+        if got_classID != '':  # 对比班级
+            if {(classname,)} != self.stuDB.queryClassnameByClassID(got_classID):
+                return (stuID, choices, score, '班级有错',-2)  # 班级冲突或无法识别
+
+        # 根据班級查姓名
+        result = self.stuDB.checkDataByClassname(stuID, classname)
         if not result:
             return ( stuID, choices, score, '未查到',-3)  # 学号不存在
         stuName = result[0][2]
 
-        result = self.scanDB.checkData(stuID, examID, classID)
+        result = self.scanDB.checkData(stuID, examID, classname)
         if result:
             return (stuID, choices, score, stuName,-4 )  # 重复阅卷或者学号涂重
 
@@ -153,10 +158,10 @@ class ExamControl():
         if retry_flag == 1:#手动调节阈值
             # 如果程序调节失败，操作者自行调节阈值
             confirmResult= self.confirmMarking(file)
-            if confirmResult:#计入成功
+            if confirmResult==1:#计入成功
                 successedCount += 1
                 self.saveMarkingData(*self.markingResult)  # 选择计入成功则保存数据
-            else:#计入失败
+            elif confirmResult==0 :#计入失败
                 failedCount += 1
                 self.dto.failedFiles.append(file)
         return failedCount, successedCount,self.markingResult,confirmResult
@@ -166,7 +171,7 @@ class ExamControl():
             if len(choices[n-1][1]) ==1:#判断选项长度是否也为1个
                 continue
             else:
-                return False
+                return False#有一个不一样就认为不一致
         else:
             return True
 
@@ -178,7 +183,7 @@ class ExamControl():
 
     # 保存阅卷数据
     def saveMarkingData(self, stuID, choices, score, stuName,flag):
-        classID = self.dto.classID
+        classname = self.dto.classname
         examID = self.dto.examID
         # 阅卷重复
         if flag==-4:
@@ -190,26 +195,26 @@ class ExamControl():
         else:
             # 答案入库，choice[0]是题号，choice[1]是填涂选项
             for choice in choices:
-                self.scanDB.insertDB(examID, classID, stuID, stuName, choice[0], choice[1])
+                self.scanDB.insertDB(examID, classname, stuID, stuName, choice[0], choice[1])
             # 分数入库
-            self.scoreDB.insertDB(classID, stuID, stuName, score, examID)
+            self.scoreDB.insertDB(classname, stuID, stuName, score, examID)
 
     def makeScoreReport(self):
         # 初始化报表文件
         try:
             reportFile = ScoreReportForm()
             #查询分数
-            scoreList=self.scoreDB.queryScore(self.dto.classID, self.dto.examID)#根据班级，考试时间查成绩
+            scoreList=self.scoreDB.queryScore(self.dto.classname, self.dto.examID)#根据班级，考试时间查成绩
             if not scoreList:
                 QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
                 return
-            stuList=self.stuDB.queryStuByClassID(self.dto.classID)#根据班级查名单
+            stuList=self.stuDB.queryStuByClassname(self.dto.classname)#根据班级查名单
             for stu in stuList:#stu内数据分别为userid INTEGER  primary key AUTOINCREMENT ,stuid int,name varchar(20),gender varchar(4),classid varchar(20))
                 for scor in scoreList:#score内数据分别为scoreID ,classID varchar(20),stuID int,name varchar(20),score int,examID varchar(8))
                     if stu[1]==scor[2] and stu[2]==scor[3]: #如果姓名和学号一致
                         break
                 else:
-                    scoreList.append([0,self.dto.classID,stu[1],stu[2],0,self.dto.examID])
+                    scoreList.append([0,self.dto.classname,stu[1],stu[2],0,self.dto.examID])
             reportFile.makeScoreReport(scoreList)
         except Exception as e:
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
@@ -218,7 +223,7 @@ class ExamControl():
         # 初始化报表文件
         try:
             reportFile = PaperReportForm()
-            stu_count=self.scanDB.queryPersonCount(self.dto.examID,self.dto.classID)
+            stu_count=self.scanDB.queryPersonCount(self.dto.examID,self.dto.classname)
             if not stu_count:
                 QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
                 return
@@ -226,15 +231,16 @@ class ExamControl():
             paperResult=[]
             for quesid in range(1,ques_count+1):
                 correct_ans=self.dto.nowAnswer.get(quesid)[0]
-                correct_count=len(self.scanDB.queryData(self.dto.classID,self.dto.examID,quesid,correct_ans))/stu_count
-                A_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'A'))/stu_count
-                B_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'B'))/stu_count
-                C_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'C'))/stu_count
-                D_count = len(self.scanDB.queryData(self.dto.classID, self.dto.examID, quesid, 'D'))/stu_count
+                correct_count=len(self.scanDB.queryData(self.dto.classname,self.dto.examID,quesid,correct_ans))/stu_count
+                A_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'A'))/stu_count
+                B_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'B'))/stu_count
+                C_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'C'))/stu_count
+                D_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'D'))/stu_count
                 #根据模板存放需要的数据：考试时间，班级，题号，正确答案，正确率，A选项率，B选项率，C选项率，D选项率,总人数，总题数
-                paperResult.append([self.dto.examID,self.dto.classID,quesid,correct_ans,correct_count,A_count,B_count,C_count,D_count,stu_count,ques_count])
+                paperResult.append([self.dto.examID,self.dto.classname,quesid,correct_ans,correct_count,A_count,B_count,C_count,D_count,stu_count,ques_count])
             reportFile.makePaperReport(paperResult)
         except Exception as e:
+            # traceback.print_exc()
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
 

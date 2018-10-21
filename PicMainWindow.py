@@ -131,21 +131,21 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
     # 刷新班级控件
     def updateComboBox(self):
         self.comboBox_2.clear()
-        if self.dto.allClassID is not None:
-            for i in self.dto.allClassID:
+        if self.dto.allClassname is not None:
+            for i in self.dto.allClassname:
                 for j in i:
                     self.comboBox_2.addItem(j)
 
     def getID(self):
         self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
-        self.dto.classID = self.comboBox_2.currentText()
+        self.dto.classname = self.comboBox_2.currentText()
 
 
     @pyqtSlot()
     def on_pushButton_3_clicked(self):
         # 獲取班級和examID
         self.getID()
-        if not self.dto.classID:
+        if not self.dto.classname:
             QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
             return
         # 未导入答案，返回
@@ -166,7 +166,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         """
         # 獲取班級和examID
         self.getID()
-        if not self.dto.classID:
+        if not self.dto.classname:
             QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
             return
         # 未导入答案，返回
@@ -230,7 +230,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         try:
             # 獲取班級和examID
             self.getID()
-            if not self.dto.classID:
+            if not self.dto.classname:
                 QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
                 return
             self.examControl.makeScoreReport()
@@ -280,10 +280,11 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         if not file:
             return
         try:
-            if self.examControl.stuDB.importStuFromXLS(file):
-                self.examControl.updateClassID()
+            i=self.examControl.stuDB.importStuFromXLS(file)
+            if i:
+                self.examControl.updateClassname()
                 self.updateComboBox()
-                QMessageBox.information(None, '消息', '结束！')
+                QMessageBox.information(None, '消息', '共导入'+str(i)+'个学生！')
         except Exception as e:
             QMessageBox.information(None, '提示', '导入失败！错误是：' + str(e) + '，请选择正确的学生库文件！')
 

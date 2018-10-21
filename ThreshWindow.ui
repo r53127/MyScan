@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>403</width>
-    <height>256</height>
+    <width>435</width>
+    <height>263</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
   <widget class="QLabel" name="label_1">
    <property name="geometry">
     <rect>
-     <x>32</x>
+     <x>82</x>
      <y>60</y>
      <width>181</width>
      <height>51</height>
@@ -32,7 +32,7 @@
   <widget class="QDoubleSpinBox" name="doubleSpinBox">
    <property name="geometry">
     <rect>
-     <x>220</x>
+     <x>270</x>
      <y>60</y>
      <width>101</width>
      <height>41</height>
@@ -63,7 +63,7 @@
   <widget class="QPushButton" name="pushButton_1">
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>20</x>
      <y>160</y>
      <width>101</width>
      <height>41</height>
@@ -76,7 +76,7 @@
   <widget class="QPushButton" name="pushButton_2">
    <property name="geometry">
     <rect>
-     <x>210</x>
+     <x>150</x>
      <y>160</y>
      <width>111</width>
      <height>41</height>
@@ -84,6 +84,19 @@
    </property>
    <property name="text">
     <string>计入成功</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_3">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>160</y>
+     <width>111</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>中止阅卷</string>
    </property>
   </widget>
  </widget>

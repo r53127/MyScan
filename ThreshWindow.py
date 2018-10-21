@@ -55,5 +55,11 @@ class ThreshWindow(QDialog, Ui_Dialog):
                 self.pushButton_2.setEnabled(True)
         else:
             self.pushButton_2.setDisabled(True)
-
-
+    
+    @pyqtSlot()
+    def on_pushButton_3_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        self.close()
+        self.setResult(-1)

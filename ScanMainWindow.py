@@ -286,7 +286,7 @@ class ScanMainWindow(QMainWindow, Ui_MainWindow):
             return
         if self.examControl.stuDB.importStuFromXLS(file):
             try:
-                self.examControl.updateClassID()
+                self.examControl.updateClassname()
                 self.updateComboBox()
             except:
                 traceback.print_exc()

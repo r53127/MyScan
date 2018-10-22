@@ -8,7 +8,7 @@ import os
 import shutil
 import win32api
 
-from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt
+from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt, QStringListModel
 from PyQt5.QtGui import QPainter, QIcon, QFont
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget
 
@@ -33,7 +33,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.dto = dto
         self.examControl = examControl
         self.setupUi(self)
-        self.setWindowIcon(QIcon("scan.ico"))
+        self.setWindowIcon(QIcon("icons\scan.ico"))
         self.line.setFixedHeight(QDesktopWidget().screenGeometry().height())
         self.line_4.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x(), 0, 21,
                                 QDesktopWidget().screenGeometry().height())
@@ -49,6 +49,8 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
         # 刷新班级控件
         self.updateComboBox()
+        #设置listview位置
+        self.listView.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x()+30, 60, self.line.geometry().x()-50,QDesktopWidget().screenGeometry().height()-190)
         # 显示窗体
         self.showMaximized()
 
@@ -120,14 +122,18 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
     def drawScore(self, painter, startX, startY):
         if not self.examControl.markingResultView:
             return
+        score=[]
         tmp = ''
         for j, result in enumerate(self.examControl.markingResultView):
             if result[2] == 0 or result[2] == -1:
                 tmp = '第' + str(result[0]) + '个失败！'
             else:
                 tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
-            painter.drawText(startX + 5, startY + 20 * j, tmp)
-
+            score.append(tmp)
+            # painter.drawText(startX + 5, startY + 20 * j, tmp)
+            slm=QStringListModel()
+            slm.setStringList(score)
+            self.listView.setModel(slm)
     # 刷新班级控件
     def updateComboBox(self):
         self.comboBox_2.clear()

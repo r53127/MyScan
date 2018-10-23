@@ -280,35 +280,35 @@ class SaveAsReport():
             self.sheet["B%d" % (i + 5)].value =os.path.basename(r[1]) # 文件名
             if r[2]!=0:
                 self.sheet["E%d" % (i + 5)].value = r[2][2]  # 分数
-                self.sheet["F%d" % (i + 5)].value = str(r[2][1]) # 答题结果
+                self.sheet["H%d" % (i + 5)].value = str(r[2][1]) # 答题结果
                 quesCount= len(r[2][1])
                 if r[2][4]==-4:
                     self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
                     self.sheet["D%d" % (i + 5)].value = r[2][3]  # 姓名
-                    self.sheet["G%d" % (i + 5)].value = '重阅或学号有重复'  # 阅卷结果
+                    self.sheet["I%d" % (i + 5)].value = '重阅或学号有重复'  # 阅卷结果
                 elif r[2][4]==-1:
                     self.sheet["C%d" % (i + 5)].value = None  # 学号
                     self.sheet["D%d" % (i + 5)].value = None  # 姓名
-                    self.sheet["G%d" % (i + 5)].value = '未涂学号'  # 阅卷结果
+                    self.sheet["I%d" % (i + 5)].value = '未涂学号'  # 阅卷结果
                 elif r[2][4]==-2:
                     self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
                     self.sheet["D%d" % (i + 5)].value = None  # 姓名
-                    self.sheet["G%d" % (i + 5)].value = '班级冲突'  # 阅卷结果
+                    self.sheet["I%d" % (i + 5)].value = '班级冲突'  # 阅卷结果
                 elif r[2][4]==-3:
                     self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
                     self.sheet["D%d" % (i + 5)].value = None  # 姓名
-                    self.sheet["G%d" % (i + 5)].value = '学号不存在'  # 阅卷结果
+                    self.sheet["I%d" % (i + 5)].value = '学号不存在'  # 阅卷结果
                 elif r[2][4] == 1:
                     self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
                     self.sheet["D%d" % (i + 5)].value = r[2][3]  # 姓名
-                    self.sheet["G%d" % (i + 5)].value = '正常'  # 阅卷结果
+                    self.sheet["I%d" % (i + 5)].value = '正常'  # 阅卷结果
             else:
-                self.sheet["G%d" % (i + 5)].value = '答题卡无法识别'  # 阅卷结果
+                self.sheet["I%d" % (i + 5)].value = '答题卡无法识别'  # 阅卷结果
 
         self.sheet["B2"].value =  quesCount##总题数
-        self.sheet["G2"].value = len(markingResultView)  # # 总人数
+        self.sheet["I2"].value = len(markingResultView)  # # 总人数
         self.sheet["B3"].value = examid  # 考試時間
-        self.sheet["G3"].value = classname  # 班級
+        self.sheet["I3"].value = classname  # 班級
 
         file=r'tmp\\'+classname+examid+r'阅卷结果.xlsx'
         self.wb.save(file)

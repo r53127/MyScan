@@ -40,8 +40,9 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.line_5.setGeometry(self.line.geometry().x() + 10, 800,
                                 self.line_4.geometry().x() - self.line.geometry().x(), 21)
         self.label_7.move(QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 30, 20)
-        self.label_8.move(self.line.geometry().x() + 30, 820)
-        self.label_4.setGeometry(QRect(self.line.geometry().x() + 50, 860, 1250, 138))
+        self.label_8.move(self.line.geometry().x() + 10, 810)
+        self.scrollArea.setGeometry(QRect(self.line.geometry().x()+15, 840, self.line_4.geometry().x()-self.line.geometry().x()-10, 100))
+        self.scrollArea.setWidget(self.label_4)
         self.label_4.setWordWrap(True)  # 自动换行
         self.label_4.setAlignment(Qt.AlignTop)
         self.setupAction.triggered.connect(self.openConfigDialog)
@@ -237,6 +238,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                     self.dto.STAND_ONE_ANSWER_ORDER.append(i+1)
             QMessageBox.information(None, '提示:', '共导入' + str(len(answers)) + '个题答案！')
             self.dto.hideAnswerFlag = 0
+            self.dto.nowPaper.initPaper()
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")
 
@@ -330,6 +332,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         if not file:
             return
         # 开始阅卷
+        self.dto.nowAnswer=None
         self.dto.testFlag = True
         self.dto.testFile = file
         self.dto.answerThreshhold = self.doubleSpinBox.value()
@@ -346,6 +349,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         """
         self.dto.answerThreshhold = self.doubleSpinBox.value()
         if self.dto.testFlag:
+            self.dto.nowAnswer = None
             self.examControl.test(self.dto.testFile)
         self.update()
     

@@ -85,7 +85,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
     def showAnswers(self):
         if self.dto.nowAnswer!=None and self.dto.hideAnswerFlag==0:
             self.label_4.clear()
-            self.label_4.setText('导入的答案为（题号：答案+得分+部分得分）：'+str(self.dto.nowAnswer))
+            self.label_4.setText('目前导入的答案为（题号：答案+得分+部分得分）：'+str(self.dto.nowAnswer))
 
     def drawImg(self, painter, x, y, w, h, padding):  # 显示图片
         if self.dto.nowPaper.showingImg is not None:

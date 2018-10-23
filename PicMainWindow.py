@@ -337,10 +337,13 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             return
         # 开始阅卷
         self.dto.nowAnswer=None
+        self.dto.hideAnswerFlag = 0
+        self.dto.nowPaper.initPaper()
         self.dto.testFlag = True
         self.dto.testFile = file
         self.dto.answerThreshhold = self.doubleSpinBox.value()
         self.examControl.test(file)
+
         self.update()
 
     @pyqtSlot(float)
@@ -353,6 +356,8 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         """
         self.dto.answerThreshhold = self.doubleSpinBox.value()
         if self.dto.testFlag:
+            self.dto.hideAnswerFlag = 0
+            self.dto.nowPaper.initPaper()
             self.dto.nowAnswer = None
             self.examControl.test(self.dto.testFile)
         self.update()

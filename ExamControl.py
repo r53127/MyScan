@@ -264,6 +264,11 @@ class ExamControl():
                     break
                 answer[c[0]] = (c[1], self.dto.cfg.PER_ANS_SCORE, self.dto.cfg.PART_ANS_SCORE)
             self.dto.nowAnswer = answer
+            self.dto.STAND_ONE_ANSWER_ORDER=[]#计算并保存标准答案长度为1的题号
+            for i in range(len(self.dto.nowAnswer)):
+                ans = self.dto.nowAnswer[i + 1][0]
+                if len(ans)==1:
+                    self.dto.STAND_ONE_ANSWER_ORDER.append(i+1)
         except Exception as e:
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 

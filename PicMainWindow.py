@@ -136,6 +136,10 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         for j, result in enumerate(self.examControl.markingResultView):
             if result[2] == 0 or (result[2][4] <0 and result[2][4]>-4):
                 tmp = '第' + str(result[0]) + '个失败！'
+            elif result[2][4]==-5:
+                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '不覆盖！'
+            elif result[2][4] == -4:
+                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '覆盖！'
             else:
                 tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
             score.append(tmp)

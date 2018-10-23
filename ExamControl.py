@@ -67,7 +67,10 @@ class ExamControl():
                 # 记录该文件阅卷结果
                 if confirmResult==-1:#退出不阅了
                     return
-                else:#记录中间结果
+                elif confirmResult==0 and self.markingResult[4]==-4:#重复，选择了计入失败，不覆盖，改变标志为-5
+                    self.markingResult[4]=-5
+                    self.markingResultView.append([i, file, self.markingResult])
+                else:
                     self.markingResultView.append([i, file, self.markingResult])
                 # time.sleep(0.5)#以秒为单位
                 QApplication.processEvents()#停顿刷新界面
@@ -95,7 +98,7 @@ class ExamControl():
         if ID != '':
             stuID = int(ID[self.dto.cfg.CLASS_BITS:(self.dto.cfg.CLASS_BITS + self.dto.cfg.STU_BITS)])  ##按位截取学号并转换成数字
         else:
-            return (0, choices, score, '未识别出学号',-1 )  # 未识别出学号
+            return [0, choices, score, '未识别出学号',-1 ]  # 未识别出学号
 
         got_classID = ID[0:self.dto.cfg.CLASS_BITS]  # 按位截取班级
 
@@ -105,19 +108,19 @@ class ExamControl():
 
         if got_classID != '':  # 对比班级
             if {(classname,)} != self.stuDB.queryClassnameByClassID(got_classID):
-                return (stuID, choices, score, '班级有错',-2)  # 班级冲突或无法识别
+                return [stuID, choices, score, '班级有错',-2]  # 班级冲突或无法识别
 
         # 根据班級查姓名
         result = self.stuDB.checkDataByClassname(stuID, classname)
         if not result:
-            return ( stuID, choices, score, '姓名未查到',-3)  # 学号不存在
+            return [ stuID, choices, score, '姓名未查到',-3]  # 学号不存在
         stuName = result[0][2]
 
         result = self.scanDB.checkData(stuID, examID, classname)
         if result:
-            return (stuID, choices, score, stuName,-4 )  # 重复阅卷或者学号涂重
+            return [stuID, choices, score, stuName,-4 ]  # 重复阅卷或者学号涂重
 
-        return ( stuID, choices, score, stuName,1)  # 成功
+        return [ stuID, choices, score, stuName,1]  # 成功
 
     def autoScan(self, file,failedCount, successedCount):#自适应阈值扫描
         confirmResult=1#手动确认结果，无需手动调节的都默认计入成功！

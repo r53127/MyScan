@@ -191,7 +191,7 @@ class Ui_MainWindow(object):
         self.pushButton_9.setText(_translate("MainWindow", "预读答案"))
         self.label_7.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:16pt; font-weight:600; color:#5500ff;\">进度显示：</span></p></body></html>"))
         self.label_2.setText(_translate("MainWindow", "全局识别精确度阈值："))
-        self.label_8.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:16pt; font-weight:600; color:#5500ff;\">信息区：</span></p></body></html>"))
+        self.label_8.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:16pt; font-weight:600; color:#5500ff;\">信息板：</span></p></body></html>"))
         self.label_9.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:16pt; font-weight:600; color:#5500ff;\">功能区：</span></p></body></html>"))
         self.pushButton_3.setText(_translate("MainWindow", "阅文件"))
         self.pushButton_4.setText(_translate("MainWindow", "阅目录"))

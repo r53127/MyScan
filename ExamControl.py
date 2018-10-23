@@ -259,10 +259,16 @@ class ExamControl():
         try:
             choices=self.examServ.test(file)
             answer = {}
-            for c in choices:
-                if c[1] == '':
+
+            while 1:#删除末尾答案未空的题目
+                if choices[-1][1]=='':
+                    choices.pop()
+                else:
                     break
+
+            for c in choices:
                 answer[c[0]] = (c[1], self.dto.cfg.PER_ANS_SCORE, self.dto.cfg.PART_ANS_SCORE)
+
             self.dto.nowAnswer = answer
             self.dto.STAND_ONE_ANSWER_ORDER=[]#计算并保存标准答案长度为1的题号
             for i in range(len(self.dto.nowAnswer)):
@@ -270,6 +276,7 @@ class ExamControl():
                 if len(ans)==1:
                     self.dto.STAND_ONE_ANSWER_ORDER.append(i+1)
         except Exception as e:
+            # traceback.print_exc()
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
 

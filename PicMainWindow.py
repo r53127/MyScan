@@ -360,12 +360,3 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(None, '错误', "尚未阅卷！")
             return
         self.examControl.makeSaveAsReport()
-
-
-    
-    @pyqtSlot()
-    def on_pushButton_answer_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-        pass

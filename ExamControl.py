@@ -254,7 +254,13 @@ class ExamControl():
 
     def test(self, file):
         try:
-            self.examServ.test(file)
+            choices=self.examServ.test(file)
+            answer = {}
+            for c in choices:
+                if c[1] == '':
+                    break
+                answer[c[0]] = (c[1], self.dto.cfg.PER_ANS_SCORE, self.dto.cfg.PART_ANS_SCORE)
+            self.dto.nowAnswer = answer
         except Exception as e:
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 

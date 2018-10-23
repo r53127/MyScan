@@ -176,6 +176,12 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>新宋体</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
     <property name="text">
      <string/>
     </property>

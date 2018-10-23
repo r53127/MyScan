@@ -260,7 +260,7 @@ class ExamControl():
             choices=self.examServ.test(file)
             answer = {}
 
-            while 1:#删除末尾答案未空的题目
+            while 1:#删除末尾答案为空的题目
                 if choices[-1][1]=='':
                     choices.pop()
                 else:

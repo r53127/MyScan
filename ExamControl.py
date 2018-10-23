@@ -258,6 +258,9 @@ class ExamControl():
     def test(self, file):
         try:
             choices=self.examServ.test(file)
+
+            if choices is None:
+                return
             answer = {}
 
             while 1:#删除末尾答案为空的题目

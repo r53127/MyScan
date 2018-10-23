@@ -306,6 +306,8 @@ class ExamPaper():
         self.showingImgThresh = ExamPaper.convertImg(thresh2)  # 显示已选标注框图片
         # cv.imshow('th',thresh2)
         image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        # cv.drawContours(src_img, cnts, -1, (255, 0, 0), 1)
+        # cv.imshow('src', src_img)
         sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)
         # 找答题卡
         for i in range(len(sortcnts)):
@@ -317,11 +319,11 @@ class ExamPaper():
                 # 透视变换提取原图内容部分
                 maxImg_tmp = four_point_transform(src_img, approx.reshape(4, 2))
                 # cv.drawContours(src_img,[approx.reshape(4,2)],-1,(255,0,0),1)
-                # cv.imshow('approx',src_img)
+                # cv.imshow('approx',maxImg_tmp)
                 ratio = maxImg_tmp.shape[1] / maxImg_tmp.shape[0]  # 寬高比
                 if ratio > 1.3 and ratio < 2.0 and maxImg_tmp.shape[0] > src_img.shape[0] / 4 and maxImg_tmp.shape[1] > \
                         src_img.shape[1] / 4:
-                    # cv.imwrite('tmp/paper.png', maxImg_tmp)
+                    cv.imwrite('tmp/paper.png', maxImg_tmp)
                     maxImg = maxImg_tmp
                     break
         else:
@@ -329,10 +331,10 @@ class ExamPaper():
             return None, None
 
         # print(maxImg.shape[1]/src_img.shape[1],maxImg.shape[0]/src_img.shape[0])
-        if maxImg.shape[1] < 0.8 * src_img.shape[1]:
+        if maxImg.shape[1] < 0.5 * src_img.shape[1]:
             QMessageBox.information(None, '提示', '可能太远导致目标识别区太小，直接计入失败！')
             return None, None
-
+        #
         ratio = maxImg.shape[1] / maxImg.shape[0]
         # print(ratio)
         if ratio < 1.4 or ratio > 2.0:  # 标准卡宽高比为1.7

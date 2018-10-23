@@ -122,7 +122,7 @@ class ScanDB():
 
     def queryData(self, classname, examid,quesid,choice):
         query_statement = r"select * from scan where classname='" + str(classname) + "' and examID='" + str(
-            examid) + "' and choice='" + str(choice) + "' and quesID='" + str(quesid) + "'"
+            examid) + "' and choice like '%" + str(choice) + "%' and quesID='" + str(quesid) + "'"
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
 
@@ -192,9 +192,9 @@ class AnswerDB():
                 continue
             if row[0].value is not None:
                 if row[1].value is not None:
-                    answer[row[0].value] = (row[1].value, row[2].value)
+                    answer[row[0].value] = (row[1].value, row[2].value,row[3].value)
                 else:
-                    answer[row[0].value] = ('', 0)
+                    answer[row[0].value] = ('', 0,0)
         return answer
 
 
@@ -260,6 +260,57 @@ class PaperReportForm():
         self.sheet["G3"].value = classname  # 班級
 
         file=r'tmp\\'+classname+examid+r'试卷分析.xlsx'
+        self.wb.save(file)
+        win32api.ShellExecute(0, 'open', file, '', '', 1)
+
+class SaveAsReport():
+    def __init__(self):
+        self.paperTemplate = 'data/阅卷结果模板.xlsx'
+        if not os.path.exists(self.paperTemplate):
+            QMessageBox.information(None, '提示', '找不到报表模板文件！')
+            return None
+        self.wb = load_workbook(self.paperTemplate)
+        self.sheet=self.wb["阅卷结果"]
+        if self.sheet['A1'].value != '阅卷结果':
+            QMessageBox.information(None, '提示', '这不是有效的模板文件！')
+
+    def makeSaveAsReport(self, markingResultView,classname,examid):
+        for i, r in enumerate(markingResultView):
+            self.sheet["A%d" % (i + 5)].value = r[0]  # 序号
+            self.sheet["B%d" % (i + 5)].value =os.path.basename(r[1]) # 文件名
+            if r[2]!=0:
+                self.sheet["E%d" % (i + 5)].value = r[2][2]  # 分数
+                self.sheet["F%d" % (i + 5)].value = str(r[2][1]) # 答题结果
+                quesCount= len(r[2][1])
+                if r[2][4]==-4:
+                    self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
+                    self.sheet["D%d" % (i + 5)].value = r[2][3]  # 姓名
+                    self.sheet["G%d" % (i + 5)].value = '重阅或学号有重复'  # 阅卷结果
+                elif r[2][4]==-1:
+                    self.sheet["C%d" % (i + 5)].value = None  # 学号
+                    self.sheet["D%d" % (i + 5)].value = None  # 姓名
+                    self.sheet["G%d" % (i + 5)].value = '未涂学号'  # 阅卷结果
+                elif r[2][4]==-2:
+                    self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
+                    self.sheet["D%d" % (i + 5)].value = None  # 姓名
+                    self.sheet["G%d" % (i + 5)].value = '班级冲突'  # 阅卷结果
+                elif r[2][4]==-3:
+                    self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
+                    self.sheet["D%d" % (i + 5)].value = None  # 姓名
+                    self.sheet["G%d" % (i + 5)].value = '学号不存在'  # 阅卷结果
+                elif r[2][4] == 1:
+                    self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
+                    self.sheet["D%d" % (i + 5)].value = r[2][3]  # 姓名
+                    self.sheet["G%d" % (i + 5)].value = '正常'  # 阅卷结果
+            else:
+                self.sheet["G%d" % (i + 5)].value = '答题卡无法识别'  # 阅卷结果
+
+        self.sheet["B2"].value =  quesCount##总题数
+        self.sheet["G2"].value = len(markingResultView)  # # 总人数
+        self.sheet["B3"].value = examid  # 考試時間
+        self.sheet["G3"].value = classname  # 班級
+
+        file=r'tmp\\'+classname+examid+r'阅卷结果.xlsx'
         self.wb.save(file)
         win32api.ShellExecute(0, 'open', file, '', '', 1)
 

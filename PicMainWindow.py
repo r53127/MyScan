@@ -50,7 +50,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 刷新班级控件
         self.updateComboBox()
         #设置listview位置
-        self.listView.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x()+30, 60, self.line.geometry().x()-50,QDesktopWidget().screenGeometry().height()-190)
+        self.listView.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x()+30, 60, self.line.geometry().x()-50,QDesktopWidget().screenGeometry().height()-200)
         # 显示窗体
         self.showMaximized()
 
@@ -67,6 +67,8 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             self.drawScore(painter, QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 20,
                            110)  # 显示姓名分数
             self.showFailedfiles()
+            # if self.dto.testFlag:
+            self.showAnswers()
         except Exception as e:
             QMessageBox.information(None, '提示', '显示图像失败！错误是：' + str(e))
 
@@ -76,7 +78,13 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             for file in self.dto.failedFiles:
                 filename = os.path.basename(file)
                 filenames.append(filename)
-            self.label_4.setText(str(filenames))
+            self.label_4.clear()
+            self.label_4.setText('失败文件名：'+str(filenames))
+
+    def showAnswers(self):
+        if self.dto.nowAnswer!=None and self.dto.hideAnswerFlag==0:
+            self.label_4.clear()
+            self.label_4.setText('导入的答案为（题号：答案+得分+部分得分）：'+str(self.dto.nowAnswer))
 
     def drawImg(self, painter, x, y, w, h, padding):  # 显示图片
         if self.dto.nowPaper.showingImg is not None:
@@ -125,7 +133,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         score=[]
         tmp = ''
         for j, result in enumerate(self.examControl.markingResultView):
-            if result[2] == 0 or result[2] == -1:
+            if result[2] == 0 or (result[2][4] <0 and result[2][4]>-4):
                 tmp = '第' + str(result[0]) + '个失败！'
             else:
                 tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
@@ -163,7 +171,9 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         if not files:
             return
         # 开始阅卷
+        self.dto.hideAnswerFlag = 1
         self.examControl.startMarking(files)
+
 
     @pyqtSlot()
     def on_pushButton_4_clicked(self):
@@ -192,6 +202,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 continue
             files.append(os.path.join(direc + '/', filename))
         # 开始阅卷
+        self.dto.hideAnswerFlag = 1
         self.examControl.startMarking(files)
 
     @pyqtSlot()
@@ -225,6 +236,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 if len(ans)==1:
                     self.dto.STAND_ONE_ANSWER_ORDER.append(i+1)
             QMessageBox.information(None, '提示:', '共导入' + str(len(answers)) + '个题答案！')
+            self.dto.hideAnswerFlag = 0
         except BaseException as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "，请导入有效的答案文件！")
 
@@ -336,3 +348,24 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         if self.dto.testFlag:
             self.examControl.test(self.dto.testFile)
         self.update()
+    
+    @pyqtSlot()
+    def on_pushButton_saveas_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        # 獲取班級和examID
+        self.getID()
+        if not self.examControl.markingResultView:
+            QMessageBox.information(None, '错误', "尚未阅卷！")
+            return
+        self.examControl.makeSaveAsReport()
+
+
+    
+    @pyqtSlot()
+    def on_pushButton_answer_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        pass

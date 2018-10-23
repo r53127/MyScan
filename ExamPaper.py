@@ -209,8 +209,11 @@ class ExamPaper():
         # print('判分'),(answer.get(choice[0]))[0]是答案，(answer.get(choice[0]))[1]是每题分值
         score = 0
         for choice in choices:
-            if (answers.get(choice[0]))[0] == choice[1]:
+            ans=(answers.get(choice[0]))[0]
+            if ans == choice[1]:#答对
                 score += (answers.get(choice[0]))[1]
+            elif ans.find(choice[1])!=-1: #部分答对
+                score += (answers.get(choice[0]))[2]
         return round(score, 1)  # 保留一位小数
 
     # 生成学号绝对坐标

@@ -35,6 +35,8 @@ class configDialog(QDialog, Ui_configDialog):
         self.spinBox_7.setValue(self.dto.cfg.ID_Y_OFFSET)
         self.spinBox_8.setValue(self.dto.cfg.CLASS_BITS)
         self.spinBox_9.setValue(self.dto.cfg.STU_BITS)
+        self.doubleSpinBox.setValue(self.dto.cfg.PER_ANS_SCORE)
+        self.doubleSpinBox_2.setValue(self.dto.cfg.PART_ANS_SCORE)
 
     
     @pyqtSlot()
@@ -51,6 +53,8 @@ class configDialog(QDialog, Ui_configDialog):
         self.dto.cfg.ID_Y_OFFSET=self.spinBox_7.value()
         self.dto.cfg.CLASS_BITS=self.spinBox_8.value()
         self.dto.cfg.STU_BITS=self.spinBox_9.value()
+        self.dto.cfg.PER_ANS_SCORE=self.doubleSpinBox.value()
+        self.dto.cfg.PART_ANS_SCORE=self.doubleSpinBox_2.value()
         self.dto.cfg.saveCfg(self.dto.cfg)
         self.dto.nowPaper.loadConfig()#当前考卷重新加载配置
         self.close()

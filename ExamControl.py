@@ -5,7 +5,7 @@ import traceback
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm
+from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm, SaveAsReport
 from ExamDto import ExamDto
 from ExamService import ExamService
 from PicMainWindow import PicMainWindow
@@ -65,12 +65,10 @@ class ExamControl():
                 #自动适应阈值阅卷
                 failedCount, successedCount,self.markingResult,confirmResult= self.autoScan(file, failedCount, successedCount)
                 # 记录该文件阅卷结果
-                if confirmResult==1:#计入成功，记录结果
-                    self.markingResultView.append([i, file, self.markingResult])
-                elif confirmResult==0:#计入失败，markingResult记录为-1
-                    self.markingResultView.append([i, file, -1])
-                elif confirmResult==-1:#退出不阅了
+                if confirmResult==-1:#退出不阅了
                     return
+                else:#记录中间结果
+                    self.markingResultView.append([i, file, self.markingResult])
                 # time.sleep(0.5)#以秒为单位
                 QApplication.processEvents()#停顿刷新界面
             except Exception as e:
@@ -97,7 +95,7 @@ class ExamControl():
         if ID != '':
             stuID = int(ID[self.dto.cfg.CLASS_BITS:(self.dto.cfg.CLASS_BITS + self.dto.cfg.STU_BITS)])  ##按位截取学号并转换成数字
         else:
-            return (0, choices, score, '',-1 )  # 未识别出学号
+            return (0, choices, score, '未识别出学号',-1 )  # 未识别出学号
 
         got_classID = ID[0:self.dto.cfg.CLASS_BITS]  # 按位截取班级
 
@@ -112,7 +110,7 @@ class ExamControl():
         # 根据班級查姓名
         result = self.stuDB.checkDataByClassname(stuID, classname)
         if not result:
-            return ( stuID, choices, score, '未查到',-3)  # 学号不存在
+            return ( stuID, choices, score, '姓名未查到',-3)  # 学号不存在
         stuName = result[0][2]
 
         result = self.scanDB.checkData(stuID, examID, classname)
@@ -239,6 +237,15 @@ class ExamControl():
                 #根据模板存放需要的数据：考试时间，班级，题号，正确答案，正确率，A选项率，B选项率，C选项率，D选项率,总人数，总题数
                 paperResult.append([self.dto.examID,self.dto.classname,quesid,correct_ans,correct_count,A_count,B_count,C_count,D_count,stu_count,ques_count])
             reportFile.makePaperReport(paperResult)
+        except Exception as e:
+            # traceback.print_exc()
+            QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
+
+    def makeSaveAsReport(self):
+        # 初始化报表文件
+        try:
+            reportFile = SaveAsReport()
+            reportFile.makeSaveAsReport(self.markingResultView,self.dto.classname,self.dto.examID)
         except Exception as e:
             # traceback.print_exc()
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")

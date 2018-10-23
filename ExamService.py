@@ -26,5 +26,7 @@ class ExamService():
         if answer_img is None or stu_Img is None:
             return
         self.dto.nowPaper.getStuID(stu_Img)
-        self.dto.nowPaper.getChoicesAndScore(answer_img)
+        print(self.dto.nowAnswer)
+        choices=self.dto.nowPaper.getChoicesAndScore(answer_img)
+        print(choices)
         return

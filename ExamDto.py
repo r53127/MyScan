@@ -17,4 +17,5 @@ class ExamDto():
         self.testFile=''
         self.testFlag=False #调试模式
         self.nowPaper=ExamPaper(self)
-        self.STAND_ONE_ANSWER_ORDER = None
+        self.STAND_ONE_ANSWER_ORDER = None#标准答案为单选的题号
+        self.hideAnswerFlag=0

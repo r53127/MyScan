@@ -20,6 +20,10 @@ class Config():
         self.ID_Y_OFFSET = 3
         # 每题选项
         self.PER_CHOICE_COUNT = 4
+        #每题得分
+        self.PER_ANS_SCORE=3
+        #部分得分
+        self.PART_ANS_SCORE=0
         self.data_path = 'data\config'
         self.loadCfg()
 
@@ -47,6 +51,8 @@ class Config():
                 self.ID_X_OFFSET = cfg.ID_X_OFFSET
                 self.ID_Y_OFFSET = cfg.ID_Y_OFFSET
                 self.PER_CHOICE_COUNT = cfg.PER_CHOICE_COUNT
+                self.PART_ANS_SCORE=cfg.PART_ANS_SCORE
+                self.PER_ANS_SCORE=cfg.PER_ANS_SCORE
 
 
 

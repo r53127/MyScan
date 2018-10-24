@@ -216,13 +216,34 @@
 # second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
 #
 # print('学号是：',str(first_num[0][0])+str(second_num[0][0]))
-import cv2
-video="http://admin:admin@192.168.31.34:8081/"  #ip摄像头的地址
-cap = cv2.VideoCapture(video)
-while(1):
-    ret, frame = cap.read()
-    cv2.imshow('frame',frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-cap.release()
-cv2.destroyAllWindows()
+# import cv2
+# video="http://admin:admin@192.168.31.34:8081/"  #ip摄像头的地址
+# cap = cv2.VideoCapture(video)
+# while(1):
+#     ret, frame = cap.read()
+#     cv2.imshow('frame',frame)
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+# cap.release()
+# cv2.destroyAllWindows()
+from PIL import Image
+img = Image.open('tmp/dstImg.jpg')
+# 先判断图片是否有exif信息
+if hasattr(img, '_getexif'):
+    # 获取exif信息
+    dict_exif = img._getexif()
+    print(dict_exif,dict_exif[274])
+    if dict_exif[274] == 3:
+        # 旋转
+        new_img = img.rotate(180)
+    elif dict_exif[274] == 6:
+        # 旋转
+        new_img = img.rotate(90)
+    elif dict_exif[274] == 8:
+        # 旋转
+        new_img = img.rotate(-90)
+    else:
+        new_img = img
+else:
+    new_img = img
+new_img.save('new_1.jpg', )

@@ -54,6 +54,20 @@ class ExamPaper():
 
     def initImg(self, imgFile):
         src_img = self.cv_imread(imgFile)
+        if src_img.shape[0]>src_img.shape[1]:#如果图像的宽小于高，那么旋转90度
+            height, width = src_img.shape[:2]
+            degree = 90
+            # 旋转后的尺寸
+            heightNew = int(width * np.fabs(np.sin(np.radians(degree))) + height * np.fabs(np.cos(np.radians(degree))))
+            widthNew = int(height * np.fabs(np.sin(np.radians(degree))) + width * np.fabs(np.cos(np.radians(degree))))
+
+            matRotation = cv.getRotationMatrix2D((width / 2, height / 2), degree, 1)
+
+            matRotation[0, 2] += (widthNew - width) / 2  # 重点在这步，目前不懂为什么加这步
+            matRotation[1, 2] += (heightNew - height) / 2  # 重点在这步
+
+            src_img = cv.warpAffine(src_img, matRotation, (widthNew, heightNew), borderValue=(255, 255, 255))
+
         self.showingImg = ExamPaper.convertImg(src_img)
         return src_img
 

@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from PIL import Image
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QMessageBox
 from imutils import contours
@@ -48,13 +49,21 @@ class ExamPaper():
         self.multiChoiceCount = 0
         self.noChoiceCount = 0
 
-    def cv_imread(self, file_path=""):
-        img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
-        return img
+    # def cv_imread(self, file_path=""):
+    #     # img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
+    #     file_path_gbk = file_path.encode('gbk')  # unicode转gbk，字符串变为字节数组
+    #     img = cv.imread(file_path_gbk.decode(),cv.IMREAD_IGNORE_ORIENTATION)  # 字节数组直接转字符串，不解码
+    #     return img
 
     def initImg(self, imgFile):
-        src_img = self.cv_imread(imgFile)
-        if src_img.shape[0]>src_img.shape[1]:#如果图像的宽小于高，那么旋转90度
+        # src_img = self.cv_imread(imgFile)
+        src_img = self.PIL_read(imgFile)
+
+        #PIL转cv
+        src_img = cv.cvtColor(np.asarray(src_img), cv.COLOR_RGB2BGR)
+
+        # 如果图像的宽小于高，那么旋转90度
+        if src_img.shape[0]>src_img.shape[1]:
             height, width = src_img.shape[:2]
             degree = 90
             # 旋转后的尺寸
@@ -69,6 +78,28 @@ class ExamPaper():
             src_img = cv.warpAffine(src_img, matRotation, (widthNew, heightNew), borderValue=(255, 255, 255))
 
         self.showingImg = ExamPaper.convertImg(src_img)
+        return src_img
+
+    def PIL_read(self, imgFile):#open with exif filed and rotate automatically,return PIL image
+        src_img = Image.open(imgFile)
+        # img_PIL = Image.fromarray(cv.cvtColor(src_img,cv.COLOR_BGR2RGB))#CV转PIL
+        # 先判断图片是否有exif信息
+        # print(dir(src_img))
+        if hasattr(src_img, '_getexif'):
+            # 获取exif信息
+            dict_exif = src_img._getexif()
+            # print(dict_exif)
+            if dict_exif == None:
+                return src_img
+            if dict_exif[274] == 3:
+                # 旋转
+                src_img = src_img.rotate(180)
+            elif dict_exif[274] == 6:
+                # 旋转
+                src_img = src_img.rotate(90)
+            elif dict_exif[274] == 8:
+                # 旋转
+                src_img = src_img.rotate(-90)
         return src_img
 
     # 根据答题区域大小生成每个选框的绝对坐标

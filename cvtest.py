@@ -227,7 +227,7 @@
 # cap.release()
 # cv2.destroyAllWindows()
 from PIL import Image
-img = Image.open('tmp/dstImg.jpg')
+img = Image.open('tmp/IMG_20181025_104526.jpg')
 # 先判断图片是否有exif信息
 if hasattr(img, '_getexif'):
     # 获取exif信息

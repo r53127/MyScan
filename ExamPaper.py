@@ -90,6 +90,7 @@ class ExamPaper():
             dict_exif = src_img._getexif()
             if dict_exif == None:
                 return src_img
+            # print(dict_exif[274])
             if dict_exif[274] == 3:
                 # 旋转
                 src_img = src_img.rotate(180,expand=1)

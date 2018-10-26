@@ -37,11 +37,11 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.line.setFixedHeight(QDesktopWidget().screenGeometry().height())
         self.line_4.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x(), 0, 21,
                                 QDesktopWidget().screenGeometry().height())
-        self.line_5.setGeometry(self.line.geometry().x() + 10, 800,
+        self.line_5.setGeometry(self.line.geometry().x() + 10, QDesktopWidget().screenGeometry().height()-280,
                                 self.line_4.geometry().x() - self.line.geometry().x(), 21)
         self.label_7.move(QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 30, 20)
-        self.label_8.move(self.line.geometry().x() + 10, 810)
-        self.scrollArea.setGeometry(QRect(self.line.geometry().x()+15, 840, self.line_4.geometry().x()-self.line.geometry().x()-10, 100))
+        self.label_8.move(self.line.geometry().x() + 10, QDesktopWidget().screenGeometry().height()-270)
+        self.scrollArea.setGeometry(QRect(self.line.geometry().x()+15, QDesktopWidget().screenGeometry().height()-240, self.line_4.geometry().x()-self.line.geometry().x()-10, 100))
         self.scrollArea.setWidget(self.label_4)
         self.label_4.setWordWrap(True)  # 自动换行
         self.label_4.setAlignment(Qt.AlignTop)
@@ -52,6 +52,9 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.updateComboBox()
         #设置listview位置
         self.listView.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x()+30, 60, self.line.geometry().x()-50,QDesktopWidget().screenGeometry().height()-200)
+        self.picPadding=10
+        self.picWidth=(self.line_4.geometry().x()-self.line.geometry().x())/3-2*self.picPadding
+        self.picHeight=self.line_5.geometry().y()/2-4*self.picPadding
         # 显示窗体
         self.showMaximized()
 
@@ -64,7 +67,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         super().paintEvent(QPaintEvent)
         try:
             painter = QPainter(self)
-            self.drawImg(painter, 350, 65, 400, 350, 20)  # 显示图像
+            self.drawImg(painter, 350, 65, self.picWidth, self.picHeight, self.picPadding)  # 显示图像
             self.drawScore(painter, QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 20,
                            110)  # 显示姓名分数
             self.showFailedfiles()

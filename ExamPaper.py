@@ -50,9 +50,9 @@ class ExamPaper():
         self.noChoiceCount = 0
 
     # def cv_imread(self, file_path=""):
-    #     # img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
-    #     file_path_gbk = file_path.encode('gbk')  # unicode转gbk，字符串变为字节数组
-    #     img = cv.imread(file_path_gbk.decode(),cv.IMREAD_IGNORE_ORIENTATION)  # 字节数组直接转字符串，不解码
+    #     img = cv.imdecode(np.fromfile(file_path, dtype=np.uint8), -1)  # 解决不能读取中文路径问题
+    # #     file_path_gbk = file_path.encode('gbk')  # unicode转gbk，字符串变为字节数组
+    # #     img = cv.imread(file_path_gbk.decode(),cv.IMREAD_IGNORE_ORIENTATION)  # 字节数组直接转字符串，不解码
     #     return img
 
     def initImg(self, imgFile):
@@ -88,18 +88,19 @@ class ExamPaper():
         if hasattr(src_img, '_getexif'):
             # 获取exif信息
             dict_exif = src_img._getexif()
-            # print(dict_exif)
             if dict_exif == None:
                 return src_img
             if dict_exif[274] == 3:
                 # 旋转
-                src_img = src_img.rotate(180)
+                src_img = src_img.rotate(180,expand=1)
             elif dict_exif[274] == 6:
                 # 旋转
-                src_img = src_img.rotate(90)
+                src_img = src_img.rotate(-90,expand=1)
+                # src_img.show()
             elif dict_exif[274] == 8:
                 # 旋转
-                src_img = src_img.rotate(-90)
+                src_img = src_img.rotate(90,expand=1)
+
         return src_img
 
     # 根据答题区域大小生成每个选框的绝对坐标

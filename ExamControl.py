@@ -232,7 +232,7 @@ class ExamControl():
             paperResult=[]
             for quesid in range(1,ques_count+1):
                 correct_ans=self.dto.nowAnswer.get(quesid)[0]
-                correct_count=len(self.scanDB.queryData(self.dto.classname,self.dto.examID,quesid,correct_ans))/stu_count
+                correct_count=len(self.scanDB.queryCorrectData(self.dto.classname,self.dto.examID,quesid,correct_ans))/stu_count
                 A_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'A'))/stu_count
                 B_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'B'))/stu_count
                 C_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'C'))/stu_count

@@ -126,6 +126,12 @@ class ScanDB():
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
 
+    def queryCorrectData(self, classname, examid,quesid,ans):
+        query_statement = r"select * from scan where classname='" + str(classname) + "' and examID='" + str(
+            examid) + "' and choice='" + str(ans) + "' and quesID='" + str(quesid) + "'"
+        self.cursor.execute(query_statement)
+        return self.cursor.fetchall()
+
     def queryPersonCount(self, examid, classname):
         query_statement = r"select stuid from scan where examID='" + str(
             examid) + "' and classname='" + str(classname) + "'"

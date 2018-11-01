@@ -53,7 +53,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>510</y>
+      <y>550</y>
       <width>321</width>
       <height>20</height>
      </rect>
@@ -213,7 +213,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>540</y>
+      <y>580</y>
       <width>251</width>
       <height>243</height>
      </rect>
@@ -229,14 +229,14 @@
      <item>
       <widget class="QPushButton" name="pushButton_3">
        <property name="text">
-        <string>阅文件</string>
+        <string>单张阅卡</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_4">
        <property name="text">
-        <string>阅目录</string>
+        <string>批量阅卡</string>
        </property>
       </widget>
      </item>
@@ -270,13 +270,42 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="layoutWidget">
+   <widget class="QScrollArea" name="scrollArea">
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>796</y>
+      <width>261</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="lineWidth">
+     <number>0</number>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>261</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>220</y>
+      <y>210</y>
       <width>251</width>
-      <height>281</height>
+      <height>341</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -297,7 +326,7 @@
      <item>
       <widget class="QPushButton" name="pushButton">
        <property name="text">
-        <string>导入学生库</string>
+        <string>导入学生库（首次即可）</string>
        </property>
       </widget>
      </item>
@@ -361,6 +390,38 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="label_6">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="lineWidth">
+        <number>3</number>
+       </property>
+       <property name="text">
+        <string>考试场次：</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::PlainText</enum>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox">
+       <property name="currentText">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="label_5">
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
@@ -390,35 +451,24 @@
      </item>
     </layout>
    </widget>
-   <widget class="QScrollArea" name="scrollArea">
-    <property name="geometry">
-     <rect>
-      <x>490</x>
-      <y>796</y>
-      <width>261</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::NoFrame</enum>
-    </property>
-    <property name="lineWidth">
-     <number>0</number>
-    </property>
-    <property name="widgetResizable">
-     <bool>true</bool>
-    </property>
-    <widget class="QWidget" name="scrollAreaWidgetContents">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>261</width>
-       <height>51</height>
-      </rect>
-     </property>
-    </widget>
-   </widget>
+   <zorder>line</zorder>
+   <zorder>line_2</zorder>
+   <zorder>line_3</zorder>
+   <zorder>line_4</zorder>
+   <zorder>pushButton_9</zorder>
+   <zorder>label_7</zorder>
+   <zorder>label_2</zorder>
+   <zorder>doubleSpinBox</zorder>
+   <zorder>line_5</zorder>
+   <zorder>label_4</zorder>
+   <zorder>label_8</zorder>
+   <zorder>listView</zorder>
+   <zorder>layoutWidget</zorder>
+   <zorder>layoutWidget</zorder>
+   <zorder>scrollArea</zorder>
+   <zorder>label_6</zorder>
+   <zorder>comboBox</zorder>
+   <zorder>label_6</zorder>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">

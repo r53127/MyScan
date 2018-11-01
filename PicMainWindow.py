@@ -49,6 +49,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 初始化时间控件
         self.dateEdit.setDateTime(QDateTime.currentDateTime())
         # 刷新班级控件
+        self.comboBox.addItems([str(x) for x in range(1, 11)])
         self.updateComboBox()
         #设置listview位置
         self.listView.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x()+30, 60, self.line.geometry().x()-50,QDesktopWidget().screenGeometry().height()-200)
@@ -159,7 +160,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                     self.comboBox_2.addItem(j)
 
     def getID(self):
-        self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")
+        self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")+'_'+self.comboBox.currentText()
         self.dto.classname = self.comboBox_2.currentText()
 
 

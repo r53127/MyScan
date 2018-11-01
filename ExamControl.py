@@ -237,6 +237,12 @@ class ExamControl():
                 B_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'B'))/stu_count
                 C_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'C'))/stu_count
                 D_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'D'))/stu_count
+                #转换成百分数
+                correct_count = "{:.2%}".format(correct_count)
+                A_count = "%.2f%%" % (A_count * 100)
+                B_count = "%.2f%%" % (B_count * 100)
+                C_count = "%.2f%%" % (C_count * 100)
+                D_count = "%.2f%%" % (D_count * 100)
                 #根据模板存放需要的数据：考试时间，班级，题号，正确答案，正确率，A选项率，B选项率，C选项率，D选项率,总人数，总题数
                 paperResult.append([self.dto.examID,self.dto.classname,quesid,correct_ans,correct_count,A_count,B_count,C_count,D_count,stu_count,ques_count])
             reportFile.makePaperReport(paperResult)

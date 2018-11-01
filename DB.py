@@ -45,8 +45,11 @@ class StudentDB():
         for stud in students:
             # 检查重复
             if self.checkDataByClassID(stud['学号'], stud['班级代号']):
-                QMessageBox.information(None, '提示', '该学生重复！' + str(stud['姓名'] + str(stud['学号'])) + str(stud['班级名称']))
-                continue
+                reply = QMessageBox.information(None,  "提示",'该学生重复！' + str(stud['姓名'] + str(stud['学号'])) + str(stud['班级名称'])+"是否继续？",QMessageBox.Yes | QMessageBox.No)
+                if reply==QMessageBox.Yes:
+                    continue
+                else:
+                    break
             self.insertDB(stud['学号'], stud['姓名'], stud['班级代号'], stud['班级名称'] )
             i+=1
         return i

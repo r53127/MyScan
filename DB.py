@@ -285,12 +285,15 @@ class SaveAsReport():
 
     def makeSaveAsReport(self, markingResultView,classname,examid):
         for i, r in enumerate(markingResultView):
-            self.sheet["A%d" % (i + 5)].value = r[0]  # 序号
+            if r[0]==0:
+                self.sheet["A%d" % (i + 5)].value=i+1
+            else:
+                self.sheet["A%d" % (i + 5)].value = r[0]  # 序号
             self.sheet["B%d" % (i + 5)].value =os.path.basename(r[1]) # 文件名
             if r[2]!=0:
                 self.sheet["E%d" % (i + 5)].value = r[2][2]  # 分数
                 self.sheet["H%d" % (i + 5)].value = str(r[2][1]) # 答题结果
-                quesCount= len(r[2][1])
+                quesCount = len(r[2][1])
                 if r[2][4]==-4:
                     self.sheet["C%d" % (i + 5)].value = r[2][0]  # 学号
                     self.sheet["D%d" % (i + 5)].value = r[2][3]  # 姓名

@@ -216,34 +216,101 @@
 # second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
 #
 # print('学号是：',str(first_num[0][0])+str(second_num[0][0]))
+import cv2
+video="http://admin:admin@192.168.31.34:8081/"  #ip摄像头的地址
+cap = cv2.VideoCapture(video)
+while(1):
+    ret, frame = cap.read()
+    cv2.imshow('frame',frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+cap.release()
+cv2.destroyAllWindows()
+# from PIL import Image
+# img = Image.open('tmp/IMG_20181025_104526.jpg')
+# # 先判断图片是否有exif信息
+# if hasattr(img, '_getexif'):
+#     # 获取exif信息
+#     dict_exif = img._getexif()
+#     print(dict_exif,dict_exif[274])
+#     if dict_exif[274] == 3:
+#         # 旋转
+#         new_img = img.rotate(180)
+#     elif dict_exif[274] == 6:
+#         # 旋转
+#         new_img = img.rotate(90)
+#     elif dict_exif[274] == 8:
+#         # 旋转
+#         new_img = img.rotate(-90)
+#     else:
+#         new_img = img
+# else:
+#     new_img = img
+# new_img.save('new_1.jpg', )
 # import cv2
-# video="http://admin:admin@192.168.31.34:8081/"  #ip摄像头的地址
-# cap = cv2.VideoCapture(video)
-# while(1):
-#     ret, frame = cap.read()
-#     cv2.imshow('frame',frame)
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
+#
+# cap=cv2.VideoCapture(0)
+#
+# success, frame=cap.read()
+#
+# while success and cv2.waitKey(1)==-1:
+#
+#     cv2.imshow("Main Window", frame)
+#
+#     success, frame=cap.read()
+#
 # cap.release()
+#
 # cv2.destroyAllWindows()
-from PIL import Image
-img = Image.open('tmp/IMG_20181025_104526.jpg')
-# 先判断图片是否有exif信息
-if hasattr(img, '_getexif'):
-    # 获取exif信息
-    dict_exif = img._getexif()
-    print(dict_exif,dict_exif[274])
-    if dict_exif[274] == 3:
-        # 旋转
-        new_img = img.rotate(180)
-    elif dict_exif[274] == 6:
-        # 旋转
-        new_img = img.rotate(90)
-    elif dict_exif[274] == 8:
-        # 旋转
-        new_img = img.rotate(-90)
-    else:
-        new_img = img
-else:
-    new_img = img
-new_img.save('new_1.jpg', )
+# from PyQt5.QtCore import *
+#
+# from PyQt5.QtWidgets import *
+#
+# from PyQt5.QtGui import *
+#
+# import cv2
+#
+# from Ui_main import Ui_MainWindow
+#
+# class MainWindow(QMainWindow, Ui_MainWindow):
+#
+#     def __init__(self, parent=None):
+#
+#         super(MainWindow, self).__init__(parent)
+#
+#         self.setupUi(self)
+#
+#         self.timer_camera = QTimer(self)
+#
+#         self.cap = cv2.VideoCapture(0)
+#
+#         self.timer_camera.timeout.connect(self.show_pic)
+#
+#         self.timer_camera.start(10)
+#
+#     def show_pic(self):
+#
+#         success, frame=self.cap.read()
+#
+#         if success:
+#
+#             show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+#
+#             showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
+#
+#             self.label.setPixmap(QPixmap.fromImage(showImage))
+#
+#             self.timer_camera.start(10)
+#
+#
+# if __name__=='__main__':
+#
+#     import sys
+#
+#     app=QApplication(sys.argv)
+#
+#     window=MainWindow()
+#
+#     window.show()
+#
+#     sys.exit(app.exec_())

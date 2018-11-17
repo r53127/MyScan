@@ -4,7 +4,7 @@
 Module implementing configDialog.
 """
 
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialog
 
 from Ui_CamconfigWindow import Ui_configDialog

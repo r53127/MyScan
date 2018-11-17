@@ -55,12 +55,12 @@ class ExamPaper():
     # #     img = cv.imread(file_path_gbk.decode(),cv.IMREAD_IGNORE_ORIENTATION)  # 字节数组直接转字符串，不解码
     #     return img
 
-    def initImg(self, imgFile):
+    def initImg(self, src_img):
         # src_img = self.cv_imread(imgFile)
         # src_img = self.PIL_read(imgFile)
 
-        #PIL转cv
-        src_img = cv.cvtColor(np.asarray(imgFile), cv.COLOR_RGB2BGR)
+        # #PIL转cv
+        # src_img = cv.cvtColor(np.asarray(imgFile), cv.COLOR_RGB2BGR)
 
         # 如果图像的宽小于高，那么旋转90度
         if src_img.shape[0]>src_img.shape[1]:

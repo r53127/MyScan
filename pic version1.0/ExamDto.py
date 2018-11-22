@@ -1,5 +1,5 @@
 from ExamPaper import ExamPaper
-from enigma.configFile import Config
+from configFile import Config
 
 
 class ExamDto():

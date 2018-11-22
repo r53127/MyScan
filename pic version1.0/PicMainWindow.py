@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidge
 
 from DB import AnswerDB
 from Ui_PicMainWindow import Ui_MainWindow
-from enigma.configWindow import configDialog
+from configWindow import configDialog
 
 
 class PicMainWindow(QMainWindow, Ui_MainWindow):

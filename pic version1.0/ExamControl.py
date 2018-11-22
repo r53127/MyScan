@@ -5,7 +5,7 @@ import traceback
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm, SaveAsReport
+from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm, SaveAsReport,BigdataReport
 from ExamDto import ExamDto
 from ExamService import ExamService
 from PicMainWindow import PicMainWindow
@@ -190,13 +190,25 @@ class ExamControl():
         if flag==-4:
             # 更新数据
             for choice in choices:
-                self.scanDB.updateDB(stuID, choice[0], choice[1])  # 学号，题号，答案
+                point=0
+                stdAns=(self.dto.nowAnswer.get(choice[0]))[0]
+                if stdAns == choice[1]:  # 答对
+                    point = (self.dto.nowAnswer.get(choice[0]))[1]
+                elif stdAns.find(choice[1]) != -1:  # 部分答对
+                    point = (self.dto.nowAnswer.get(choice[0]))[2]
+                self.scanDB.updateDB(stuID, choice[0], choice[1],stdAns,point)  # 学号，题号，答案
             # 分数更新
             self.scoreDB.updateDB(stuID, score)  # 学号，分数
         else:
             # 答案入库，choice[0]是题号，choice[1]是填涂选项
             for choice in choices:
-                self.scanDB.insertDB(examID, classname, stuID, stuName, choice[0], choice[1])
+                point = 0
+                stdAns=(self.dto.nowAnswer.get(choice[0]))[0]
+                if stdAns == choice[1]:  # 答对
+                    point = (self.dto.nowAnswer.get(choice[0]))[1]
+                elif stdAns.find(choice[1]) != -1:  # 部分答对
+                    point = (self.dto.nowAnswer.get(choice[0]))[2]
+                self.scanDB.insertDB(examID, classname, stuID, stuName, choice[0], choice[1],stdAns,point)
             # 分数入库
             self.scoreDB.insertDB(classname, stuID, stuName, score, examID)
 
@@ -228,11 +240,13 @@ class ExamControl():
             if not stu_count:
                 QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
                 return
-            ques_count=len(self.dto.nowAnswer)
+            stdAns=self.scanDB.queryStdAnswer(self.dto.examID,self.dto.classname)
+            ques_count=len(stdAns)
             paperResult=[]
-            for quesid in range(1,ques_count+1):
-                correct_ans=self.dto.nowAnswer.get(quesid)[0]
-                correct_count=len(self.scanDB.queryCorrectData(self.dto.classname,self.dto.examID,quesid,correct_ans))/stu_count
+            for ans in stdAns:
+                quesid=ans[0]
+                correct_ans=ans[1]
+                correct_count=len(self.scanDB.queryCorrectData(self.dto.classname,self.dto.examID,quesid))/stu_count
                 A_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'A'))/stu_count
                 B_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'B'))/stu_count
                 C_count = len(self.scanDB.queryData(self.dto.classname, self.dto.examID, quesid, 'C'))/stu_count
@@ -247,6 +261,36 @@ class ExamControl():
                 paperResult.append([self.dto.examID,self.dto.classname,quesid,correct_ans,correct_count,A_count,B_count,C_count,D_count,stu_count,ques_count])
             reportFile.makePaperReport(paperResult)
         except Exception as e:
+            QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
+
+    def makeBigdataReport(self):
+        reportFile = BigdataReport()
+        # 查询分数
+        scoreList = self.scoreDB.queryScore(self.dto.classname, self.dto.examID)  # 根据班级，考试时间查成绩
+        if not scoreList:
+            QMessageBox.information(None, '提示', '没有查询到对应班级和日期的阅卷数据！')
+            return
+        bigdata=[]
+
+        #合并分数和阅卷数据
+        for sco in scoreList:
+            tmp=[]
+            tmp.append(sco)
+            result=self.scanDB.queryPoint(self.dto.examID,self.dto.classname,sco[2])
+            bigdata.append(tmp+result)
+
+        #添加未交卷学生
+        stuList = self.stuDB.queryStuByClassname(self.dto.classname)  # 根据班级查名单
+        for stu in stuList:  # stu内数据分别为userid INTEGER  primary key AUTOINCREMENT ,stuid int,name varchar(20),gender varchar(4),classid varchar(20))
+            for data in bigdata:
+                if data[0]!=0:
+                    if stu[1] == data[0][2] and stu[2] == data[0][3]:  # 如果学号和姓名一致
+                        break
+            else:
+                bigdata.append([0, self.dto.classname, stu[1], stu[2], 0, self.dto.examID])
+        try:
+            reportFile.makeBigdataReport(bigdata)
+        except Exception as e:
             # traceback.print_exc()
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
@@ -256,7 +300,6 @@ class ExamControl():
             reportFile = SaveAsReport()
             reportFile.makeSaveAsReport(self.markingResultView,self.dto.classname,self.dto.examID)
         except Exception as e:
-            # traceback.print_exc()
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
 
@@ -285,7 +328,6 @@ class ExamControl():
                 if len(ans)==1:
                     self.dto.STAND_ONE_ANSWER_ORDER.append(i+1)
         except Exception as e:
-            # traceback.print_exc()
             QMessageBox.information(None, '错误:', "意外错误！错误是：" + str(e) + "！")
 
 

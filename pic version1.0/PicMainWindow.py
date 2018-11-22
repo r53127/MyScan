@@ -272,9 +272,6 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         """
         # 獲取班級和examID
         self.getID()
-        if not self.dto.nowAnswer:
-            QMessageBox.information(None, '提示', '请先导入答案!')
-            return
         self.examControl.makePaperReport()
 
     @pyqtSlot()
@@ -377,3 +374,12 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(None, '错误', "尚未阅卷！")
             return
         self.examControl.makeSaveAsReport()
+    
+    @pyqtSlot()
+    def on_pushButton_savebigdata_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        # 獲取班級和examID
+        self.getID()
+        self.examControl.makeBigdataReport()

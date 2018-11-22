@@ -103,17 +103,17 @@ class ScanDB():
         self.cursor = self.conn.cursor()
         # 执行一条SQL语句，创建user表:AUTOINCREMENT类型必须是主键
         self.cursor.execute(
-            r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,examID varchar(8),classname varchar(20),stuID int,name varchar(50),quesID int,choice varchar(4))')
+            r'CREATE TABLE IF NOT EXISTS scan (scanid INTEGER  primary key AUTOINCREMENT ,examID varchar(8),classname varchar(20),stuID int,name varchar(50),quesID int,choice varchar(4),stdAns varchar(4),point real)')
 
-    def insertDB(self, examid, classname, stuid, name, quesid, choice):
+    def insertDB(self, examid, classname, stuid, name, quesid, choice,stdans,point):
         # 继续执行一条SQL语句，插入一条记录:
-        insert_statement = r'insert into scan (examID,classname,stuID,name,quesID,choice) values (?,?,?,?,?,?)'
-        self.conn.execute(insert_statement, (examid, classname, stuid, name, quesid, choice))
+        insert_statement = r'insert into scan (examID,classname,stuID,name,quesID,choice,stdAns,point) values (?,?,?,?,?,?,?,?)'
+        self.conn.execute(insert_statement, (examid, classname, stuid, name, quesid, choice,stdans,point))
         self.conn.commit()  # 修改类操作必须commit
 
-    def updateDB(self, stuid, quesid, choice):
+    def updateDB(self, stuid, quesid, choice,stdans,point):
         # 继续执行一条SQL语句，插入一条记录:
-        update_statement = "update scan set choice='"+choice+"' where quesID='"+str(quesid)+"' and stuID='"+str(stuid)+ "'"
+        update_statement = "update scan set choice='"+choice+"',stdAns='"+stdans+"',point='"+point+"' where quesID='"+str(quesid)+"' and stuID='"+str(stuid)+ "'"
         self.conn.execute(update_statement)
         self.conn.commit()  # 修改类操作必须commit
 
@@ -129,9 +129,9 @@ class ScanDB():
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
 
-    def queryCorrectData(self, classname, examid,quesid,ans):
+    def queryCorrectData(self, classname, examid,quesid):
         query_statement = r"select * from scan where classname='" + str(classname) + "' and examID='" + str(
-            examid) + "' and choice='" + str(ans) + "' and quesID='" + str(quesid) + "'"
+            examid) + "' and choice=stdAns and quesID='" + str(quesid) + "'"
         self.cursor.execute(query_statement)
         return self.cursor.fetchall()
 
@@ -140,6 +140,19 @@ class ScanDB():
             examid) + "' and classname='" + str(classname) + "'"
         self.cursor.execute(query_statement)
         return len(set(self.cursor.fetchall()))
+
+    def queryStdAnswer(self, examid, classname):
+        query_statement = r"select quesID,stdAns from scan where examID='" + str(
+            examid) + "' and classname='" + str(classname) + "'"
+        self.cursor.execute(query_statement)
+        return sorted(set(self.cursor.fetchall()))
+
+
+    def queryPoint(self,examid,classname,stuid):
+        query_statement = r"select stuID,quesID,point from scan where examID='" + str(
+            examid) + "' and classname='" + str(classname) + "' and stuID='" + str(stuid) + "'"
+        self.cursor.execute(query_statement)
+        return sorted(self.cursor.fetchall())
 
 
     def closeDB(self):
@@ -326,6 +339,54 @@ class SaveAsReport():
         self.wb.save(file)
         win32api.ShellExecute(0, 'open', file, '', '', 1)
 
+class BigdataReport():
+    def __init__(self):
+        self.paperTemplate = 'data/分数采集模板.xlsx'
+        if not os.path.exists(self.paperTemplate):
+            QMessageBox.information(None, '提示', '找不到报表模板文件！')
+            return None
+        self.wb = load_workbook(self.paperTemplate)
+        try:
+            self.sheet=self.wb["分数采集"]
+        except:
+            QMessageBox.information(None, '提示', '这不是有效的模板文件！')
+
+    def makeBigdataReport(self,bigdata):
+        ##bigdata数据格式：[(1, '高三2班', 24, '林炜', 8.3, '20181117_1'), (24, 1, 8.33), (24, 2, 0.0), (24, 3, 0.0), (24, 4, 0.0), (24, 5, 0.0), (24, 6, 0.0), (24, 7, 0.0), (24, 8, 0.0), (24, 9, 0.0), (24, 10, 0.0), (24, 11, 0.0), (24, 12, 0.0), (24, 13, 0.0)]
+        for i, r in enumerate(bigdata):
+            if r[0]!=0:
+                classname=r[0][1]
+                quesCount= len(r)-1
+                stuname=r[0][3]
+                stuid=r[0][2]
+                stuscore=r[0][4]
+                examid=r[0][5]
+
+                for col in range(9, 9+quesCount):
+                    _ = self.sheet.cell(column=col, row=i+3, value=r[col-8][2])
+
+                self.sheet["C%d" % (i + 3)].value = classname
+                self.sheet["D%d" % (i + 3)].value = stuid
+                self.sheet["E%d" % (i + 3)].value = stuname
+                self.sheet["G%d" % (i + 3)].value = stuscore
+            else:
+                classname=r[1]
+                stuname=r[3]
+                stuid=r[2]
+                examid=r[5]
+
+                self.sheet["C%d" % (i + 3)].value = classname
+                self.sheet["D%d" % (i + 3)].value = stuid
+                self.sheet["E%d" % (i + 3)].value = stuname
+                self.sheet["G%d" % (i + 3)].value = '未阅！'
+
+
+
+        file=r'tmp\\'+classname+examid+r'数据采集.xlsx'
+        self.wb.save(file)
+        win32api.ShellExecute(0, 'open', file, '', '', 1)
+
 if __name__ == "__main__":
-    test = ScoreDB()
-    test.updateDB(26,100)
+    test = ScanDB()
+    a=test.queryPoint('20181117_1','高三2班','15')
+    print(a)

@@ -216,16 +216,16 @@
 # second_num = sorted(second_num, key=lambda x: x[1], reverse=True)
 #
 # print('学号是：',str(first_num[0][0])+str(second_num[0][0]))
-import cv2
-video="http://admin:admin@192.168.31.34:8081/"  #ip摄像头的地址
-cap = cv2.VideoCapture(video)
-while(1):
-    ret, frame = cap.read()
-    cv2.imshow('frame',frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-cap.release()
-cv2.destroyAllWindows()
+# import cv2
+# video="http://admin:admin@192.168.31.34:8081/"  #ip摄像头的地址
+# cap = cv2.VideoCapture(video)
+# while(1):
+#     ret, frame = cap.read()
+#     cv2.imshow('frame',frame)
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+# cap.release()
+# cv2.destroyAllWindows()
 # from PIL import Image
 # img = Image.open('tmp/IMG_20181025_104526.jpg')
 # # 先判断图片是否有exif信息
@@ -314,3 +314,81 @@ cv2.destroyAllWindows()
 #     window.show()
 #
 #     sys.exit(app.exec_())
+#
+#
+# from multiprocessing import Pool
+# import os, time, random
+#
+# def long_time_task(name):
+#     print('Run task %s (%s)...' % (name, os.getpid()))
+#     start = time.time()
+#     time.sleep(random.random() * 3)
+#     end = time.time()
+#     print('Task %s runs %0.2f seconds.' % (name, (end - start)))
+#
+# if __name__=='__main__':
+#     print('Parent process %s.' % os.getpid())
+#     p = Pool(5)
+#     for i in range(5):
+#         p.apply_async(long_time_task, args=(i,))
+#     print('Waiting for all subprocesses done...')
+#     p.close()
+#     p.join()
+#     print('All subprocesses done.')
+#
+# import threading, multiprocessing
+#
+# def loop():
+#     x = 0
+#     while True:
+#         x = x ^ 2
+#
+# for i in range(16):
+#     t = threading.Thread(target=loop)
+#     t.start()
+
+import threading
+import time
+
+class myThread (threading.Thread):
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+    def run(self):
+        print ("开启线程： " + self.name)
+        # 获取锁，用于线程同步
+        # threadLock.acquire()
+        print_time(self.name, self.counter, 3)
+        # 释放锁，开启下一个线程
+        # threadLock.release()
+        print("退出线程：" + self.name)
+
+
+def print_time(threadName, delay, counter):
+    while counter:
+        time.sleep(delay)
+        print ("%s: %s" % (threadName, time.ctime(time.time())))
+        counter -= 1
+
+threadLock = threading.Lock()
+threads = []
+
+# 创建新线程
+thread1 = myThread(1, "Thread-1", 1)
+thread2 = myThread(2, "Thread-2", 1)
+
+# 开启新线程
+thread1.start()
+
+thread2.start()
+
+# 添加线程到线程列表
+threads.append(thread1)
+threads.append(thread2)
+
+# 等待所有线程完成
+# for t in threads:
+#     t.join()
+print ("退出主线程")

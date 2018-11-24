@@ -3,6 +3,8 @@ import os
 import sys
 import traceback
 
+from PyQt5.QtCore.QThread import QThread
+from PyQt5.QtCore.pyqtSignal import pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm, SaveAsReport
@@ -11,6 +13,19 @@ from CamExamService import ExamService
 from CamMainWindow import CamMainWindow
 from CamThreshWindow import ThreshWindow
 
+
+class WorkThread(QThread):
+    trigger = pyqtSignal()
+
+    def __int__(self,dto):
+        super(WorkThread, self).__init__()
+        self.dto=dto
+
+    def run(self):
+
+
+        # 循环完毕后发出信号
+        self.trigger.emit()
 
 class ExamControl():
     def __init__(self):
@@ -37,6 +52,10 @@ class ExamControl():
 
     def updateClassname(self):
         self.dto.allClassname = self.stuDB.queryClassname()
+
+    def startThread(self):
+        workThread=WorkThread(self.dto)
+
 
 
     def startMarking(self, ansImg,stuImg):#自适应阈值批量阅卷并做各种记录和保存处理

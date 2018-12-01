@@ -3,31 +3,137 @@ import os
 import sys
 import traceback
 
-from PyQt5.QtCore.QThread import QThread
-from PyQt5.QtCore.pyqtSignal import pyqtSignal
+from PyQt5.QtCore import QThread,pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMessageBox
+from imutils.perspective import four_point_transform
 
 from DB import StudentDB, ScanDB, ScoreDB, ScoreReportForm, PaperReportForm, SaveAsReport
 from CamExamDto import ExamDto
 from CamExamService import ExamService
 from CamMainWindow import CamMainWindow
 from CamThreshWindow import ThreshWindow
-
+import cv2 as cv
 
 class WorkThread(QThread):
     trigger = pyqtSignal()
 
-    def __int__(self,dto):
+    def __int__(self,parent=None):
         super(WorkThread, self).__init__()
-        self.dto=dto
+
 
     def run(self):
+        try:
+            global exam
+            cv.imwrite('cam.jpg',exam.dto.camImg[0])
+            while(1):
+                self.sleep(0.5)
+                ansImg, stuImg=self.get_roi_img(exam.dto.camImg[0])
+                if ansImg is not None:
+                    exam.startMarking(ansImg,stuImg)
+                    # 循环完毕后发出信号
+                    self.trigger.emit()
 
+        except:
+            traceback.print_exc()
 
-        # 循环完毕后发出信号
-        self.trigger.emit()
+    # 提取答题和学号区域
+    def get_roi_img(self, src_img):
+        if src_img.shape[1] > 1500:  # 如果图像太大，则进行缩小
+            src_img = cv.resize(src_img, (1440, int((1440 / src_img.shape[1] * src_img.shape[0]))),
+                                interpolation=cv.INTER_AREA)
+            # src_img=cv.resize(src_img,(0,0),fx=0.3,fy=0.3,interpolation=cv.INTER_AREA)
+        # cv.imshow('src',src_img)
+        gray = cv.cvtColor(src_img, cv.COLOR_BGR2GRAY)  # 转化成灰度图片
+        # 高斯滤波，清除一些杂点
+        blur = cv.GaussianBlur(gray, (3, 3), 0)
+        # 自适应二值化算法
+        thresh2 = cv.adaptiveThreshold(blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 131, 4)
+
+        # self.showingImgThresh = ExamPaper.convertImg(thresh2)  # 显示已选标注框图片
+        # cv.imshow('th',thresh2)
+        image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        # cv.drawContours(src_img, cnts, -1, (255, 0, 0), 1)
+        # cv.imshow('src', src_img)
+        sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)
+        # 找答题卡
+        for i in range(len(sortcnts)):
+            peri = 0.1 * cv.arcLength(sortcnts[i], True)
+
+            # 获取多边形的所有定点，如果是四个定点，就代表是矩形
+            approx = cv.approxPolyDP(sortcnts[i], peri, True)
+            if len(approx) == 4:  # 矩形
+                # 透视变换提取原图内容部分
+                maxImg_tmp = four_point_transform(src_img, approx.reshape(4, 2))
+                # cv.drawContours(src_img,[approx.reshape(4,2)],-1,(255,0,0),1)
+                # cv.imshow('approx',maxImg_tmp)
+                ratio = maxImg_tmp.shape[1] / maxImg_tmp.shape[0]  # 寬高比
+                if ratio > 1.3 and ratio < 2.0 and maxImg_tmp.shape[0] > src_img.shape[0] / 4 and maxImg_tmp.shape[1] > \
+                        src_img.shape[1] / 4:
+                    cv.imwrite('tmp/paper.png', maxImg_tmp)
+                    maxImg = maxImg_tmp
+                    break
+        else:
+            # QMessageBox.information(None, '提示', '找不到有效的答题卡！')
+            exam.dto.errorMsg='找不到有效的答题卡！'
+            return None, None
+
+        # print(maxImg.shape[1]/src_img.shape[1],maxImg.shape[0]/src_img.shape[0])
+        if maxImg.shape[1] < 0.5 * src_img.shape[1]:
+            # QMessageBox.information(None, '提示', '可能太远导致目标识别区太小！')
+            exam.dto.errorMsg='可能太远导致目标识别区太小！'
+            return None, None
+        #
+        ratio = maxImg.shape[1] / maxImg.shape[0]
+        # print(ratio)
+        if ratio < 1.4 or ratio > 2.0:  # 标准卡宽高比为1.7
+            # QMessageBox.information(None, '提示', '可能太斜导致目标识别区不准！')
+            exam.dto.errorMsg='可能太斜导致目标识别区不准！'
+            return None, None
+
+        # 找选项区
+        for i in range(len(sortcnts)):
+            peri = 0.1 * cv.arcLength(sortcnts[i], True)
+            # 获取多边形的所有定点，如果是四个定点，就代表是矩形
+            approx = cv.approxPolyDP(sortcnts[i], peri, True)
+            if len(approx) == 4:  # 矩形
+                # 透视变换提取原图内容部分
+                ansImg_tmp = four_point_transform(src_img, approx.reshape(4, 2))
+                ratio = ansImg_tmp.shape[1] / ansImg_tmp.shape[0]  # 寬高比
+                if ratio > 0.9 and ratio < 1.8 and ansImg_tmp.shape[0] < maxImg.shape[0] and ansImg_tmp.shape[1] < \
+                        maxImg.shape[1] and ansImg_tmp.shape[0] > maxImg.shape[0] * 2 / 3 and ansImg_tmp.shape[1] > \
+                        maxImg.shape[1] / 2:
+                    ansImg = ansImg_tmp
+                    cv.imwrite('tmp/ansImg.png', ansImg)
+                    break
+        else:
+            # QMessageBox.information(None, '提示', '找不到有效的答題区域！')
+            exam.dto.errorMsg = '找不到有效的答題区域！'
+            return None, None
+
+        # 找学号区
+        for i in range(len(sortcnts)):
+            peri = 0.1 * cv.arcLength(sortcnts[i], True)
+            # 获取多边形的所有定点，如果是四个定点，就代表是矩形
+            approx = cv.approxPolyDP(sortcnts[i], peri, True)
+            if len(approx) == 4:  # 矩形
+                # 透视变换提取原图内容部分
+                stuImg_tmp = four_point_transform(src_img, approx.reshape(4, 2))
+                ratio = stuImg_tmp.shape[1] / stuImg_tmp.shape[0]  # 寬高比
+                if ratio > 0.4 and ratio < 1 and stuImg_tmp.shape[0] < ansImg.shape[0] and stuImg_tmp.shape[1] < \
+                        ansImg.shape[1] and stuImg_tmp.shape[0] > maxImg.shape[0] / 4 and stuImg_tmp.shape[1] > \
+                        maxImg.shape[1] / 7:
+                    stuImg = stuImg_tmp
+                    # cv.imwrite('tmp/stuImg.png', stuImg)
+                    break
+        else:
+            exam.dto.errorMsg ='找不到有效的学号区域！'
+            # QMessageBox.information(None, '提示', '找不到有效的学号区域！')
+            return None, None
+
+        return ansImg, stuImg
 
 class ExamControl():
+
     def __init__(self):
         if not os.path.exists('data'):
             os.mkdir('data')
@@ -54,8 +160,13 @@ class ExamControl():
         self.dto.allClassname = self.stuDB.queryClassname()
 
     def startThread(self):
-        workThread=WorkThread(self.dto)
+        self.workThread=WorkThread()
+        self.workThread.start()
+        self.workThread.trigger.connect(self.threadStop)
 
+    def threadStop(self):
+        self.workThread.quit()
+        QMessageBox.information(None, '提示', '线程已结束！')
 
 
     def startMarking(self, ansImg,stuImg):#自适应阈值批量阅卷并做各种记录和保存处理
@@ -144,17 +255,17 @@ class ExamControl():
             if self.markingResult[4] == -2:# 班级冲突
                 retry_flag=0#不再重试
                 failedCount += 1
-                QMessageBox.information(None, '提示', '学生涂的班级和老师选的班级不一致，直接计入失败！')
+                # QMessageBox.information(None, '提示', '学生涂的班级和老师选的班级不一致，直接计入失败！')
                 break
             if self.markingResult[4] == -1 or self.markingResult[4]==-3:  # 学号无法识别或学号查不到，则跳出循环，手动调节
                 retry_flag = 1  # 重试
-                QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
+                # QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                 break
             if self.comparison(self.markingResult[1]):  # 比对所有单选的序号是否一致，如果一致说明阈值适合则结束
                 if self.markingResult[4] == -4:  # 重复阅卷或者学号涂重
                     self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
                     retry_flag = 1  # 重试
-                    QMessageBox.information(None, '提示', '该学号已阅过，请确实此学生是否错涂别人的学号，计入成功则覆盖，计入失败则不保存！')
+                    # QMessageBox.information(None, '提示', '该学号已阅过，请确实此学生是否错涂别人的学号，计入成功则覆盖，计入失败则不保存！')
                 else:
                     successedCount += 1
                     retry_flag = 0
@@ -295,5 +406,5 @@ class ExamControl():
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    ExamControl()
+    exam=ExamControl()
     sys.exit(app.exec_())

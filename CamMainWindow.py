@@ -4,19 +4,17 @@
 Module implementing ScanMainWindow.
 """
 import os
-import threading
 import traceback
 import win32api
 
 import cv2 as cv
-import numpy as np
-from CamconfigWindow import configDialog
-from DB import AnswerDB
 from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt, QStringListModel, QTimer
 from PyQt5.QtGui import QPainter, QIcon, QFont, QImage
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget, QApplication
+
+from CamconfigWindow import configDialog
+from DB import AnswerDB
 from Ui_CamMainWindow import Ui_MainWindow
-from imutils.perspective import four_point_transform
 
 
 class CamMainWindow(QMainWindow, Ui_MainWindow):
@@ -117,13 +115,16 @@ class CamMainWindow(QMainWindow, Ui_MainWindow):
         if event.key() == Qt.Key_Escape:
             self.close()
         elif event.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            self.examControl.startThread()
+            try:
+                self.takePhotoMarking()
+            except:
+                traceback.print_exc()
         elif event.key()==Qt.Key_R and QApplication.keyboardModifiers() == Qt.ControlModifier:
             if self.fps is not None:
                 self.takePhotoAnswer(self.change_size(self.dto.camImg[0]))
 
 
-    def takePhotoMarking(self,ansImg,stuImg):
+    def takePhotoMarking(self):
         # 獲取班級和examID
         self.getID()
         if not self.dto.classname:
@@ -171,6 +172,7 @@ class CamMainWindow(QMainWindow, Ui_MainWindow):
     def showAnswers(self):
         if self.dto.hideAnswerFlag==1:
             self.label_4.clear()
+            self.label_4.setText(self.dto.errorMsg)
         if self.dto.nowAnswer!=None and self.dto.hideAnswerFlag==0:
             self.label_4.clear()
             self.label_4.setText('目前导入的答案为（题号：答案+得分+部分得分）：'+str(self.dto.nowAnswer))
@@ -258,7 +260,10 @@ class CamMainWindow(QMainWindow, Ui_MainWindow):
         """
         Slot documentation goes here.
         """
-        self.takePhotoMarking(self.change_size(self.dto.camImg[0]))
+        try:
+            self.takePhotoMarking()
+        except:
+            traceback.print_exc()
 
     @pyqtSlot()
     def on_pushButton_1_clicked(self):

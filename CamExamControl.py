@@ -24,15 +24,15 @@ class WorkThread(QThread):
     def run(self):
         try:
             global exam
-            cv.imwrite('cam.jpg',exam.dto.camImg[0])
+            # cv.imwrite('cam.jpg',exam.dto.camImg[0])
             while(1):
-                self.sleep(0.5)
-                ansImg, stuImg=self.get_roi_img(exam.dto.camImg[0])
-                if ansImg is not None:
-                    exam.startMarking(ansImg,stuImg)
+                self.sleep(1)
+                exam.dto.ansImg, exam.dto.stuImg=self.get_roi_img(exam.dto.camImg[0])
+                if exam.dto.ansImg is not None:
                     # 循环完毕后发出信号
+                    exam.dto.errorMsg = '抓图成功！'
                     self.trigger.emit()
-
+                    return
         except:
             traceback.print_exc()
 
@@ -78,10 +78,10 @@ class WorkThread(QThread):
             return None, None
 
         # print(maxImg.shape[1]/src_img.shape[1],maxImg.shape[0]/src_img.shape[0])
-        if maxImg.shape[1] < 0.5 * src_img.shape[1]:
-            # QMessageBox.information(None, '提示', '可能太远导致目标识别区太小！')
-            exam.dto.errorMsg='可能太远导致目标识别区太小！'
-            return None, None
+        # if maxImg.shape[1] < 0.5 * src_img.shape[1]:
+        #     # QMessageBox.information(None, '提示', '可能太远导致目标识别区太小！')
+        #     exam.dto.errorMsg='可能太远导致目标识别区太小！'
+        #     return None, None
         #
         ratio = maxImg.shape[1] / maxImg.shape[0]
         # print(ratio)
@@ -162,11 +162,14 @@ class ExamControl():
     def startThread(self):
         self.workThread=WorkThread()
         self.workThread.start()
-        self.workThread.trigger.connect(self.threadStop)
+        self.workThread.trigger.connect(lambda: self.threadStop(self.dto.ansImg, self.dto.stuImg))
 
-    def threadStop(self):
+    def threadStop(self,ansImg, stuImg):
         self.workThread.quit()
-        QMessageBox.information(None, '提示', '线程已结束！')
+        if self.dto.ansImg is not None:
+            flag=self.startMarking(ansImg,stuImg)
+        if flag:
+            self.startThread()
 
 
     def startMarking(self, ansImg,stuImg):#自适应阈值批量阅卷并做各种记录和保存处理
@@ -189,12 +192,9 @@ class ExamControl():
 
             #自动适应阈值阅卷
             failedCount, successedCount,self.markingResult,confirmResult= self.autoScan(ansImg,stuImg, failedCount, successedCount)
-            # 记录该文件阅卷结果
-            if confirmResult==0 and self.markingResult[4]==-4:#重复，选择了计入失败，不覆盖，改变标志为-5
-                self.markingResult[4]=-5
-                self.dto.markingResultView.append([0,'來自拍照',self.markingResult])
-            elif self.markingResult!=0:
-                self.dto.markingResultView.append([0,'來自拍照',self.markingResult])
+
+            self.dto.markingResultView.append([0,'來自拍照',self.markingResult])
+
             QApplication.processEvents()  # 停顿刷新界面
             return True
         except Exception as e:
@@ -248,29 +248,26 @@ class ExamControl():
             self.dto.nowPaper.multiChoiceCount = 0  # 重置多选计数器
             self.dto.nowPaper.noChoiceCount = 0  # 重置无选项计数器
             self.markingResult = self.marking(ansImg,stuImg)  # 阅卷
-            QApplication.processEvents()  # 停顿刷新界面
             if self.markingResult == 0:  # 无法识别图片，直接计入失败跳过调节阈值
                 retry_flag=0#不再重试
                 break
             if self.markingResult[4] == -2:# 班级冲突
                 retry_flag=0#不再重试
                 failedCount += 1
-                # QMessageBox.information(None, '提示', '学生涂的班级和老师选的班级不一致，直接计入失败！')
+                QMessageBox.information(None, '提示', '学生涂的班级和老师选的班级不一致，直接计入失败！')
+                break
+            if self.markingResult[4] == -4:  # 重复阅卷或者学号涂重
+                retry_flag = 0  # 重试
                 break
             if self.markingResult[4] == -1 or self.markingResult[4]==-3:  # 学号无法识别或学号查不到，则跳出循环，手动调节
                 retry_flag = 1  # 重试
-                # QMessageBox.information(None, '提示', '请确认班级或学号是否涂的有问题，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
+                QMessageBox.information(None, '提示', '该班级没有这个学号，可通过调节阈值重试，如果确实有问题，建议直接计入失败！')
                 break
             if self.comparison(self.markingResult[1]):  # 比对所有单选的序号是否一致，如果一致说明阈值适合则结束
-                if self.markingResult[4] == -4:  # 重复阅卷或者学号涂重
-                    self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
-                    retry_flag = 1  # 重试
-                    # QMessageBox.information(None, '提示', '该学号已阅过，请确实此学生是否错涂别人的学号，计入成功则覆盖，计入失败则不保存！')
-                else:
-                    successedCount += 1
-                    retry_flag = 0
-                    self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
-                    self.saveMarkingData(*self.markingResult)#成功则保存数据
+                self.dto.bestAnswerThreshhold = a / 10  # 保存最优阈值
+                successedCount += 1
+                retry_flag = 0
+                self.saveMarkingData(*self.markingResult)#成功则保存数据
                 break
         if retry_flag == 1:#手动调节阈值
             # 如果程序调节失败，操作者自行调节阈值

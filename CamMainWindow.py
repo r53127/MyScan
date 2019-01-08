@@ -114,30 +114,14 @@ class CamMainWindow(QMainWindow, Ui_MainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.close()
-        elif event.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            try:
-                self.takePhotoMarking()
-            except:
-                traceback.print_exc()
-        elif event.key()==Qt.Key_R and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            if self.fps is not None:
-                self.takePhotoAnswer(self.change_size(self.dto.camImg[0]))
+        # elif event.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
+        #     self.takePhotoMarking()
+        # elif event.key()==Qt.Key_R and QApplication.keyboardModifiers() == Qt.ControlModifier:
+        #     if self.fps is not None:
+        #         self.takePhotoAnswer(self.change_size(self.dto.camImg[0]))
 
 
-    def takePhotoMarking(self):
-        # 獲取班級和examID
-        self.getID()
-        if not self.dto.classname:
-            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
-            return
-        # 未导入答案，返回
-        if self.dto.nowAnswer is None:
-            QMessageBox.information(None, '提示', '请先导入答案!')
-            return
-        # 开始阅卷
-        self.dto.hideAnswerFlag = 1
-        if self.examControl.startThread():
-            return True
+
 
     def takePhotoAnswer(self,pic):
         if pic is None:
@@ -225,18 +209,19 @@ class CamMainWindow(QMainWindow, Ui_MainWindow):
         tmp = ''
         for j, result in enumerate(self.dto.markingResultView,start=1):
             if result[2][4] <0 and result[2][4]>-4:
-                tmp = '第' +  str(j) + '个失败！'
-            elif result[2][4]==-5:#学号重复并且选择了计入失败
-                tmp = '第' + str(j) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '不覆盖！'
+                tmp = '无法识别，失败！'
             elif result[2][4] == -4:#学号重复选择了计入成功
-                tmp = '第' + str(j) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '覆盖！'
+                tmp = '学号：' + str(result[2][0]) + ' 已阅过，请取走换一张！'
             else:
-                tmp = '第' + str(j) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
+                tmp = '学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
 
             score.append(tmp)
-            slm=QStringListModel()
-            slm.setStringList(score)
-            self.listView.setModel(slm)
+        slm=QStringListModel()
+        slm.setStringList(score)
+        self.listView.setModel(slm)
+        self.listView.setWordWrap(True)
+        self.listView.scrollToBottom()
+        self.listView.setAutoScroll(True)
     # 刷新班级控件
     def updateComboBox(self):
         self.comboBox_2.clear()
@@ -260,10 +245,27 @@ class CamMainWindow(QMainWindow, Ui_MainWindow):
         """
         Slot documentation goes here.
         """
-        try:
-            self.takePhotoMarking()
-        except:
-            traceback.print_exc()
+        # 獲取班級和examID
+        self.getID()
+        if not self.dto.classname:
+            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+            return
+        # 未导入答案，返回
+        if self.dto.nowAnswer is None:
+            QMessageBox.information(None, '提示', '请先导入答案!')
+            return
+        # 开始阅卷
+        self.dto.hideAnswerFlag = 1
+
+        if not self.dto.isReading:
+            self.pushButton_4.setText('停止阅卷')
+            self.examControl.startThread()
+        else:
+            self.pushButton_4.setText('开始阅卷（Ctrl+S）')
+            self.listView.reset()
+            self.examControl.workThread.blockSignals(True)
+        self.dto.isReading = not self.dto.isReading
+
 
     @pyqtSlot()
     def on_pushButton_1_clicked(self):

@@ -20,3 +20,7 @@ class ExamDto():
         self.hideAnswerFlag=0#消息区隐藏导入答案标识
         self.markingResultView=[]
         self.camImg=None
+        self.ansImg=None
+        self.stuImg=None
+        self.isReading=False
+

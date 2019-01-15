@@ -196,7 +196,7 @@ class ExamControl():
                     point = (self.dto.nowAnswer.get(choice[0]))[1]
                 elif stdAns.find(choice[1]) != -1:  # 部分答对
                     point = (self.dto.nowAnswer.get(choice[0]))[2]
-                self.scanDB.updateDB(stuID, choice[0], choice[1],stdAns,point)  # 学号，题号，答案
+                self.scanDB.updateDB(stuID, choice[0], choice[1],stdAns,str(point))  # 学号，题号，答案
             # 分数更新
             self.scoreDB.updateDB(stuID, score)  # 学号，分数
         else:

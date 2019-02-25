@@ -208,7 +208,7 @@ class ExamControl():
                     point = (self.dto.nowAnswer.get(choice[0]))[1]
                 elif stdAns.find(choice[1]) != -1:  # 部分答对
                     point = (self.dto.nowAnswer.get(choice[0]))[2]
-                self.scanDB.insertDB(examID, classname, stuID, stuName, choice[0], choice[1],stdAns,point)
+                self.scanDB.insertDB(examID, classname, stuID, stuName, choice[0], choice[1],stdAns,str(point))
             # 分数入库
             self.scoreDB.insertDB(classname, stuID, stuName, score, examID)
 

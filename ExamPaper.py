@@ -352,7 +352,8 @@ class ExamPaper():
 
         self.showingImgThresh = ExamPaper.convertImg(thresh2)  # 显示已选标注框图片
         # cv.imshow('th',thresh2)
-        image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        #image, cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+        cnts, hierarchy = cv.findContours(thresh2.copy(), cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)#opencv升级后多了一个image参数
         # cv.drawContours(src_img, cnts, -1, (255, 0, 0), 1)
         # cv.imshow('src', src_img)
         sortcnts = sorted(cnts, key=lambda c: cv.contourArea(c), reverse=True)

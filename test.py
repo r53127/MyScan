@@ -18,7 +18,7 @@ def primes():
     while True:
         n = next(it) # 返回序列的第一个数
         yield n
-        it = filter(_not_divisible(n), it) # 构造新序列
+        it = filter(_not_divisible(n), it) # 构造新序列，过滤函数，为真保留，为假去除
 
 # 打印1000以内的素数:
 # for n in primes():

@@ -27,14 +27,75 @@ def primes():
 #     else:
 #         break
 
-m=primes()
-n = next(m)
-while True:
-    print(n)
-    if n>100:
-        break
-    else:
-        n=next(m)
+# m=primes()
+# print(m)
+# n = next(m)
+# while True:
+#     print(n)
+#     if n>100:
+#         break
+#     else:
+#         n=next(m)
 
 
 
+# def count():
+#     fs = []
+#     for i in range(1, 4):
+#         print('i',i)
+#         def f():
+#             print(i)
+#             return i*i
+#         fs.append(f)
+#         print(id(fs))
+#     return fs
+#
+# f1, f2, f3 = count()
+# f1()
+# print(id(f1),id(f2),id(f3))
+
+
+def now(*kv,**kwargs):
+    if 'test' in kwargs:
+        print('test arg is:',kwargs['test'])
+    print('2015-3-25')
+
+def log(func):
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        return func(*args, **kw)
+    return wrapper
+
+# @log
+# def now(**kwargs):
+#     print('2015-3-25')
+# class Chain(object):
+#
+#     def __init__(self, path=''):
+#         self._path = path
+#
+#     def __getattr__(self, path):
+#         return Chain('%s/%s' % (self._path, path))
+#
+#     def __str__(self):
+#         return self._path
+#
+#     __repr__ = __str__
+#
+# print(Chain().status.user.timeline.list)
+
+class Chain(object):
+    def __init(self, path=''):
+        self.path = path
+
+    def __getattr__(self, path):
+        return Chain('%s/%s' % (self.path, path))
+
+    def __call__(self, username):
+        return Chain('%s/%s' % (self.path, username))
+
+    def __str__(self):
+        return self.path
+    __repr__ = __str__
+
+print(Chain().users('Michael').repos)

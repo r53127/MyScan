@@ -3,21 +3,21 @@
 """
 Module implementing ScanMainWindow.
 """
-
 import os
-import shutil
+import traceback
 import win32api
 
-from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt, QStringListModel
-from PyQt5.QtGui import QPainter, QIcon, QFont
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget
+import cv2 as cv
+from PyQt5.QtCore import pyqtSlot, QDateTime, QRect, Qt, QStringListModel, QTimer
+from PyQt5.QtGui import QPainter, QIcon, QFont, QImage
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QMainWindow, QDesktopWidget, QApplication
 
 from DB import AnswerDB
-from Ui_PicMainWindow import Ui_MainWindow
-from configWindow import configDialog
+from Ui_CamMainWindow import Ui_MainWindow
+from CamconfigWindow import configDialog
 
 
-class PicMainWindow(QMainWindow, Ui_MainWindow):
+class CamMainWindow(QMainWindow, Ui_MainWindow):
     """
     Class documentation goes here.
     """
@@ -29,7 +29,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         @param parent reference to the parent widget
         @type QWidget
         """
-        super(PicMainWindow, self).__init__(parent)
+        super(CamMainWindow, self).__init__(parent)
         self.dto = dto
         self.examControl = examControl
         self.setupUi(self)
@@ -37,13 +37,11 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         self.line.setFixedHeight(QDesktopWidget().screenGeometry().height())
         self.line_4.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x(), 0, 21,
                                 QDesktopWidget().screenGeometry().height())
-        self.line_5.setGeometry(self.line.geometry().x() + 10, QDesktopWidget().screenGeometry().height() - 280,
+        self.line_5.setGeometry(self.line.geometry().x() + 10, QDesktopWidget().screenGeometry().height()-280,
                                 self.line_4.geometry().x() - self.line.geometry().x(), 21)
         self.label_7.move(QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 30, 20)
-        self.label_8.move(self.line.geometry().x() + 10, QDesktopWidget().screenGeometry().height() - 270)
-        self.scrollArea.setGeometry(
-            QRect(self.line.geometry().x() + 15, QDesktopWidget().screenGeometry().height() - 240,
-                  self.line_4.geometry().x() - self.line.geometry().x() - 10, 100))
+        self.label_8.move(self.line.geometry().x() + 10, QDesktopWidget().screenGeometry().height()-270)
+        self.scrollArea.setGeometry(QRect(self.line.geometry().x()+15, QDesktopWidget().screenGeometry().height()-240, self.line_4.geometry().x()-self.line.geometry().x()-10, 100))
         self.scrollArea.setWidget(self.label_4)
         self.label_4.setWordWrap(True)  # 自动换行
         self.label_4.setAlignment(Qt.AlignTop)
@@ -53,46 +51,122 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         # 刷新班级控件
         self.comboBox.addItems([str(x) for x in range(1, 11)])
         self.updateComboBox()
-        # 设置listview位置
-        self.listView.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 30, 60,
-                                  self.line.geometry().x() - 50, QDesktopWidget().screenGeometry().height() - 200)
-        self.picPadding = 10
-        self.picWidth = (self.line_4.geometry().x() - self.line.geometry().x()) / 3 - 2 * self.picPadding
-        self.picHeight = self.line_5.geometry().y() / 2 - 4 * self.picPadding
+        #设置listview位置
+        self.listView.setGeometry(QDesktopWidget().screenGeometry().width() - self.line.geometry().x()+30, 60, self.line.geometry().x()-50,QDesktopWidget().screenGeometry().height()-200)
+        self.picPadding=10
+        self.picWidth=(self.line_4.geometry().x()-self.line.geometry().x())/3-2*self.picPadding
+        self.picHeight=self.line_5.geometry().y()/2-4*self.picPadding
         # 显示窗体
         self.showMaximized()
+        self.setFocus()
+        # 初始化攝像頭
+        self.fps=None
+        self.cap=None
+        self.camera_init()
+
+
+    def camera_init(self):
+        self.timer_camera = QTimer(self)
+        self.timer_camera.timeout.connect(self.readImgFromCamra)
+        self.timer_camera.timeout.connect(self.update)
+        self.cap = cv.VideoCapture()
+        if len(self.dto.cfg.CAM_ID)==1:
+            flag = self.cap.open(int(self.dto.cfg.CAM_ID))
+        else:
+            flag = self.cap.open(r'http://admin:admin@192.168.31.34:8081/')
+        if flag:
+            self.fps = self.cap.get(cv.CAP_PROP_FPS)
+ #           self.timer_camera.start(1000 / self.fps)
+            self.update()
+        else:
+            QMessageBox.warning(None, u"Warning", u"请检测相机与电脑是否连接正确"+str(flag), buttons=QMessageBox.Ok,
+                                defaultButton=QMessageBox.Ok)
+            return
+
+
+
+    def readImgFromCamra(self):
+        ret, cvImg = self.cap.read()
+        if ret:
+            show = cv.resize(cvImg,(int(self.cap.get(3)),int(self.cap.get(4))))
+            show = cv.cvtColor(show, cv.COLOR_BGR2RGB)
+            height, width, bytesPerComponent = show.shape
+            bytesPerLine = bytesPerComponent * width
+            qtImg = QImage(show.data, width, height, bytesPerLine, QImage.Format_RGB888)
+            self.dto.camImg=(cvImg,qtImg)
+            self.timer_camera.start(1000/self.fps)
+
 
     def openConfigDialog(self):
-        dialog = configDialog(self.dto)
-        dialog.exec_()
+        self.dialog = configDialog(self.dto,parent=self)
+        self.dialog.exec_()
         return
+
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.close()
+        elif event.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            if self.fps is not None:
+                self.takePhotoMarking(self.change_size(self.dto.camImg[0]))
+        elif event.key()==Qt.Key_R and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            if self.fps is not None:
+                self.takePhotoAnswer(self.change_size(self.dto.camImg[0]))
+
+
+    def takePhotoMarking(self,pic):
+        # 獲取班級和examID
+        self.getID()
+        if not self.dto.classname:
+            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
+            return
+        # 未导入答案，返回
+        if self.dto.nowAnswer is None:
+            QMessageBox.information(None, '提示', '请先导入答案!')
+            return
+        # 如果未选择，返回
+        if pic is None:
+            return
+        # 开始阅卷
+        self.dto.hideAnswerFlag = 1
+        self.examControl.startMarking(pic)
+
+    def takePhotoAnswer(self,pic):
+        if pic is None:
+            return
+        # 开始分析
+        self.dto.nowAnswer = None
+        self.dto.hideAnswerFlag = 1
+        self.update()
+        self.dto.nowPaper.initPaper()
+        self.dto.testFlag = True
+        self.dto.testFile = pic
+        self.dto.markingResultView=[]
+        self.dto.answerThreshhold = self.doubleSpinBox.value()
+        self.examControl.test(pic)
+        self.dto.hideAnswerFlag=0
+        self.update()
+
+
 
     def paintEvent(self, QPaintEvent):
         super().paintEvent(QPaintEvent)
         try:
             painter = QPainter(self)
+            if self.dto.camImg is not None:
+                painter.drawImage(QRect(5, 40, 310, 210), self.dto.camImg[1])
             self.drawImg(painter, 350, 65, self.picWidth, self.picHeight, self.picPadding)  # 显示图像
-            self.drawScore(painter, QDesktopWidget().screenGeometry().width() - self.line.geometry().x() + 20,
-                           110)  # 显示姓名分数
-            self.showFailedfiles()
-            # if self.dto.testFlag:
+            self.drawScore()  # 显示姓名分数
             self.showAnswers()
         except Exception as e:
             QMessageBox.information(None, '提示', '显示图像失败！错误是：' + str(e))
 
-    def showFailedfiles(self):
-        if len(self.dto.failedFiles) != 0:
-            filenames = []
-            for file in self.dto.failedFiles:
-                filename = os.path.basename(file)
-                filenames.append(filename)
-            self.label_4.clear()
-            self.label_4.setText('失败文件名：' + str(filenames))
-
     def showAnswers(self):
-        if self.dto.nowAnswer != None and self.dto.hideAnswerFlag == 0:
+        if self.dto.hideAnswerFlag==1:
             self.label_4.clear()
-            self.label_4.setText('目前导入的答案为（题号：答案+得分+部分得分）：' + str(self.dto.nowAnswer))
+        if self.dto.nowAnswer!=None and self.dto.hideAnswerFlag==0:
+            self.label_4.clear()
+            self.label_4.setText('目前导入的答案为（题号：答案+得分+部分得分）：'+str(self.dto.nowAnswer))
 
     def drawImg(self, painter, x, y, w, h, padding):  # 显示图片
         if self.dto.nowPaper.showingImg is not None:
@@ -109,7 +183,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 painter.drawText(x + w + padding, y, '所涂选项:')
             painter.drawImage(QRect(x + w + padding, y + 10, w, h), self.dto.nowPaper.showingChoices)
         if self.dto.nowPaper.showingStu is not None:
-            if self.dto.nowPaper.stuID != '':
+            if self.dto.nowPaper.stuID !='':
                 painter.drawText(x + (w + padding) * 2, y, '所涂学号：')
             else:
                 painter.setFont(QFont('Mine', 14))
@@ -135,26 +209,25 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                 painter.drawImage(QRect(x + (w + padding) * 2, y + h + padding * 3 + 10, w, h),
                                   self.dto.nowPaper.showingPaperThresh)
 
-    def drawScore(self, painter, startX, startY):
-        if not self.examControl.markingResultView:
+    def drawScore(self):
+        if not self.dto.markingResultView:
             return
-        score = []
+        score=[]
         tmp = ''
-        for j, result in enumerate(self.examControl.markingResultView):
-            if result[2] == 0 or (result[2][4] < 0 and result[2][4] > -4):
-                tmp = '第' + str(result[0]) + '个失败！'
-            elif result[2][4] == -5:  # 学号重复并且选择了计入失败
-                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '不覆盖！'
-            elif result[2][4] == -4:  # 学号重复选择了计入成功
-                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '覆盖！'
+        for j, result in enumerate(self.dto.markingResultView,start=1):
+            if result[2][4] <0 and result[2][4]>-4:
+                tmp = '第' +  str(j) + '个失败！'
+            elif result[2][4]==-5:#学号重复并且选择了计入失败
+                tmp = '第' + str(j) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '不覆盖！'
+            elif result[2][4] == -4:#学号重复选择了计入成功
+                tmp = '第' + str(j) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + '覆盖！'
             else:
-                tmp = '第' + str(result[0]) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
+                tmp = '第' + str(j) + '个：学号：' + str(result[2][0]) + ' 分数：' + str(result[2][2]) + ' 成功！'
+
             score.append(tmp)
-            # painter.drawText(startX + 5, startY + 20 * j, tmp)
-            slm = QStringListModel()
+            slm=QStringListModel()
             slm.setStringList(score)
             self.listView.setModel(slm)
-
     # 刷新班级控件
     def updateComboBox(self):
         self.comboBox_2.clear()
@@ -164,57 +237,21 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
                     self.comboBox_2.addItem(j)
 
     def getID(self):
-        self.dto.examID = self.dateEdit.date().toString("yyyyMMdd") + '_' + self.comboBox.currentText()
+        self.dto.examID = self.dateEdit.date().toString("yyyyMMdd")+'_'+self.comboBox.currentText()
         self.dto.classname = self.comboBox_2.currentText()
+
 
     @pyqtSlot()
     def on_pushButton_3_clicked(self):
-        # 獲取班級和examID
-        self.getID()
-        if not self.dto.classname:
-            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
-            return
-        # 未导入答案，返回
-        if not self.dto.nowAnswer:
-            QMessageBox.information(None, '提示', '请先导入答案!')
-            return
-        files, filetype = QFileDialog.getOpenFileNames(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp;*.jpeg)')
-        # 如果未选择，返回
-        if not files:
-            return
-        # 开始阅卷
-        self.dto.hideAnswerFlag = 1
-        self.examControl.startMarking(files)
+        self.takePhotoAnswer(self.change_size(self.dto.camImg[0]))
+
 
     @pyqtSlot()
     def on_pushButton_4_clicked(self):
         """
         Slot documentation goes here.
         """
-        # 獲取班級和examID
-        self.getID()
-        if not self.dto.classname:
-            QMessageBox.information(None, '提示', '请先导入学生库生成班级!')
-            return
-        # 未导入答案，返回
-        if not self.dto.nowAnswer:
-            QMessageBox.information(None, '提示', '请先导入答案!')
-            return
-        direc = QFileDialog.getExistingDirectory(self, '打开阅卷目录', r'.')
-        if not direc:
-            return
-        # 生成文件列表
-        files = []
-        filesname = os.listdir(direc)
-        for filename in filesname:
-            ext = os.path.splitext(filename)[1]
-            ext = ext.lower()
-            if ext != '.jpg' and ext != '.png' and ext != '.bmp' and ext != '.jpeg':
-                continue
-            files.append(os.path.join(direc + '/', filename))
-        # 开始阅卷
-        self.dto.hideAnswerFlag = 1
-        self.examControl.startMarking(files)
+        self.takePhotoMarking(self.change_size(self.dto.camImg[0]))
 
     @pyqtSlot()
     def on_pushButton_1_clicked(self):
@@ -241,12 +278,13 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             if answers is None:
                 return
             self.dto.nowAnswer = answers
-            self.dto.STAND_ONE_ANSWER_ORDER = []  # 计算并保存标准答案长度为1的题号
+            self.dto.STAND_ONE_ANSWER_ORDER=[]#计算并保存标准答案长度为1的题号
             for i in range(len(self.dto.nowAnswer)):
                 ans = self.dto.nowAnswer[i + 1][0]
-                if len(ans) == 1:
-                    self.dto.STAND_ONE_ANSWER_ORDER.append(i + 1)
+                if len(ans)==1:
+                    self.dto.STAND_ONE_ANSWER_ORDER.append(i+1)
             QMessageBox.information(None, '提示:', '共导入' + str(len(answers)) + '个题答案！')
+            self.dto.markingResultView=[]
             self.dto.hideAnswerFlag = 0
             self.dto.nowPaper.initPaper()
         except BaseException as e:
@@ -274,28 +312,10 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         """
         # 獲取班級和examID
         self.getID()
+        if not self.dto.nowAnswer:
+            QMessageBox.information(None, '提示', '请先导入答案!')
+            return
         self.examControl.makePaperReport()
-
-    @pyqtSlot()
-    def on_pushButton_7_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-        if not self.dto.failedFiles:
-            QMessageBox.information(None, '提示', '尚未有阅卷失败的文件！')
-            return
-        direc = QFileDialog.getExistingDirectory(self, '另存为目录', r'.')
-        if not direc:
-            return
-        for file in self.dto.failedFiles:
-            self.saveFailedFiles(file, direc)
-
-    def saveFailedFiles(self, file, dstPath):
-        try:
-            newfilepath = os.path.join(dstPath, os.path.basename(file))
-            shutil.copyfile(file, newfilepath)
-        except Exception as e:
-            QMessageBox.information(None, '提示', '另存失败！错误是：' + str(e))
 
     @pyqtSlot()
     def on_pushButton_clicked(self):
@@ -307,11 +327,11 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         if not file:
             return
         try:
-            i = self.examControl.stuDB.importStuFromXLS(file)
+            i=self.examControl.stuDB.importStuFromXLS(file)
             if i:
                 self.examControl.updateClassname()
                 self.updateComboBox()
-                QMessageBox.information(None, '消息', '共导入' + str(i) + '个学生！')
+                QMessageBox.information(None, '消息', '共导入'+str(i)+'个学生！')
         except Exception as e:
             QMessageBox.information(None, '提示', '导入失败！错误是：' + str(e) + '，请选择正确的学生库文件！')
 
@@ -329,25 +349,6 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         except Exception as e:
             QMessageBox.information(None, '错误:', "错误是：" + str(e) + "！")
 
-    @pyqtSlot()
-    def on_pushButton_9_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-        file, filetype = QFileDialog.getOpenFileName(self, '打开文件', r'.', r'图片文件 (*.jpg;*.png;*.bmp)')
-        # 如果未选择，返回
-        if not file:
-            return
-        # 开始阅卷
-        self.dto.nowAnswer = None
-        self.dto.hideAnswerFlag = 0
-        self.dto.nowPaper.initPaper()
-        self.dto.testFlag = True
-        self.dto.testFile = file
-        self.dto.answerThreshhold = self.doubleSpinBox.value()
-        self.examControl.test(file)
-
-        self.update()
 
     @pyqtSlot(float)
     def on_doubleSpinBox_valueChanged(self, p0):
@@ -364,7 +365,7 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
             self.dto.nowAnswer = None
             self.examControl.test(self.dto.testFile)
         self.update()
-
+    
     @pyqtSlot()
     def on_pushButton_saveas_clicked(self):
         """
@@ -372,16 +373,33 @@ class PicMainWindow(QMainWindow, Ui_MainWindow):
         """
         # 獲取班級和examID
         self.getID()
-        if not self.examControl.markingResultView:
+        if not self.dto.markingResultView:
             QMessageBox.information(None, '错误', "尚未阅卷！")
             return
         self.examControl.makeSaveAsReport()
 
-    @pyqtSlot()
-    def on_pushButton_savebigdata_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-        # 獲取班級和examID
-        self.getID()
-        self.examControl.makeBigdataReport()
+    def change_size(self,image):
+        # image = cv.imread(read_file, 1)  # 读取图片 image_name应该是变量
+        b = cv.threshold(image, 15, 255, cv.THRESH_BINARY)  # 调整裁剪效果
+        binary_image = b[1]  # 二值图--具有三通道
+        binary_image = cv.cvtColor(binary_image, cv.COLOR_BGR2GRAY)
+        # print(binary_image.shape)  # 改为单通道
+
+        x = binary_image.shape[0]
+        y = binary_image.shape[1]
+        edges_x = []
+        edges_y = []
+
+        for i in range(x):
+            for j in range(y):
+                if binary_image[i][j] == 255:
+                    edges_x.append(i)
+                    edges_y.append(j)
+        left = min(edges_x)  # 左边界
+        right = max(edges_x)  # 右边界
+        width = right - left  # 宽度
+        bottom = min(edges_y)  # 底部
+        top = max(edges_y)  # 顶部
+        height = top - bottom  # 高度
+        pre1_picture = image[left:left + width, bottom:bottom + height]  # 图片截取
+        return pre1_picture

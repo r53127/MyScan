@@ -85,7 +85,7 @@ class CamMainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def readImgFromCamra(self):
+    def readImgFromCamra():
         ret, cvImg = self.cap.read()
         if ret:
             show = cv.resize(cvImg,(int(self.cap.get(3)),int(self.cap.get(4))))

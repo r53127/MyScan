@@ -54,7 +54,7 @@ class Config():
                 self.PER_CHOICE_COUNT = cfg.PER_CHOICE_COUNT
                 self.PART_ANS_SCORE=cfg.PART_ANS_SCORE
                 self.PER_ANS_SCORE=cfg.PER_ANS_SCORE
-                self.CAM_ID=cfg.CAM_ID
+               # self.CAM_ID=cfg.CAM_ID
 
 
 
